@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "iBudget",
@@ -17,7 +18,8 @@ export default function RootLayout({
       <html lang="en">
         <body className="font-sans bg-background text-slateDark">
           <Navbar />
-          <main className="min-h-screen flex flex-col items-center justify-center px-4">
+          <Toaster position="top-right" />
+          <main className="min-h-screen">
             {children}
           </main>
         </body>

@@ -1,17 +1,19 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { accountService } from "@/lib/server/services";
+import { PageShell } from "@/components/PageShell";
+import { AccountsTable, AccountsPageActions } from "./_components";
 
-export default async function AccountsPage() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/login");
-  }
+const AccountsPage = async () => {
+  const accounts = await accountService.getAccounts();
 
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold">Accounts</h1>
-      {/* Account management UI will go here */}
-    </main>
+    <PageShell
+      title="Your Accounts"
+      subtitle="See and manage all your accounts in one place"
+    >
+      <AccountsPageActions />
+      <AccountsTable data={accounts} />
+    </PageShell>
   );
-}
+};
+
+export default AccountsPage;
