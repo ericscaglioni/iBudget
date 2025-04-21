@@ -1,4 +1,4 @@
-import { patch, post } from "@/lib/client/api";
+import { del, patch, post } from "@/lib/client/api";
 import type { AccountType } from "@prisma/client";
 
 export const createAccount = async (data: {
@@ -20,4 +20,8 @@ export const updateAccount = async (
   }
 ) => {
   return patch(`/api/accounts/${id}`, data);
+};
+
+export const deleteAccount = async (id: string) => {
+  return del(`/api/accounts/${id}`);
 };

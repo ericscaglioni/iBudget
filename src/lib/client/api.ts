@@ -1,5 +1,5 @@
-import { toast } from "sonner";
 import { getBaseUrl } from "@/lib/utils/url";
+import { showError, showSuccess } from "@/lib/utils/toast";
 
 export const post = async <TData extends object, TResult = any>(
   url: string,
@@ -15,14 +15,14 @@ export const post = async <TData extends object, TResult = any>(
 
     if (!res.ok) {
       const err = await res.text();
-      toast.error(err || "Something went wrong.");
+      showError(err || "Something went wrong.");
       throw new Error(err);
     }
 
-    toast.success("Success!");
+    showSuccess("Success!");
     return res.json();
   } catch (err) {
-    toast.error("Network error");
+    showError("Network error");
     throw err;
   }
 };
@@ -40,14 +40,31 @@ export const patch = async <TData extends object, TResult = any>(
 
     if (!res.ok) {
       const err = await res.text();
-      toast.error(err || "Failed to update data");
+      showError(err || "Failed to update data");
       throw new Error(err);
     }
 
-    toast.success("Updated successfully!");
+    showSuccess("Updated successfully!");
     return res.json();
   } catch (err) {
-    toast.error("Network error");
+    showError("Network error");
+    throw err;
+  }
+};
+
+export const del = async (url: string): Promise<void> => {
+  try {
+    const res = await fetch(url, { method: "DELETE" });
+
+    if (!res.ok) {
+      const err = await res.text();
+      showError(err || "Delete failed");
+      throw new Error(err);
+    }
+
+    showSuccess("Deleted successfully");
+  } catch (err) {
+    showError("Network error");
     throw err;
   }
 };

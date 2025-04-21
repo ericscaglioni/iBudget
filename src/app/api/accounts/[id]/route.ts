@@ -22,3 +22,18 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
 
   return NextResponse.json(updated);
 });
+
+export const DELETE = authHandler(async ({ userId, params }) => {
+  const { id } = await params ?? {};
+
+  // Later: check for related transactions
+
+  await prisma.account.delete({
+    where: {
+      id: id as string,
+      userId,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+});

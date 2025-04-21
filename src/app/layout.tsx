@@ -15,10 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className="font-sans bg-background text-slateDark">
+      <html lang="en" suppressHydrationWarning>
+        <body className="font-sans bg-background text-slateDark" suppressHydrationWarning>
           <Navbar />
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+          />
           <main className="min-h-screen">
             {children}
           </main>
