@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { Modal } from './Modal';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import clsx from 'clsx';
+import { Button } from './Button';
 
 type Props<TData extends FieldValues> = {
   form: UseFormReturn<TData>;
@@ -32,15 +33,16 @@ export const FormModal = <TData extends FieldValues,>({
         {children}
 
         <div className="pt-4 flex justify-end gap-4">
-          <button
-            type="button"
+          <Button
+            type='button'
+            variant='ghost'
             onClick={onClose}
             disabled={isSubmitting}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            size='sm'
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          {/* <button
             type="submit"
             disabled={isSubmitting || !isDirty}
             className={clsx(
@@ -51,7 +53,16 @@ export const FormModal = <TData extends FieldValues,>({
             )}
           >
             {isSubmitting ? 'Saving...' : 'Save'}
-          </button>
+          </button> */}
+          <Button
+            type='submit'
+            variant='primary'
+            size='md'
+            isLoading={isSubmitting}
+            disabled={!isDirty}
+          >
+            {isSubmitting ? 'Saving...' : 'Save'}
+          </Button>
         </div>
       </form>
     </Modal>
