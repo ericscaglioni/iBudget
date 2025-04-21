@@ -2,7 +2,11 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Account } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 
-export const accountColumns: ColumnDef<Account>[] = [
+type ActionsProps = {
+  onEdit: (account: Account) => void;
+};
+
+export const accountColumns = ({ onEdit }: ActionsProps): ColumnDef<Account>[] => [
   {
     header: "Name",
     accessorKey: "name",
@@ -29,5 +33,17 @@ export const accountColumns: ColumnDef<Account>[] = [
     cell: ({ getValue }) => {
       return formatDate(getValue<string>());
     },
+  },
+  {
+    header: "Actions",
+    id: "actions",
+    cell: ({ row }) => (
+      <button
+        onClick={() => onEdit(row.original)}
+        className="text-sm text-primary hover:underline"
+      >
+        Edit
+      </button>
+    ),
   },
 ];

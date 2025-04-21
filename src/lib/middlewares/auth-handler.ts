@@ -1,21 +1,29 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-type HandlerFn = (ctx: { userId: string; request: Request }) => Promise<Response>;
+type HandlerContext = {
+  userId: string;
+  request: NextRequest;
+  params?: Record<string, string>;
+};
 
-export const authHandler = (handler: HandlerFn) => {
-  return async (request: Request) => {
+export const authHandler = (
+  handler: (ctx: HandlerContext) => Promise<NextResponse>
+) => {
+  return async (
+    request: NextRequest,
+    context: { params?: Record<string, string> }
+  ) => {
     const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    try {
-      return await handler({ userId, request });
-    } catch (err) {
-      console.error("Route error:", err);
-      return new NextResponse("Server Error", { status: 500 });
-    }
+    return handler({
+      userId,
+      request,
+      params: context.params,
+    });
   };
-}
+};

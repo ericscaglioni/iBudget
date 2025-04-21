@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreateAccountModal } from "./CreateAccountModal";
+import { AccountModal } from "./AccountModal";
 
 export function AccountsPageActions() {
   const [open, setOpen] = useState(false);
@@ -15,7 +15,7 @@ export function AccountsPageActions() {
         + New Account
       </button>
 
-      <CreateAccountModal open={open} onClose={() => setOpen(false)} />
+      <AccountModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 }

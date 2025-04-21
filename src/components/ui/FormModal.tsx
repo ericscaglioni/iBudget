@@ -2,29 +2,33 @@
 
 import { ReactNode } from 'react';
 import { Modal } from './Modal';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
+import clsx from 'clsx';
 
-type Props = {
+type Props<TData extends FieldValues> = {
+  form: UseFormReturn<TData>;
   open: boolean;
+  onSubmit: (data: TData) => void;
   onClose: () => void;
   title: string;
   children: ReactNode;
-  onSubmit: () => void;
-  isSubmitting?: boolean;
   description?: string;
 };
 
-export const FormModal = ({
+export const FormModal = <TData extends FieldValues,>({
+  form,
   open,
+  onSubmit,
   onClose,
   title,
   children,
-  onSubmit,
-  isSubmitting = false,
   description,
-}: Props) => {
+}: Props<TData>) => {
+  const { formState: { isSubmitting, isDirty } } = form;
+  
   return (
     <Modal open={open} onClose={onClose} title={title} description={description}>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {children}
 
         <div className="pt-4 flex justify-end gap-4">
@@ -38,8 +42,13 @@ export const FormModal = ({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 text-sm"
+            disabled={isSubmitting || !isDirty}
+            className={clsx(
+              'bg-primary text-white px-4 py-2 rounded-md shadow hover:bg-primary/90 transition',
+              {
+                'opacity-50 cursor-not-allowed': isSubmitting || !isDirty,
+              }
+            )}
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </button>

@@ -1,0 +1,120 @@
+"use client";
+
+import { ComboboxField, FormModal, TextInput } from "@/components/ui";
+import { accountService } from "@/lib/client/services";
+import {
+  accountCurrencies,
+  accountTypes,
+} from "@/lib/constants";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Account, AccountType } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { CreateAccountInput, createAccountSchema } from "./schema";
+import { useEffect } from "react";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  account?: Account;
+};
+
+export const AccountModal = ({ open, onClose, account }: Props) => {
+  const router = useRouter();
+
+  const isEdit = !!account;
+
+  const form = useForm<CreateAccountInput>({
+    resolver: zodResolver(createAccountSchema),
+    defaultValues: {
+      name: "",
+      type: "cash",
+      currency: "USD",
+      initialBalance: "0",
+    },
+  });
+
+  const { reset, watch, setValue } = form;
+
+  // Populate form when editing
+  useEffect(() => {
+    if (account) {
+      reset({
+        name: account.name,
+        type: account.type,
+        currency: account.currency,
+        initialBalance: String(account.initialBalance),
+      });
+    } else {
+      reset();
+    }
+  }, [account, reset]);
+
+  const selectedType = watch('type');
+  const selectedCurrency = watch('currency');
+
+  const onCloseModal = () => {
+    reset();
+    onClose();
+  };
+
+  const onSubmit = async (data: CreateAccountInput) => {
+    const payload = {
+      name: data.name,
+      type: data.type as AccountType,
+      currency: data.currency,
+      initialBalance: parseFloat(data.initialBalance),
+    };
+
+    if (isEdit) {
+      await accountService.updateAccount(account!.id, payload);
+    } else {
+      await accountService.createAccount(payload);
+    }
+
+    router.refresh();
+    onCloseModal();
+  };
+
+  return (
+    <FormModal<CreateAccountInput>
+      open={open}
+      form={form}
+      onSubmit={onSubmit}
+      onClose={onCloseModal}
+      title={isEdit ? "Edit Account" : "Create New Account"}
+      description="Fill in the details to create a new account."
+    >
+      <TextInput
+        label="Name"
+        name="name"
+        form={form}
+      />
+
+      <ComboboxField
+        form={form}
+        label="Type"
+        name="type"
+        options={accountTypes}
+        value={selectedType}
+        onChange={(val) => setValue('type', val)}
+      />
+
+      <ComboboxField
+        form={form}
+        label="Currency"
+        name="currency"
+        options={accountCurrencies} 
+        value={selectedCurrency}
+        onChange={(val) => setValue('currency', val)}
+      />
+
+      <TextInput
+        label="Initial Balance"
+        name="initialBalance"
+        form={form}
+        inputProps={{ type: 'number', step: '0.01' }}
+        />
+    </FormModal>
+  );
+};

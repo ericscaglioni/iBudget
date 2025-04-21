@@ -26,3 +26,28 @@ export const post = async <TData extends object, TResult = any>(
     throw err;
   }
 };
+
+export const patch = async <TData extends object, TResult = any>(
+  url: string,
+  data: TData
+): Promise<TResult> => {
+  try {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      toast.error(err || "Failed to update data");
+      throw new Error(err);
+    }
+
+    toast.success("Updated successfully!");
+    return res.json();
+  } catch (err) {
+    toast.error("Network error");
+    throw err;
+  }
+};
