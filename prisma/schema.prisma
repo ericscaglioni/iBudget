@@ -35,3 +35,29 @@ model Account {
 
   @@map("accounts")
 }
+
+model CategoryGroup {
+  id        String     @id @default(uuid())
+  userId    String?    // null = default group
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  categories Category[]
+
+  @@map("category_groups")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  userId    String?    // null = default category
+  name      String
+  color     String     // Tailwind-like (e.g. "green", "red")
+  groupId   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  group     CategoryGroup @relation(fields: [groupId], references: [id])
+
+  @@map("categories")
+}

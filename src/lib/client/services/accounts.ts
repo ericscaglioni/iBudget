@@ -1,4 +1,4 @@
-import { del, patch, post } from "@/lib/client/api";
+import { del, patch, post } from "@/lib/api/client";
 import type { AccountType } from "@prisma/client";
 
 export const createAccount = async (data: {

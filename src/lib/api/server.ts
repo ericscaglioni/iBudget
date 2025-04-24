@@ -26,3 +26,22 @@ export const get = async <TResult>(url: string): Promise<TResult> => {
     throw err;
   }
 };
+
+export const post = async <TData extends object, TResult = any>(
+  url: string,
+  data: TData
+): Promise<TResult> => {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}${url}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`POST ${url} failed: ${errText}`);
+  }
+
+  return res.json();
+};
