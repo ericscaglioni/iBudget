@@ -1,4 +1,5 @@
 export * from './Button';
+export * from './ColorInput';
 export * from './ComboboxField';
 export * from './ConfirmationModal';
 export * from './FormModal';

@@ -1,2 +1,2 @@
 export * from './AccountsTable';
-export * from './AccountsPageAction';
+export * from './AccountsPageShell';

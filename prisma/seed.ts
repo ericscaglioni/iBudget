@@ -5,45 +5,35 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding default category groups and categories...');
 
-  // Clear any existing default entries
   await prisma.category.deleteMany({ where: { userId: null } });
   await prisma.categoryGroup.deleteMany({ where: { userId: null } });
 
-  // Create groups
   const essentialGroup = await prisma.categoryGroup.create({
-    data: {
-      name: 'Essential',
-      userId: null,
-    },
+    data: { name: 'Essential', userId: null },
   });
 
   const nonEssentialGroup = await prisma.categoryGroup.create({
-    data: {
-      name: 'Non-Essential',
-      userId: null,
-    },
+    data: { name: 'Non-Essential', userId: null },
   });
 
-  // Categories under Essential
   await prisma.category.createMany({
     data: [
-      { name: 'Rent', groupId: essentialGroup.id, userId: null, color: 'red' },
-      { name: 'Groceries', groupId: essentialGroup.id, userId: null, color: 'green' },
-      { name: 'Transportation', groupId: essentialGroup.id, userId: null, color: 'blue' },
-      { name: 'Utilities', groupId: essentialGroup.id, userId: null, color: 'orange' },
-      { name: 'Healthcare', groupId: essentialGroup.id, userId: null, color: 'purple' },
+      { name: 'Rent', groupId: essentialGroup.id, userId: null, color: '#EF4444' },
+      { name: 'Groceries', groupId: essentialGroup.id, userId: null, color: '#10B981' },
+      { name: 'Transportation', groupId: essentialGroup.id, userId: null, color: '#3B82F6' },
+      { name: 'Utilities', groupId: essentialGroup.id, userId: null, color: '#F97316' },
+      { name: 'Healthcare', groupId: essentialGroup.id, userId: null, color: '#8B5CF6' },
     ],
   });
 
-  // Categories under Non-Essential
   await prisma.category.createMany({
     data: [
-      { name: 'Leisure', groupId: nonEssentialGroup.id, userId: null, color: 'teal' },
-      { name: 'Shopping', groupId: nonEssentialGroup.id, userId: null, color: 'lime' },
-      { name: 'Dining Out', groupId: nonEssentialGroup.id, userId: null, color: 'yellow' },
-      { name: 'Entertainment', groupId: nonEssentialGroup.id, userId: null, color: 'pink' },
-      { name: 'Subscriptions', groupId: nonEssentialGroup.id, userId: null, color: 'gray' },
-      { name: 'Personal', groupId: nonEssentialGroup.id, userId: null, color: 'cyan' },
+      { name: 'Leisure', groupId: nonEssentialGroup.id, userId: null, color: '#14B8A6' },
+      { name: 'Shopping', groupId: nonEssentialGroup.id, userId: null, color: '#84CC16' },
+      { name: 'Dining Out', groupId: nonEssentialGroup.id, userId: null, color: '#FACC15' },
+      { name: 'Entertainment', groupId: nonEssentialGroup.id, userId: null, color: '#EC4899' },
+      { name: 'Subscriptions', groupId: nonEssentialGroup.id, userId: null, color: '#6B7280' },
+      { name: 'Personal', groupId: nonEssentialGroup.id, userId: null, color: '#06B6D4' },
     ],
   });
 

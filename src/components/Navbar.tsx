@@ -22,6 +22,9 @@ export const Navbar = () => {
         <Link href="/accounts" className="text-sm text-grayNeutral hover:text-primary">
           Accounts
         </Link>
+        <Link href="/categories" className="text-sm text-grayNeutral hover:text-primary">
+          Categories
+        </Link>
         {/* Add more links here in the future */}
       </div>
 

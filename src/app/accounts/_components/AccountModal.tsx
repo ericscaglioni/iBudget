@@ -95,7 +95,10 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
         form={form}
         label="Type"
         name="type"
-        options={accountTypes}
+        options={accountTypes.map((type) => ({
+          id: type,
+          label: type.charAt(0).toUpperCase() + type.slice(1),
+        }))}
         value={selectedType}
         onChange={(val) => setValue('type', val)}
       />
@@ -104,7 +107,10 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
         form={form}
         label="Currency"
         name="currency"
-        options={accountCurrencies} 
+        options={accountCurrencies.map((currency) => ({
+          id: currency,
+          label: currency,
+        }))} 
         value={selectedCurrency}
         onChange={(val) => setValue('currency', val)}
       />
