@@ -33,6 +33,7 @@ model Account {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
+  transactions   Transaction[]
   @@map("accounts")
 }
 
@@ -50,16 +51,41 @@ model CategoryGroup {
 }
 
 model Category {
-  id        String     @id @default(uuid())
-  userId    String?    // null = default category
-  name      String
-  color     String     // hex color
-  groupId   String
-  isSystem  Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id           String     @id @default(uuid())
+  userId       String?    // null = default category
+  name         String
+  color        String     // hex color
+  groupId      String
+  isSystem     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  group     CategoryGroup @relation(fields: [groupId], references: [id])
+  group       CategoryGroup @relation(fields: [groupId], references: [id])
+  transactions Transaction[]
 
   @@map("categories")
 }
+
+enum TransactionType {
+  income
+  expense
+}
+
+model Transaction {
+  id          String    @id @default(uuid()) // ✅ use uuid
+  userId      String
+  accountId   String
+  categoryId  String?   // nullable for transfers/incomes
+  type        TransactionType
+  amount      Float
+  description String
+  date        DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  account     Account   @relation(fields: [accountId], references: [id])
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  @@map("transactions")
+}
+
