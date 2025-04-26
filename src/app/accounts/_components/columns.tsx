@@ -1,8 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Account } from "@prisma/client";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
-import { Button } from "@/components/ui";
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { Button, Icon } from "@/components/ui";
+
 import { CurrencyCell, DateCell } from "@/components/utils/components";
 
 type ActionsProps = {
@@ -21,14 +21,14 @@ export const accountColumns = ({ onEdit, onDelete }: ActionsProps): ColumnDef<Ac
           size="sm"
           onClick={() => onEdit(row.original)}
         >
-          <PencilSquareIcon className="h-4 w-4" />
+          <Icon name="edit" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onDelete(row.original)}
         >
-          <TrashIcon className="h-4 w-4" />
+          <Icon name="delete" />
         </Button>
       </div>
     ),

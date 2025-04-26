@@ -1,27 +1,46 @@
 "use client";
 
 import { PageShell } from "@/components";
+import { ConfirmationModal } from "@/components/ui";
+import { categoryService } from "@/lib/client/services";
+import { Category } from "@prisma/client";
 import { useState } from "react";
 import { CategoryGroupWithCategories } from "../types";
-import { CategoryModal, CategoryList } from "./";
-import { Category } from "@prisma/client";
+import { CategoryList, CategoryModal } from "./";
+import { useRouter } from "next/navigation";
 
 interface Props {
   groups: CategoryGroupWithCategories[];
 };
 
 export const CategoriesPageShell = ({ groups }: Props) => {
-  const [openModal, setOpenModal] = useState(false);
+  const router = useRouter();
+  
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDelete, setOpenDeleteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
+  const handleCreate = () => {
+    setSelectedCategory(null);
+    setOpenEditModal(true);
+  };
 
   const handleEdit = (category: Category) => {
     setSelectedCategory(category);
-    setOpenModal(true);
+    setOpenEditModal(true);
   };
 
-  const handleCreate = () => {
+  const handleDelete = (category: Category) => {
+    setSelectedCategory(category);
+    setOpenDeleteModal(true);
+  }
+
+  const confirmDelete = async () => {
+    if (!selectedCategory) return;
+
+    await categoryService.deleteCategory(selectedCategory.id);
+    router.refresh();
     setSelectedCategory(null);
-    setOpenModal(true);
   };
 
   return (
@@ -35,12 +54,21 @@ export const CategoriesPageShell = ({ groups }: Props) => {
         onClick: handleCreate,
       }} 
     >
-      <CategoryList groups={groups} onEdit={handleEdit} />
+      <CategoryList groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
+
       <CategoryModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
         groups={groups}
         category={selectedCategory ?? undefined}
+      />
+      
+      <ConfirmationModal
+        open={openDelete}
+        onClose={() => setOpenDeleteModal(false)}
+        title="Delete Category"
+        description={`Are you sure you want to delete ${selectedCategory?.name}? This action cannot be undone.`}
+        onConfirm={confirmDelete}
       />
     </PageShell>
   );

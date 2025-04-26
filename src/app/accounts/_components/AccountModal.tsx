@@ -8,10 +8,16 @@ import {
 } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Account, AccountType } from "@prisma/client";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { CreateAccountInput, createAccountSchema } from "./schema";
-import { useEffect } from "react";
+
+const DEFAULT_VALUES = {
+  name: "",
+  type: "cash",
+  currency: "USD",
+  initialBalance: "0",
+};
 
 type Props = {
   open: boolean;
@@ -20,18 +26,9 @@ type Props = {
 };
 
 export const AccountModal = ({ open, onClose, account }: Props) => {
-  const router = useRouter();
-
-  const isEdit = !!account;
-
   const form = useForm<CreateAccountInput>({
     resolver: zodResolver(createAccountSchema),
-    defaultValues: {
-      name: "",
-      type: "cash",
-      currency: "USD",
-      initialBalance: "0",
-    },
+    defaultValues: DEFAULT_VALUES,
   });
 
   const { reset, watch, setValue } = form;
@@ -46,7 +43,7 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
         initialBalance: String(account.initialBalance),
       });
     } else {
-      reset();
+      reset(DEFAULT_VALUES);
     }
   }, [account, reset]);
 
@@ -66,13 +63,13 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
       initialBalance: parseFloat(data.initialBalance),
     };
 
+    const isEdit = !!account;
     if (isEdit) {
       await accountService.updateAccount(account!.id, payload);
     } else {
       await accountService.createAccount(payload);
     }
 
-    router.refresh();
     onCloseModal();
   };
 
@@ -82,8 +79,10 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
       form={form}
       onSubmit={onSubmit}
       onClose={onCloseModal}
-      title={isEdit ? "Edit Account" : "Create New Account"}
+      title={!!account ? "Edit Account" : "Create New Account"}
       description="Fill in the details to create a new account."
+      toastSuccessMessage="Account saved successfully"
+      toastErrorMessage="Failed to save account"
     >
       <TextInput
         label="Name"

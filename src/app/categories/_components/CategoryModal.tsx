@@ -4,7 +4,6 @@ import { ColorInput, ComboboxField, FormModal, TextInput } from "@/components/ui
 import { categoryService } from "@/lib/client/services";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, CategoryGroup } from "@prisma/client";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { CategoryInput, categorySchema } from "./schema";
@@ -23,8 +22,6 @@ type Props = {
 };
 
 export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
-  const router = useRouter();
-
   const form = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
     defaultValues: DEFAULT_VALUES,
@@ -58,7 +55,6 @@ export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
       await categoryService.createCategory(data);
     }
 
-    router.refresh();
     onCloseModal();
   };
 
@@ -70,6 +66,8 @@ export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
       form={form}
       title={!!category ? "Edit Category" : "New Category"}
       description="Choose a name, color, and group for your category."
+      toastSuccessMessage="Category saved successfully"
+      toastErrorMessage="Failed to save category"
     >
       <TextInput name="name" label="Name" form={form} />
 

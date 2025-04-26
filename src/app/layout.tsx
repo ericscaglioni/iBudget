@@ -2,6 +2,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Toaster } from "sonner";
+import { LoadingProvider } from "@/lib/hooks/useLoading";
+import { LoadingOverlay } from "@/components/ui";
 
 export const metadata = {
   title: "iBudget",
@@ -17,13 +19,16 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className="font-sans bg-background text-slateDark" suppressHydrationWarning>
-          <Navbar />
-          <Toaster
-            position="top-right"
-          />
-          <main className="min-h-screen">
-            {children}
-          </main>
+          <LoadingProvider>
+            <Navbar />
+            <Toaster
+              position="top-right"
+            />
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <LoadingOverlay />
+          </LoadingProvider>
         </body>
       </html>
     </ClerkProvider>

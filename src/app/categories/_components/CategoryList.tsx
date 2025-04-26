@@ -1,15 +1,17 @@
 "use client";
 
-import { Button } from "@/components/ui";
-import { CategoryGroupWithCategories } from "../types";
+import { Button, Icon } from "@/components/ui";
+import { TrashIcon } from "@heroicons/react/20/solid";
 import { Category } from "@prisma/client";
+import { CategoryGroupWithCategories } from "../types";
 
 interface Props {
   groups: CategoryGroupWithCategories[];
   onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
 }
 
-export const CategoryList = ({ groups, onEdit }: Props) => {
+export const CategoryList = ({ groups, onEdit, onDelete}: Props) => {
   return (
     groups.map((group) => (
       <div key={group.id} className="mb-8">
@@ -29,14 +31,23 @@ export const CategoryList = ({ groups, onEdit }: Props) => {
                   <span>{cat.name}</span>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onEdit(cat)}
-                >
-                  Edit
-                </Button>
-                {/* We'll add edit/delete buttons here */}
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onEdit(cat)}
+                  >
+                    <Icon name="edit" />
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onDelete(cat)}
+                  >
+                    <Icon name="delete" />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

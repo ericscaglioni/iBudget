@@ -3,6 +3,8 @@ export * from './ColorInput';
 export * from './ComboboxField';
 export * from './ConfirmationModal';
 export * from './FormModal';
+export * from './Icon';
+export * from './LoadingOverlay';
 export * from './Modal';
 export * from './Table';
 export * from './TextInput';

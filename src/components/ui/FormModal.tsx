@@ -1,19 +1,25 @@
 'use client';
 
+import { useLoading } from '@/lib/hooks/useLoading';
+import { useRouter } from 'next/navigation';
 import { ReactNode } from 'react';
-import { Modal } from './Modal';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
-import clsx from 'clsx';
 import { Button } from './Button';
+import { Modal } from './Modal';
+import { showError, showSuccess } from '@/lib/utils/toast';
 
 type Props<TData extends FieldValues> = {
   form: UseFormReturn<TData>;
   open: boolean;
-  onSubmit: (data: TData) => void;
+  onSubmit: (data: TData) => Promise<void>;
   onClose: () => void;
   title: string;
   children: ReactNode;
   description?: string;
+  refreshOnSubmit?: boolean;
+  showToast?: boolean;
+  toastSuccessMessage?: string;
+  toastErrorMessage?: string;
 };
 
 export const FormModal = <TData extends FieldValues,>({
@@ -24,12 +30,38 @@ export const FormModal = <TData extends FieldValues,>({
   title,
   children,
   description,
+  refreshOnSubmit = true,
+  showToast = true,
+  toastSuccessMessage = 'Operation successful',
+  toastErrorMessage = 'Operation failed',
 }: Props<TData>) => {
+  const router = useRouter();
+
+  const { startLoading, stopLoading } = useLoading();
+
   const { formState: { isSubmitting, isDirty } } = form;
   
+  const onFormSubmit = async (data: TData) => {
+    try {
+      startLoading();
+      await onSubmit(data);
+
+      if (refreshOnSubmit) {
+        router.refresh();
+      }
+      if (showToast) {
+        showSuccess(toastSuccessMessage);
+      }
+    } catch (error) {
+      showError(error instanceof Error ? error.message : toastErrorMessage);
+    } finally {
+      stopLoading();
+    }
+  }
+
   return (
     <Modal open={open} onClose={onClose} title={title} description={description}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
         {children}
 
         <div className="pt-4 flex justify-end gap-4">
@@ -42,18 +74,6 @@ export const FormModal = <TData extends FieldValues,>({
           >
             Cancel
           </Button>
-          {/* <button
-            type="submit"
-            disabled={isSubmitting || !isDirty}
-            className={clsx(
-              'bg-primary text-white px-4 py-2 rounded-md shadow hover:bg-primary/90 transition',
-              {
-                'opacity-50 cursor-not-allowed': isSubmitting || !isDirty,
-              }
-            )}
-          >
-            {isSubmitting ? 'Saving...' : 'Save'}
-          </button> */}
           <Button
             type='submit'
             variant='primary'
