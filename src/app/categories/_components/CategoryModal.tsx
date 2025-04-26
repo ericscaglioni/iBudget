@@ -69,7 +69,12 @@ export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
       toastSuccessMessage="Category saved successfully"
       toastErrorMessage="Failed to save category"
     >
-      <TextInput name="name" label="Name" form={form} />
+      <TextInput
+        name="name"
+        label="Name"
+        form={form}
+        inputProps={{ disabled: !!category?.isSystem }}
+      />
 
       <ComboboxField
         form={form}

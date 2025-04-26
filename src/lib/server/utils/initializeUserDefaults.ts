@@ -20,19 +20,21 @@ export const initializeUserDefaults = async (userId: string) => {
     const userGroup = await prisma.categoryGroup.create({
       data: {
         name: group.name,
+        isSystem: group.isSystem,
         userId,
       },
     });
 
     // Copy each category under this group
     await Promise.all(
-      group.categories.map((cat) =>
+      group.categories.map(({ id, ...cat }) =>
         prisma.category.create({
           data: {
             name: cat.name,
             color: cat.color,
             groupId: userGroup.id,
             userId,
+            isSystem: cat.isSystem,
           },
         })
       )

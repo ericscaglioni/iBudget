@@ -8,7 +8,7 @@ const CategoriesPage = async () =>{
   if (!userId) return notFound();
 
   const groups = await prisma.categoryGroup.findMany({
-    where: { userId },
+    where: { userId, isSystem: false },
     include: {
       categories: {
         where: { userId },

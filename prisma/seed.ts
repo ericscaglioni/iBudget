@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding default category groups and categories...');
 
-  await prisma.category.deleteMany({ where: { userId: null } });
-  await prisma.categoryGroup.deleteMany({ where: { userId: null } });
+  await prisma.category.deleteMany();
+  await prisma.categoryGroup.deleteMany();
 
   const essentialGroup = await prisma.categoryGroup.create({
     data: { name: 'Essential', userId: null },
@@ -35,6 +35,25 @@ async function main() {
       { name: 'Subscriptions', groupId: nonEssentialGroup.id, userId: null, color: '#6B7280' },
       { name: 'Personal', groupId: nonEssentialGroup.id, userId: null, color: '#06B6D4' },
     ],
+  });
+
+  const systemGroup = await prisma.categoryGroup.create({
+    data: {
+      name: "System",
+      userId: null,
+      isSystem: true,
+    },
+  });
+
+  // 🚀 Add Transfer System Category
+  await prisma.category.create({
+    data: {
+      name: 'Transfer',
+      color: '#6366F1', // Indigo
+      groupId: systemGroup.id,
+      userId: null,
+      isSystem: true,
+    },
   });
 
   console.log('✅ Done seeding defaults!');

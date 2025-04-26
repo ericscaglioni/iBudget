@@ -44,6 +44,7 @@ export const CategoryList = ({ groups, onEdit, onDelete}: Props) => {
                     size="sm"
                     variant="ghost"
                     onClick={() => onDelete(cat)}
+                    disabled={cat.isSystem}
                   >
                     <Icon name="delete" />
                   </Button>

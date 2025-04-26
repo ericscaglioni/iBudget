@@ -8,6 +8,7 @@ import {
   ComboboxOptions,
 } from '@headlessui/react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import { useState } from 'react';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 
 type Option = {
@@ -32,8 +33,16 @@ export const ComboboxField = <TData extends FieldValues>({
   onChange,
   form,
 }: Props<TData>) => {
+  const [query, setQuery] = useState("");
+  
   const { formState: { errors } } = form;
   const error = errors[name]?.message as string | undefined;
+
+  const filteredOptions = query === ""
+    ? options
+    : options.filter((opt) =>
+        opt.label.toLowerCase().includes(query.toLowerCase())
+      );
 
   const selected = options.find((opt) => opt.id === value);
 
@@ -44,14 +53,14 @@ export const ComboboxField = <TData extends FieldValues>({
         <div className="relative">
           <ComboboxInput
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
             displayValue={() => selected?.label ?? ''}
           />
           <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
             <ChevronDownIcon className="size-4 fill-black/60 group-data-[hover]:fill-black" />
           </ComboboxButton>
           <ComboboxOptions className="absolute z-10 mt-1 w-full bg-white border rounded shadow-md max-h-60 overflow-auto text-sm">
-            {options.map((option) => (
+            {filteredOptions.map((option) => (
               <ComboboxOption
                 key={option.id}
                 value={option.id}
