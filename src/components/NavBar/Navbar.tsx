@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
+import { navItems } from "./constants";
 
 export const Navbar = () => {
   const { signOut } = useClerk();
@@ -19,13 +20,18 @@ export const Navbar = () => {
         <Link href="/accounts" className="text-xl font-bold text-primary">
           iBudget
         </Link>
-        <Link href="/accounts" className="text-sm text-grayNeutral hover:text-primary">
-          Accounts
-        </Link>
-        <Link href="/categories" className="text-sm text-grayNeutral hover:text-primary">
-          Categories
-        </Link>
-        {/* Add more links here in the future */}
+        {/* Navigation Links */}
+        {navItems.map((item) => (
+          <Link
+            key={item.title}
+            href={item.href}
+            className={`text-sm text-grayNeutral hover:text-primary ${
+              pathname === item.href ? "text-primary font-semibold" : ""
+            }`}
+          >
+            {item.title}
+          </Link>
+        ))}
       </div>
 
       {/* RIGHT SIDE: Sign out */}

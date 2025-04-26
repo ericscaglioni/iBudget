@@ -1,9 +1,9 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Toaster } from "sonner";
-import { LoadingProvider } from "@/lib/hooks/useLoading";
+import { Navbar } from "@/components/NavBar";
 import { LoadingOverlay } from "@/components/ui";
+import { LoadingProvider } from "@/lib/hooks/useLoading";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner";
+import "./globals.css";
 
 export const metadata = {
   title: "iBudget",
