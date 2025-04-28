@@ -2,6 +2,7 @@
 
 import { InputHTMLAttributes } from 'react';
 import { FieldValues, Path, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
+import { Input } from './Input';
 
 type Props<TData extends FieldValues> = {
   form: UseFormReturn<TData>;
@@ -9,9 +10,9 @@ type Props<TData extends FieldValues> = {
   name: Path<TData>;
   className?: string;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
-} & Partial<UseFormRegisterReturn>;
+};
 
-export const TextInput = <TData extends FieldValues,>({
+export const FormTextInput = <TData extends FieldValues,>({
   form,
   label,
   name,
@@ -23,11 +24,10 @@ export const TextInput = <TData extends FieldValues,>({
   
   return (
     <div className={className}>
-      <label className="block text-sm font-medium mb-1">{label}</label>
-      <input
+      <Input
+        label={label}
         {...form.register(name)}
         {...inputProps}
-        className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>

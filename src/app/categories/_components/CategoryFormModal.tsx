@@ -1,6 +1,6 @@
 "use client";
 
-import { ColorInput, ComboboxField, FormModal, TextInput } from "@/components/ui";
+import { ColorInput, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { categoryService } from "@/lib/client/services";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, CategoryGroup } from "@prisma/client";
@@ -21,7 +21,7 @@ type Props = {
   category?: Category;
 };
 
-export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
+export const CategoryFormModal = ({ open, onClose, category, groups }: Props) => {
   const form = useForm<CategoryInput>({
     resolver: zodResolver(categorySchema),
     defaultValues: DEFAULT_VALUES,
@@ -69,19 +69,19 @@ export const CategoryModal = ({ open, onClose, category, groups }: Props) => {
       toastSuccessMessage="Category saved successfully"
       toastErrorMessage="Failed to save category"
     >
-      <TextInput
+      <FormTextInput
         name="name"
         label="Name"
         form={form}
         inputProps={{ disabled: !!category?.isSystem }}
       />
 
-      <ComboboxField
+      <FormCombobox
         form={form}
         name="groupId"
         label="Group"
         options={groups.map((g) => ({
-          id: g.id,
+          value: g.id,
           label: g.name,
         }))}
         value={selectedGroupId}

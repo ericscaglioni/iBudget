@@ -1,22 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { notFound } from "next/navigation";
+import { categoryService } from "@/lib/server/services";
 import { CategoriesPageShell } from "./_components";
 
 const CategoriesPage = async () =>{
-  const { userId } = await auth();
-  if (!userId) return notFound();
-
-  const groups = await prisma.categoryGroup.findMany({
-    where: { userId, isSystem: false },
-    include: {
-      categories: {
-        where: { userId },
-        orderBy: { name: "asc" },
-      },
-    },
-    orderBy: { name: "asc" },
-  });
+  const groups = await categoryService.listCategoryGroups();
 
   return (
     <CategoriesPageShell groups={groups} />

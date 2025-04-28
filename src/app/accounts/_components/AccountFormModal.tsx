@@ -1,6 +1,6 @@
 "use client";
 
-import { ComboboxField, FormModal, TextInput } from "@/components/ui";
+import { FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { accountService } from "@/lib/client/services";
 import {
   accountCurrencies,
@@ -25,7 +25,7 @@ type Props = {
   account?: Account;
 };
 
-export const AccountModal = ({ open, onClose, account }: Props) => {
+export const AccountFormModal = ({ open, onClose, account }: Props) => {
   const form = useForm<CreateAccountInput>({
     resolver: zodResolver(createAccountSchema),
     defaultValues: DEFAULT_VALUES,
@@ -84,37 +84,37 @@ export const AccountModal = ({ open, onClose, account }: Props) => {
       toastSuccessMessage="Account saved successfully"
       toastErrorMessage="Failed to save account"
     >
-      <TextInput
+      <FormTextInput
         label="Name"
         name="name"
         form={form}
       />
 
-      <ComboboxField
+      <FormCombobox
         form={form}
         label="Type"
         name="type"
         options={accountTypes.map((type) => ({
-          id: type,
+          value: type,
           label: type.charAt(0).toUpperCase() + type.slice(1),
         }))}
         value={selectedType}
         onChange={(val) => setValue('type', val)}
       />
 
-      <ComboboxField
+      <FormCombobox
         form={form}
         label="Currency"
         name="currency"
         options={accountCurrencies.map((currency) => ({
-          id: currency,
+          value: currency,
           label: currency,
         }))} 
         value={selectedCurrency}
         onChange={(val) => setValue('currency', val)}
       />
 
-      <TextInput
+      <FormTextInput
         label="Initial Balance"
         name="initialBalance"
         form={form}

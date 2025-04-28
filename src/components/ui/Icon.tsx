@@ -1,8 +1,12 @@
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
 
 const iconMap = {
   edit: PencilSquareIcon,
   delete: TrashIcon,
+  arrowLeft: ArrowLeftIcon,
+  arrowRight: ArrowRightIcon,
+  checkMark: CheckIcon,
+  chevronDownIcon: ChevronDownIcon,
 };
 
 export type IconType = keyof typeof iconMap;

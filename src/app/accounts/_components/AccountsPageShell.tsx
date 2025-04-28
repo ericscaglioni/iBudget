@@ -4,13 +4,16 @@ import { PageShell } from "@/components";
 import { Account } from "@prisma/client";
 import { useState } from "react";
 import { AccountsTable } from "./";
-import { AccountModal } from "./AccountModal";
+import { AccountFormModal } from "./AccountFormModal";
 
 interface Props {
   accounts: Account[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 };
 
-export const AccountsPageShell = ({ accounts }: Props) => {
+export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Props) => {
   const [openModal, setOpenModal] = useState(false);
 
   return (
@@ -24,8 +27,13 @@ export const AccountsPageShell = ({ accounts }: Props) => {
         onClick: () => setOpenModal(true),
       }} 
     >
-      <AccountsTable data={accounts} />
-      <AccountModal open={openModal} onClose={() => setOpenModal(false)} />
+      <AccountsTable
+        data={accounts}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+      />
+      <AccountFormModal open={openModal} onClose={() => setOpenModal(false)} />
     </PageShell>
   );
 };

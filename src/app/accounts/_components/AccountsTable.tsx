@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { Account } from '@prisma/client';
-import { Table } from '@/components/ui/Table';
-import { accountColumns } from './columns';
-import { AccountModal } from './AccountModal';
-import { accountService } from '@/lib/client/services';
-import { useRouter } from 'next/navigation';
 import { ConfirmationModal } from '@/components/ui';
+import { Table } from '@/components/ui/Table/Table';
+import { accountService } from '@/lib/client/services';
+import { accountCurrencies, accountTypes } from '@/lib/constants';
+import { Account } from '@prisma/client';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { AccountFormModal } from './AccountFormModal';
+import { accountColumns } from './columns';
 
-export const AccountsTable = ({ data }: { data: Account[] }) => {
+interface Props {
+  data: Account[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export const AccountsTable = ({ data, totalCount, page, pageSize }: Props) => {
   const router = useRouter();
   
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -31,10 +39,36 @@ export const AccountsTable = ({ data }: { data: Account[] }) => {
           onEdit: setSelectedAccount,
           onDelete: (account) => setConfirmDelete(account),
         })}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        basePath='/accounts'
+        enablePagination
+        enableSorting
+        filtersConfig={[
+          {
+            type: "combobox",
+            label: "Type",
+            name: "type",
+            options: accountTypes.map((type) => ({
+              label: type.charAt(0).toUpperCase() + type.slice(1),
+              value: type,
+            })),
+          },
+          {
+            type: "combobox",
+            label: "Currency",
+            name: "currency",
+            options: accountCurrencies.map((currency) => ({
+              label: currency.toUpperCase(),
+              value: currency,
+            })),
+          },
+        ]}
       />
 
       {selectedAccount && (
-        <AccountModal
+        <AccountFormModal
           open={true}
           onClose={() => setSelectedAccount(null)}
           account={selectedAccount}

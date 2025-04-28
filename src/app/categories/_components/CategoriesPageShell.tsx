@@ -6,7 +6,7 @@ import { categoryService } from "@/lib/client/services";
 import { Category } from "@prisma/client";
 import { useState } from "react";
 import { CategoryGroupWithCategories } from "../types";
-import { CategoryList, CategoryModal } from "./";
+import { CategoryList, CategoryFormModal } from "./";
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -56,7 +56,7 @@ export const CategoriesPageShell = ({ groups }: Props) => {
     >
       <CategoryList groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
 
-      <CategoryModal
+      <CategoryFormModal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         groups={groups}

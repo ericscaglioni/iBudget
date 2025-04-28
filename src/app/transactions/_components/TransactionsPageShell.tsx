@@ -3,12 +3,26 @@
 import { PageShell } from "@/components";
 import { useState } from "react";
 import { TransactionWithDetails } from "../types";
+import { TransactionsTable } from "./TransactionsTable";
+import { ComboboxOption } from "@/components/ui";
 
 interface Props {
   transactions: TransactionWithDetails[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  accountOptions: ComboboxOption[];
+  categoryOptions: ComboboxOption[];
 }
 
-export const TransactionsPageShell = ({ transactions }: Props) => {
+export const TransactionsPageShell = ({
+  transactions,
+  totalCount,
+  page,
+  pageSize,
+  accountOptions,
+  categoryOptions,
+}: Props) => {
   const [openModal, setOpenModal] = useState(false);
 
   const handleCreate = () => {
@@ -26,10 +40,16 @@ export const TransactionsPageShell = ({ transactions }: Props) => {
         onClick: handleCreate,
       }}
     >
-      <h1>test</h1>
-      {/* <TransactionsTable data={transactions} />
+      <TransactionsTable
+        data={transactions}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        accountOptions={accountOptions}
+        categoryOptions={categoryOptions}
+      />
 
-      <TransactionModal
+      {/* <TransactionModal
         open={openModal}
         onClose={() => setOpenModal(false)}
       /> */}
