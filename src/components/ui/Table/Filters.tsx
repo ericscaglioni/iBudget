@@ -18,9 +18,10 @@ interface Props {
   filtersConfig: TableFilter[];
   searchParams: URLSearchParams;
   basePath?: string;
+  startTransition: (callback: () => void) => void;
 }
 
-export const Filters = ({ filtersConfig, basePath, searchParams }: Props) => {
+export const Filters = ({ filtersConfig, basePath, searchParams, startTransition }: Props) => {
   const router = useRouter();
   const [pendingTextFilters, setPendingTextFilters] = useState<Record<string, string>>({});
 
@@ -33,7 +34,10 @@ export const Filters = ({ filtersConfig, basePath, searchParams }: Props) => {
     } else {
       params.delete(name);
     }
-    router.push(`${basePath}?${params.toString()}`);
+    
+    startTransition(() => {
+      router.push(`${basePath}?${params.toString()}`);
+    });
   };
 
   const handleTextChange = (name: string, value: string) => {

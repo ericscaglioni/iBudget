@@ -9,4 +9,5 @@ export * from './Icon';
 export * from './Input';
 export * from './LoadingOverlay';
 export * from './Modal';
+export * from './Spinner';
 export * from './Table/Table';

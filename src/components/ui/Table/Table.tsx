@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/ui";
 import {
   flexRender,
   getCoreRowModel,
@@ -9,6 +10,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filters, TableFilter } from "./Filters";
 import { Pagination } from "./Pagination";
+import { useTransition } from "react";
 
 type Props<TData> = {
   data: TData[];
@@ -35,6 +37,7 @@ export function Table<TData>({
 }: Props<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const table = useReactTable({
     data,
@@ -47,12 +50,6 @@ export function Table<TData>({
 
   const pageCount = Math.ceil(totalCount / pageSize);
 
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    router.push(`${basePath}?${params.toString()}`);
-  };
-
   const handleSortChange = (columnId: string) => {
     const params = new URLSearchParams(searchParams.toString());
     const currentSortField = params.get("sortField");
@@ -64,7 +61,9 @@ export function Table<TData>({
     params.set("sortField", columnId);
     params.set("sortOrder", nextOrder);
 
-    router.push(`${basePath}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${basePath}?${params.toString()}`);
+    });
   };
 
   return (
@@ -75,9 +74,15 @@ export function Table<TData>({
           filtersConfig={filtersConfig}
           basePath={basePath}
           searchParams={searchParams}
+          startTransition={startTransition}
         />
       )}
       <div className="relative overflow-x-auto overflow-y-visible rounded-md border border-gray-200">
+        {isPending && (
+          <div className="absolute inset-0 z-10 bg-white/70 flex items-center justify-center">
+            <Spinner />
+          </div>
+        )}
         {/* 🚀 TABLE */}
         <table className="table-auto w-full min-w-full bg-white text-sm text-left">
           <thead className="bg-gray-100">
