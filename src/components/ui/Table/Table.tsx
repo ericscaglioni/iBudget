@@ -1,6 +1,6 @@
 "use client";
 
-import { Spinner } from "@/components/ui";
+import { Icon, Spinner } from "@/components/ui";
 import {
   flexRender,
   getCoreRowModel,
@@ -94,9 +94,24 @@ export function Table<TData>({
                     className="px-4 py-2 font-medium text-gray-700 cursor-pointer"
                     onClick={() => enableSorting && header.column.getCanSort() && handleSortChange(header.column.id)}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.isPlaceholder ? null : (
+                      // flexRender(header.column.columnDef.header, header.getContext())
+                      <div className="flex items-center gap-1">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {enableSorting && header.column.getCanSort() && (
+                          <>
+                            {searchParams.get("sortField") === header.column.id && (
+                              <span className="text-xs">
+                                <Icon
+                                  name={searchParams.get("sortOrder") === "asc" ? "chevronUp" : "chevronDown"}
+                                  className="w-3 h-3"
+                                />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </th>
                 ))}
               </tr>
