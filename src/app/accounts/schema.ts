@@ -6,7 +6,7 @@ const accountTypesTuple = accountTypes as [string, ...string[]];
 // Ensure accountCurrencies is a tuple
 const accountCurrenciesTuple = accountCurrencies as [string, ...string[]];
 
-export const createAccountSchema = z.object({
+export const AccountFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   type: z.enum(accountTypesTuple),
   currency: z.enum(accountCurrenciesTuple),
@@ -17,4 +17,4 @@ export const createAccountSchema = z.object({
     })
 });
 
-export type CreateAccountInput = z.infer<typeof createAccountSchema>;
+export type AccountFormInput = z.infer<typeof AccountFormSchema>;

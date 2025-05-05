@@ -1,6 +1,9 @@
 import {
+  ArrowDownIcon,
   ArrowLeftIcon,
+  ArrowPathIcon,
   ArrowRightIcon,
+  ArrowUpIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronUpIcon,
@@ -9,13 +12,16 @@ import {
 } from '@heroicons/react/20/solid';
 
 const iconMap = {
-  edit: PencilSquareIcon,
-  delete: TrashIcon,
+  arrowDown: ArrowDownIcon,
   arrowLeft: ArrowLeftIcon,
+  arrowLoop: ArrowPathIcon,
   arrowRight: ArrowRightIcon,
+  arrowUp: ArrowUpIcon,
+  delete: TrashIcon,
   checkMark: CheckIcon,
   chevronDown: ChevronDownIcon,
-  chevronUp: ChevronUpIcon
+  chevronUp: ChevronUpIcon,
+  edit: PencilSquareIcon,
 };
 
 export type IconType = keyof typeof iconMap;

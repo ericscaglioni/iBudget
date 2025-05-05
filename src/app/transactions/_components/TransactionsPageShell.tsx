@@ -1,10 +1,11 @@
 "use client";
 
 import { PageShell } from "@/components";
+import { ComboboxOption } from "@/components/ui";
 import { useState } from "react";
 import { TransactionWithDetails } from "../types";
+import { TransactionFormModal } from "./TransactionFormModal";
 import { TransactionsTable } from "./TransactionsTable";
-import { ComboboxOption } from "@/components/ui";
 
 interface Props {
   transactions: TransactionWithDetails[];
@@ -49,10 +50,12 @@ export const TransactionsPageShell = ({
         categoryOptions={categoryOptions}
       />
 
-      {/* <TransactionModal
+      <TransactionFormModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-      /> */}
+        accountOptions={accountOptions}
+        categoryOptions={categoryOptions}
+      />
     </PageShell>
   );
 };

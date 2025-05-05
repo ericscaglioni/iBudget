@@ -12,6 +12,7 @@ type Props<TData extends FieldValues> = {
   options: ComboboxOption[];
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 };
 
 export const FormCombobox = <TData extends FieldValues>({
@@ -21,6 +22,7 @@ export const FormCombobox = <TData extends FieldValues>({
   value,
   onChange,
   form,
+  disabled = false,
 }: Props<TData>) => {
   const [query, setQuery] = useState("");
   
@@ -34,6 +36,7 @@ export const FormCombobox = <TData extends FieldValues>({
         label={label}
         value={value}
         onChange={onChange}
+        disabled={disabled}
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>

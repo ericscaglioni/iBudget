@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Account, AccountType } from "@prisma/client";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { CreateAccountInput, createAccountSchema } from "./schema";
+import { AccountFormInput, AccountFormSchema } from "../schema";
 
 const DEFAULT_VALUES = {
   name: "",
@@ -26,8 +26,8 @@ type Props = {
 };
 
 export const AccountFormModal = ({ open, onClose, account }: Props) => {
-  const form = useForm<CreateAccountInput>({
-    resolver: zodResolver(createAccountSchema),
+  const form = useForm<AccountFormInput>({
+    resolver: zodResolver(AccountFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -55,7 +55,7 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
     onClose();
   };
 
-  const onSubmit = async (data: CreateAccountInput) => {
+  const onSubmit = async (data: AccountFormInput) => {
     const payload = {
       name: data.name,
       type: data.type as AccountType,
@@ -74,7 +74,7 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
   };
 
   return (
-    <FormModal<CreateAccountInput>
+    <FormModal<AccountFormInput>
       open={open}
       form={form}
       onSubmit={onSubmit}

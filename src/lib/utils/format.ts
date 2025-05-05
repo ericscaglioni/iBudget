@@ -1,4 +1,4 @@
-import dayjs from "./dayjs";
+import { dayjs } from "./dayjs";
 
 export const formatCurrency = (value: number, currency: string) => {
   return new Intl.NumberFormat(undefined, {

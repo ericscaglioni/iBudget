@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, CategoryGroup } from "@prisma/client";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { CategoryInput, categorySchema } from "./schema";
+import { CategoryFormInput, CategoryFormSchema } from "../schema";
 
 const DEFAULT_VALUES = {
   name: "",
@@ -22,8 +22,8 @@ type Props = {
 };
 
 export const CategoryFormModal = ({ open, onClose, category, groups }: Props) => {
-  const form = useForm<CategoryInput>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<CategoryFormInput>({
+    resolver: zodResolver(CategoryFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -47,7 +47,7 @@ export const CategoryFormModal = ({ open, onClose, category, groups }: Props) =>
     onClose();
   };
 
-  const onSubmit = async (data: CategoryInput) => {
+  const onSubmit = async (data: CategoryFormInput) => {
     const isEdit = !!category;
     if (isEdit) {
       await categoryService.updateCategory(category!.id, data);
@@ -59,7 +59,7 @@ export const CategoryFormModal = ({ open, onClose, category, groups }: Props) =>
   };
 
   return (
-    <FormModal<CategoryInput>
+    <FormModal<CategoryFormInput>
       open={open}
       onClose={onCloseModal}
       onSubmit={onSubmit}

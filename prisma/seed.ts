@@ -3,6 +3,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log('🌱 Resetting DB...');
+  await prisma.$executeRaw`TRUNCATE TABLE "accounts" CASCADE;`;
+  await prisma.$executeRaw`TRUNCATE TABLE "transactions" CASCADE;`;
+  console.log('✅ Done resetting DB!');
+
   console.log('🌱 Seeding default category groups and categories...');
 
   await prisma.category.deleteMany();
@@ -34,6 +39,7 @@ async function main() {
       { name: 'Entertainment', groupId: nonEssentialGroup.id, userId: null, color: '#EC4899' },
       { name: 'Subscriptions', groupId: nonEssentialGroup.id, userId: null, color: '#6B7280' },
       { name: 'Personal', groupId: nonEssentialGroup.id, userId: null, color: '#06B6D4' },
+      { name: 'Travel', groupId: nonEssentialGroup.id, userId: null, color: '#A78BFA' },
     ],
   });
 

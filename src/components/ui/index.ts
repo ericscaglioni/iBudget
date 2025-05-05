@@ -1,4 +1,5 @@
 export * from './Button';
+export * from './Chip';
 export * from './ColorInput';
 export * from './Combobox';
 export * from './ConfirmationModal';

@@ -7,7 +7,7 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { useState } from "react";
+import { SelectHTMLAttributes, useState } from "react";
 import { Icon } from "./Icon";
 
 export type ComboboxOption = {
@@ -22,9 +22,10 @@ type Props = {
   placeholder?: string;
   label?: string;
   allValues?: boolean;
+  disabled?: boolean;
 };
 
-export const Combobox = ({ options, value, onChange, placeholder, label, allValues = false }: Props) => {
+export const Combobox = ({ options, value, onChange, placeholder, label, allValues = false, disabled = false }: Props) => {
   const [query, setQuery] = useState("");
 
   const filteredOptions =
@@ -39,7 +40,7 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
   return (
     <div>
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
-      <HeadlessCombobox value={value} onChange={onChange}>
+      <HeadlessCombobox value={value ?? ""} onChange={onChange} disabled={disabled}>
         <div className="relative">
           <ComboboxInput
             className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -48,7 +49,7 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
             placeholder={placeholder}
           />
           <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
-            <Icon name="chevronDownIcon" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
+            <Icon name="chevronDown" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
           </ComboboxButton>
           <ComboboxOptions className="absolute z-10 mt-1 w-full bg-white border rounded shadow-md max-h-60 overflow-auto text-sm">
             {allValues && (

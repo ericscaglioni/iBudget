@@ -1,27 +1,18 @@
 import { del, patch, post } from "@/lib/api/client";
-import type { AccountType } from "@prisma/client";
+import type { Account } from "@prisma/client";
 
-export const createAccount = async (data: {
-  name: string;
-  type: AccountType;
-  currency: string;
-  initialBalance: number;
-}) => {
-  return post("/api/accounts", data);
+const accountsPath = "/api/accounts";
+
+type AccountPayload = Omit<Account, "id" | "userId" | "createdAt" | "updatedAt">;
+
+export const createAccount = async (data: AccountPayload) => {
+  return post(accountsPath, data);
 };
 
-export const updateAccount = async (
-  id: string,
-  data: {
-    name: string;
-    type: AccountType;
-    currency: string;
-    initialBalance: number;
-  }
-) => {
-  return patch(`/api/accounts/${id}`, data);
+export const updateAccount = async (id: string, data: AccountPayload) => {
+  return patch(`${accountsPath}/${id}`, data);
 };
 
 export const deleteAccount = async (id: string) => {
-  return del(`/api/accounts/${id}`);
+  return del(`${accountsPath}/${id}`);
 };

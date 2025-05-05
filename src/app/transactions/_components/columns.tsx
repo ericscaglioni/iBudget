@@ -1,12 +1,29 @@
+import { Chip, Icon } from "@/components/ui";
+import { CurrencyCell, DateCell } from "@/components/utils/components";
+import { TRANSACTION_TYPE_CONFIG } from "@/lib/constants";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionWithDetails } from "../types";
-import { formatCurrency, formatDate } from "@/lib/utils/format";
 
 export const columns: ColumnDef<TransactionWithDetails>[] = [
   {
     accessorKey: "date",
     header: "Date",
-    cell: ({ getValue }) => formatDate(getValue<string>()),
+    cell: ({ getValue }) => <DateCell value={getValue<string>()} />,
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }) => {
+      const type = row.original.type;
+      const config = TRANSACTION_TYPE_CONFIG[type];
+      return (
+        <Chip
+          label={config.label}
+          color={config.color}
+          icon={<Icon name={config.icon} className="w-3.5 h-3.5" />}
+        />
+      );
+    },
   },
   {
     accessorKey: "description",
@@ -20,14 +37,27 @@ export const columns: ColumnDef<TransactionWithDetails>[] = [
   {
     accessorKey: "category.name",
     header: "Category",
-    cell: ({ row }) => row.original.category?.name ?? "-",
+    cell: ({ row }) => {
+      const category = row.original.category;
+      return category
+        ? (
+          <Chip
+            label={category.name}
+            color={category.color}
+          />
+        )
+        : "-";
+    },
   },
   {
     accessorKey: "amount",
     header: "Amount",
     cell: ({ getValue, row }) => (
       <div className="text-end">
-        {formatCurrency(getValue<number>(), row.original.account.currency)}
+        <CurrencyCell
+          value={getValue<number>()}
+          currency={row.original.account.currency}
+        />
       </div>
     ),
   },

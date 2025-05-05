@@ -44,6 +44,7 @@ export const FormModal = <TData extends FieldValues,>({
   const onFormSubmit = async (data: TData) => {
     try {
       startLoading();
+      
       await onSubmit(data);
 
       if (refreshOnSubmit) {
@@ -53,7 +54,7 @@ export const FormModal = <TData extends FieldValues,>({
         showSuccess(toastSuccessMessage);
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : toastErrorMessage);
+      showError((error instanceof Error && error.message) ? error.message : toastErrorMessage);
     } finally {
       stopLoading();
     }
