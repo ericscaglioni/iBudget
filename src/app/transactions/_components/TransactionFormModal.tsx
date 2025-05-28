@@ -1,6 +1,6 @@
 "use client";
 
-import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
+import { ComboboxOption, FormModal, FormTextInput } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
 import { dayjs } from "@/lib/utils/dayjs";
@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, TransactionFormSchema } from "../schema";
 import { TransactionWithDetails } from "../types";
+import { FormFieldsByType } from "./FormFieldsByType";
 
 const getDefaultValues = (type: TransactionTypeEnum) => ({
   type,
@@ -40,65 +41,87 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
 
   const { reset } = form;
 
+  const loadTransferTransaction = async (transaction: TransactionWithDetails) => {
+    const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
+    setMode(TransactionTypeEnum.transfer);
+    form.reset({
+      amount: String(transaction.amount),
+      date: dayjs(transaction.date).format("YYYY-MM-DD"),
+      description: transaction.description,
+      type: TransactionTypeEnum.transfer,
+      fromAccountId: transaction.accountId,
+      toAccountId: transferTransaction.accountId,
+    });
+  }
+
+  const loadRegularTransaction = async (transaction: TransactionWithDetails) => {
+    const mode = transaction.type as TransactionTypeEnum;
+    setMode(mode);
+    form.reset({
+      amount: String(transaction.amount),
+      date: dayjs(transaction.date).format("YYYY-MM-DD"),
+      description: transaction.description,
+      accountId: transaction.accountId,
+      categoryId: transaction.categoryId!,
+      type: mode,
+    });
+  }
+
+  const resetFormToDefault = () => {
+    setMode(TransactionTypeEnum.expense);
+    form.reset(getDefaultValues(TransactionTypeEnum.expense));
+  };
+
   useEffect(() => {
-    const fetchTransferTransaction = async () => {
-      if (!transaction) return;
-      const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
-
-      setMode(TransactionTypeEnum.transfer);
-      form.reset({
-        amount: String(transaction.amount),
-        date: dayjs(transaction.date).format("YYYY-MM-DD"),
-        description: transaction.description,
-        type: TransactionTypeEnum.transfer,
-        fromAccountId: transaction.accountId,
-        toAccountId: transferTransaction.accountId,
-      });
+    if (!transaction) {
+      resetFormToDefault();
+      return;
     }
-
-    if (transaction) {
-      if (transaction.transferId) {
-        fetchTransferTransaction();
-        return;
-      }
-
-      setMode(transaction.type as TransactionTypeEnum);
-      form.reset({
-        amount: String(transaction.amount),
-        date: dayjs(transaction.date).format("YYYY-MM-DD"),
-        description: transaction.description,
-        accountId: transaction.accountId,
-        categoryId: transaction.categoryId!,
-        type: transaction.type as TransactionTypeEnum,
-      });
+  
+    if (transaction.transferId) {
+      loadTransferTransaction(transaction);
     } else {
-      setMode(TransactionTypeEnum.expense);
-      reset(getDefaultValues(mode));
+      loadRegularTransaction(transaction);
     }
   }, [transaction, reset]);
 
   const onCloseModal = () => {
-    reset(getDefaultValues(mode));
+    resetFormToDefault();
     onClose();
   };
 
-  const onSubmit = async (data: TransactionFormInput) => {
+  const handleCreate = async (data: TransactionFormInput) => {
     const payload = {
       ...data,
       amount: parseFloat(data.amount),
       date: dayjs(data.date).toDate(),
-      description: data.description,
       type: mode,
     };
-  
-    const isEdit = !!transaction;
-    if (isEdit) {
-      await transactionService.updateTransaction(transaction.id, {
-        ...payload,
-        ...(transaction.transferId ? { transferId: transaction.transferId } : {}),
-      });
+
+    await transactionService.createTransaction(payload);
+  }
+
+  const handleUpdate = async (data: TransactionFormInput) => {
+    if (!transaction) return;
+
+    const payload = {
+      ...data,
+      amount: parseFloat(data.amount),
+      date: dayjs(data.date).toDate(),
+      type: mode,
+    };
+
+    await transactionService.updateTransaction(transaction.id, {
+      ...payload,
+      ...(transaction.transferId ? { transferId: transaction.transferId } : {}),
+    });
+  }
+
+  const onSubmit = async (data: TransactionFormInput) => {
+    if (transaction) {
+      await handleUpdate(data);
     } else {
-      await transactionService.createTransaction(payload);
+      await handleCreate(data);
     }
 
     onCloseModal();
@@ -109,8 +132,6 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
     form.setValue("type", newMode);
     form.trigger("type");
   };
-
-  const isTransfer = mode === TransactionTypeEnum.transfer;
 
   return (
     <FormModal
@@ -154,48 +175,12 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
         inputProps={{ type: "date" }}
       />
 
-      {isTransfer ? (
-        <>
-          <FormCombobox
-            form={form}
-            name="fromAccountId"
-            label="From Account"
-            value={form.watch("fromAccountId") ?? ""}
-            onChange={(val) => form.setValue("fromAccountId", val, { shouldDirty: true })}
-            options={accountOptions}
-          />
-          <FormCombobox
-            form={form}
-            name="toAccountId"
-            label="To Account"
-            value={form.watch("toAccountId") ?? ""}
-            onChange={(val) => form.setValue("toAccountId", val, { shouldDirty: true })}
-            disabled={!form.watch("fromAccountId")}
-            options={accountOptions
-              .filter((option) => option.value !== form.watch("fromAccountId"))
-            }
-          />
-        </>
-      ) : (
-        <>
-          <FormCombobox
-            form={form}
-            name="accountId"
-            label="Account"
-            value={form.watch("accountId") ?? ""}
-            onChange={(val) => form.setValue("accountId", val)}
-            options={accountOptions}
-          />
-          <FormCombobox
-            form={form}
-            name="categoryId"
-            label="Category"
-            value={form.watch("categoryId") ?? ""}
-            onChange={(val) => form.setValue("categoryId", val)}
-            options={categoryOptions}
-          />
-        </>
-      )}
+      <FormFieldsByType
+        mode={mode}
+        form={form}
+        accountOptions={accountOptions}
+        categoryOptions={categoryOptions}
+      />
 
       <FormTextInput
         form={form}
