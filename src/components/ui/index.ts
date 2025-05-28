@@ -12,3 +12,4 @@ export * from './LoadingOverlay';
 export * from './Modal';
 export * from './Spinner';
 export * from './Table/Table';
+export * from './DeleteModal';

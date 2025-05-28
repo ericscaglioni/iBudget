@@ -1,7 +1,8 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ComboboxOption, ConfirmationModal } from "@/components/ui";
+import { ComboboxOption, DeleteModal } from "@/components/ui";
+import { transactionService } from "@/lib/client/services";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TransactionWithDetails } from "../types";
@@ -42,7 +43,7 @@ export const TransactionsPageShell = ({
     setOpenTransactionModal(true);
   };
 
-  const handleEdit = (transaction: TransactionWithDetails) => {
+const handleEdit = (transaction: TransactionWithDetails) => {
     setSelectedTransaction(transaction);
     setOpenTransactionModal(true);
   };
@@ -55,7 +56,7 @@ export const TransactionsPageShell = ({
   const confirmDelete = async () => {
     if (!selectedTransaction) return;
 
-    // await transactionService.deleteTransaction(selectedTransaction.id);
+    await transactionService.deleteTransaction(selectedTransaction.id);
     router.refresh();
     setSelectedTransaction(null);
   };
@@ -90,12 +91,12 @@ export const TransactionsPageShell = ({
         transaction={selectedTransaction ?? undefined}
       />
 
-      <ConfirmationModal
+      <DeleteModal
         open={openDeleteModal}
         onClose={handleClose}
-        title="Delete Transaction"
-        description={`Are you sure you want to delete this transaction: ${selectedTransaction?.description}? This action cannot be undone.`}
-        onConfirm={confirmDelete}
+        itemDescription={selectedTransaction?.description ?? ""}
+        onDelete={confirmDelete}
+        modelName="Transaction"
       />
     </PageShell>
   );

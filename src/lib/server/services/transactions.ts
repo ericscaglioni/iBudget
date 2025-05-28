@@ -243,3 +243,30 @@ export const updateTransferTransaction = async (userId: string, props: UpdateTra
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const deleteTransaction = async (userId: string, id: string) => {
+  try {
+    const transaction = await prisma.transaction.findUnique({
+      where: { id, userId },
+    });
+
+    if (!transaction) {
+      return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
+    }
+
+    if (transaction.transferId) {
+      await prisma.transaction.deleteMany({
+        where: { transferId: transaction.transferId },
+      });
+    } else {
+      await prisma.transaction.delete({
+        where: { id, userId },
+      });
+    }
+
+    return NextResponse.json({ message: "Transaction deleted successfully" });
+  } catch (error) {
+    console.error("Transaction deletion failed:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

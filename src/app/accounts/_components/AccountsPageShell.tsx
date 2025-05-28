@@ -1,8 +1,8 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ConfirmationModal } from "@/components/ui";
 import { accountService } from "@/lib/client/services";
+import { DeleteModal } from "@/components/ui";
 import { Account } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -77,12 +77,12 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
         account={selectedAccount ?? undefined}
       />
 
-      <ConfirmationModal
+      <DeleteModal
         open={openDeleteModal}
         onClose={handleClose}
-        onConfirm={confirmDelete}
-        title="Delete Account"
-        description={`Are you sure you want to delete "${selectedAccount?.name}"? This action cannot be undone.`}
+        onDelete={confirmDelete}
+        itemDescription={selectedAccount?.name ?? ""}
+        modelName="Account"
       />
 
     </PageShell>

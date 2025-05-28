@@ -1,7 +1,7 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ConfirmationModal } from "@/components/ui";
+import { ConfirmationModal, DeleteModal } from "@/components/ui";
 import { categoryService } from "@/lib/client/services";
 import { Category } from "@prisma/client";
 import { useState } from "react";
@@ -63,12 +63,12 @@ export const CategoriesPageShell = ({ groups }: Props) => {
         category={selectedCategory ?? undefined}
       />
       
-      <ConfirmationModal
+      <DeleteModal
         open={openDelete}
         onClose={() => setOpenDeleteModal(false)}
-        title="Delete Category"
-        description={`Are you sure you want to delete ${selectedCategory?.name}? This action cannot be undone.`}
-        onConfirm={confirmDelete}
+        itemDescription={selectedCategory?.name ?? ""}
+        modelName="Category"
+        onDelete={confirmDelete}
       />
     </PageShell>
   );
