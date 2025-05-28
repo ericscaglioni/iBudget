@@ -15,7 +15,6 @@ export const TransactionFormSchema = z
     toAccountId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    console.log("🚀 ~ .superRefine ~ data:", data)
     if (data.type === "expense" || data.type === "income") {
       if (!data.accountId) {
         ctx.addIssue({
