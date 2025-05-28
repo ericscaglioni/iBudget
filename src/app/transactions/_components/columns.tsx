@@ -1,10 +1,10 @@
 import { Chip, Icon } from "@/components/ui";
 import { CurrencyCell, DateCell } from "@/components/utils/components";
-import { TRANSACTION_TYPE_CONFIG } from "@/lib/constants";
+import { TRANSACTION_TYPE_CONFIG, TransactionTypeEnum } from "@/lib/constants";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionWithDetails } from "../types";
 
-export const columns: ColumnDef<TransactionWithDetails>[] = [
+export const transactionsColumns: ColumnDef<TransactionWithDetails>[] = [
   {
     accessorKey: "date",
     header: "Date",
@@ -14,8 +14,12 @@ export const columns: ColumnDef<TransactionWithDetails>[] = [
     accessorKey: "type",
     header: "Type",
     cell: ({ row }) => {
-      const type = row.original.type;
-      const config = TRANSACTION_TYPE_CONFIG[type];
+      const { type, transferId } = row.original;
+      
+      const config = transferId
+        ? TRANSACTION_TYPE_CONFIG[TransactionTypeEnum.transfer]
+        : TRANSACTION_TYPE_CONFIG[type];
+
       return (
         <Chip
           label={config.label}
@@ -52,13 +56,18 @@ export const columns: ColumnDef<TransactionWithDetails>[] = [
   {
     accessorKey: "amount",
     header: "Amount",
-    cell: ({ getValue, row }) => (
-      <div className="text-end">
-        <CurrencyCell
-          value={getValue<number>()}
-          currency={row.original.account.currency}
-        />
-      </div>
-    ),
+    cell: ({ getValue, row }) => {
+      const type = row.original.type;
+      const sign = type === TransactionTypeEnum.expense ? -1 : 1;
+      const amount = getValue<number>() * sign;
+      return (
+        <div className="text-end">
+          <CurrencyCell
+            value={amount}
+            currency={row.original.account.currency}
+          />
+        </div>
+      );
+    },
   },
 ];

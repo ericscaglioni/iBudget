@@ -80,6 +80,7 @@ model Transaction {
   amount      Float
   description String
   date        DateTime
+  transferId  String?   // used to link both sides of a transfer
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

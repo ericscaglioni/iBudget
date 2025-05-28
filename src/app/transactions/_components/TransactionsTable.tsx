@@ -1,9 +1,11 @@
 "use client";
 
-import { Table } from "@/components/ui/Table/Table";
-import { TransactionWithDetails } from "../types";
-import { columns } from "./columns";
 import { ComboboxOption } from "@/components/ui";
+import { Table } from "@/components/ui/Table/Table";
+import { getActionColumns } from "@/components/ui/Table/utils/actionColumns";
+import { useState } from "react";
+import { TransactionWithDetails } from "../types";
+import { transactionsColumns } from "./columns";
 
 interface Props {
   data: TransactionWithDetails[];
@@ -12,6 +14,8 @@ interface Props {
   pageSize: number;
   accountOptions: ComboboxOption[];
   categoryOptions: ComboboxOption[];
+  onEdit: (transaction: TransactionWithDetails) => void;
+  onDelete: (transaction: TransactionWithDetails) => void;
 }
 
 export const TransactionsTable = ({
@@ -21,11 +25,17 @@ export const TransactionsTable = ({
   pageSize,
   accountOptions,
   categoryOptions,
+  onEdit,
+  onDelete,
 }: Props) => {
   return (
     <Table
       data={data}
-      columns={columns}
+      columns={getActionColumns({
+        columns: transactionsColumns,
+        onEdit,
+        onDelete,
+      })}
       totalCount={totalCount}
       page={page}
       pageSize={pageSize}

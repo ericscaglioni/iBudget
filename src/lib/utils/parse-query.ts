@@ -8,7 +8,7 @@ export type QueryParams = {
   filters: Record<string, string | undefined>;
 };
 
-export const DEFAULT_PAGE_SIZE = 5;
+export const DEFAULT_PAGE_SIZE = 15;
 
 export const parseQueryParams = async (searchParams: Record<string, string | string[] | undefined>): Promise<QueryParams> => {
   const {

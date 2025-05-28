@@ -1,7 +1,8 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ComboboxOption } from "@/components/ui";
+import { ComboboxOption, ConfirmationModal } from "@/components/ui";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TransactionWithDetails } from "../types";
 import { TransactionFormModal } from "./TransactionFormModal";
@@ -24,10 +25,39 @@ export const TransactionsPageShell = ({
   accountOptions,
   categoryOptions,
 }: Props) => {
-  const [openModal, setOpenModal] = useState(false);
+  const router = useRouter();
+  
+  const [openTransactionModal, setOpenTransactionModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithDetails | null>(null);
+
+  const handleClose = () => {
+    setOpenTransactionModal(false);
+    setOpenDeleteModal(false);
+    setSelectedTransaction(null);
+  };
 
   const handleCreate = () => {
-    setOpenModal(true);
+    setSelectedTransaction(null);
+    setOpenTransactionModal(true);
+  };
+
+  const handleEdit = (transaction: TransactionWithDetails) => {
+    setSelectedTransaction(transaction);
+    setOpenTransactionModal(true);
+  };
+
+  const handleDelete = (transaction: TransactionWithDetails) => {
+    setSelectedTransaction(transaction);
+    setOpenDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedTransaction) return;
+
+    // await transactionService.deleteTransaction(selectedTransaction.id);
+    router.refresh();
+    setSelectedTransaction(null);
   };
 
   return (
@@ -48,13 +78,24 @@ export const TransactionsPageShell = ({
         pageSize={pageSize}
         accountOptions={accountOptions}
         categoryOptions={categoryOptions}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
 
       <TransactionFormModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
+        open={openTransactionModal}
+        onClose={handleClose}
         accountOptions={accountOptions}
         categoryOptions={categoryOptions}
+        transaction={selectedTransaction ?? undefined}
+      />
+
+      <ConfirmationModal
+        open={openDeleteModal}
+        onClose={handleClose}
+        title="Delete Transaction"
+        description={`Are you sure you want to delete this transaction: ${selectedTransaction?.description}? This action cannot be undone.`}
+        onConfirm={confirmDelete}
       />
     </PageShell>
   );

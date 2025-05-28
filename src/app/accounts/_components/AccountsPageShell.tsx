@@ -1,7 +1,10 @@
 "use client";
 
 import { PageShell } from "@/components";
+import { ConfirmationModal } from "@/components/ui";
+import { accountService } from "@/lib/client/services";
 import { Account } from "@prisma/client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AccountsTable } from "./";
 import { AccountFormModal } from "./AccountFormModal";
@@ -14,7 +17,39 @@ interface Props {
 };
 
 export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Props) => {
-  const [openModal, setOpenModal] = useState(false);
+  const router = useRouter();
+
+  const [openAccountModal, setOpenAccountModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+
+  const handleClose = () => {
+    setOpenAccountModal(false);
+    setOpenDeleteModal(false);
+    setSelectedAccount(null);
+  };
+
+  const handleCreate = () => {
+    setOpenAccountModal(true);
+  }
+
+  const handleEdit = (account: Account) => {
+    setSelectedAccount(account);
+    setOpenAccountModal(true);
+  };
+
+  const handleDelete = (account: Account) => {
+    setSelectedAccount(account);
+    setOpenDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedAccount) return;
+
+    await accountService.deleteAccount(selectedAccount.id);
+    router.refresh();
+    setSelectedAccount(null);
+  };
 
   return (
     <PageShell
@@ -24,7 +59,7 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
         text: "+ New Account",
         variant: "primary",
         size: "lg",
-        onClick: () => setOpenModal(true),
+        onClick: handleCreate,
       }} 
     >
       <AccountsTable
@@ -32,8 +67,24 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
         totalCount={totalCount}
         page={page}
         pageSize={pageSize}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
-      <AccountFormModal open={openModal} onClose={() => setOpenModal(false)} />
+
+      <AccountFormModal
+        open={openAccountModal}
+        onClose={handleClose}
+        account={selectedAccount ?? undefined}
+      />
+
+      <ConfirmationModal
+        open={openDeleteModal}
+        onClose={handleClose}
+        onConfirm={confirmDelete}
+        title="Delete Account"
+        description={`Are you sure you want to delete "${selectedAccount?.name}"? This action cannot be undone.`}
+      />
+
     </PageShell>
   );
 };

@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Filters, TableFilter } from "./Filters";
 import { Pagination } from "./Pagination";
 import { useTransition } from "react";
+import clsx from "clsx";
 
 type Props<TData> = {
   data: TData[];
@@ -91,12 +92,18 @@ export function Table<TData>({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-2 font-medium text-gray-700 cursor-pointer"
+                    className={clsx(
+                      "px-4 py-2 font-medium text-gray-700",
+                      header.column.columnDef.meta?.className,
+                      enableSorting && header.column.getCanSort() && "cursor-pointer"
+                    )}
                     onClick={() => enableSorting && header.column.getCanSort() && handleSortChange(header.column.id)}
                   >
                     {header.isPlaceholder ? null : (
-                      // flexRender(header.column.columnDef.header, header.getContext())
-                      <div className="flex items-center gap-1">
+                      <div className={clsx(
+                        "flex items-center gap-1",
+                        header.column.columnDef.meta?.className?.includes("text-center") && "justify-center"
+                      )}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {enableSorting && header.column.getCanSort() && (
                           <>
@@ -121,7 +128,10 @@ export function Table<TData>({
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-2 text-gray-800">
+                  <td key={cell.id} className={clsx(
+                    "px-4 py-2 text-gray-800",
+                    cell.column.columnDef.meta?.className,
+                  )}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

@@ -59,3 +59,18 @@ export const del = async (url: string): Promise<void> => {
     throw err;
   }
 };
+
+export const get = async <TData extends object, TResult = any>(url: string): Promise<TResult> => {
+  try {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
+
+    return res.json();
+  } catch (err) {
+    throw err;
+  }
+};

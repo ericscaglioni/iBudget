@@ -1,39 +1,8 @@
-import { ColumnDef } from "@tanstack/react-table";
-import { Account } from "@prisma/client";
-import { formatCurrency, formatDate } from "@/lib/utils/format";
-import { Button, Icon } from "@/components/ui";
-
 import { CurrencyCell, DateCell } from "@/components/utils/components";
+import { Account } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
 
-type ActionsProps = {
-  onEdit: (account: Account) => void;
-  onDelete: (account: Account) => void;
-};
-
-export const accountColumns = ({ onEdit, onDelete }: ActionsProps): ColumnDef<Account>[] => [
-  {
-    header: () => <div className="text-center">Actions</div>,
-    id: "actions",
-    cell: ({ row }) => (
-      <div className="flex justify-around">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(row.original)}
-        >
-          <Icon name="edit" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(row.original)}
-        >
-          <Icon name="delete" />
-        </Button>
-      </div>
-    ),
-    size: 20,
-  },
+export const accountColumns: ColumnDef<Account>[] = [
   {
     header: "Name",
     accessorKey: "name",
