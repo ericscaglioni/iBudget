@@ -1,6 +1,7 @@
 import { TransactionTypeEnum } from "@/lib/constants";
 import { authHandler } from "@/lib/middlewares";
 import { transactionService } from "@/lib/server/services";
+import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 
 export const POST = authHandler(async ({ userId, request }) => {
   const body = await request.json();
@@ -16,12 +17,14 @@ export const POST = authHandler(async ({ userId, request }) => {
     date,
   } = body;
 
+  const sanitizedDescription = sanitizeFilterInput(description);
+
   if (type === TransactionTypeEnum.transfer) {
     return await transactionService.createTransferTransaction(userId, {
       fromAccountId,
       toAccountId,
       amount,
-      description,
+      description: sanitizedDescription,
       date,
     });
   }
@@ -31,7 +34,7 @@ export const POST = authHandler(async ({ userId, request }) => {
     amount,
     accountId,
     categoryId,
-    description,
+    description: sanitizedDescription,
     date,
   });
 });

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
+import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 import { Prisma, Transaction, TransactionType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { v4 as uuid } from "uuid";
@@ -7,11 +8,13 @@ import { v4 as uuid } from "uuid";
 export const getTransactionsByUser = async (userId: string, props: QueryParams) => {
   const { page, pageSize, sortField = "createdAt", sortOrder = "desc", filters } = props;
 
+  const sanitizedDescription = filters.description ? sanitizeFilterInput(filters.description) : undefined;
+
   const where = {
     userId,
     ...(filters.accountId ? { accountId: filters.accountId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
-    ...(filters.description ? { description: { contains: filters.description, mode: "insensitive" as Prisma.QueryMode } } : {}),
+    ...(sanitizedDescription ? { description: { contains: sanitizedDescription, mode: "insensitive" as Prisma.QueryMode } } : {}),
     // Only list non-transfer transactions or the 'expense' side of transfers
     OR: [
       { transferId: null }, // Regular transaction
