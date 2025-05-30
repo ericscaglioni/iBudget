@@ -21,7 +21,7 @@ export const listCategoryGroups = async () => {
 export const getUserCategories = async (userId: string) => {
   return prisma.category.findMany({
     where: { userId, isSystem: false },
-    select: { id: true, name: true },
+    select: { id: true, name: true, type: true },
     orderBy: { name: "asc" },
   });
 }

@@ -19,7 +19,6 @@ const TransactionsPage = async ({ searchParams }: Props) => {
   const userCategories = await categoryService.getUserCategories(userId);
 
   const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id }));
-  const categoryOptions = userCategories.map((c) => ({ label: c.name, value: c.id }));
 
   return (
     <TransactionsPageShell
@@ -27,8 +26,8 @@ const TransactionsPage = async ({ searchParams }: Props) => {
       totalCount={totalCount}
       page={queryParams.page}
       pageSize={queryParams.pageSize}
+      categoryOptions={userCategories}
       accountOptions={accountOptions}
-      categoryOptions={categoryOptions}
     />
   );
 }

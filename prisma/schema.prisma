@@ -50,15 +50,21 @@ model CategoryGroup {
   @@map("category_groups")
 }
 
+enum CategoryType {
+  income
+  expense
+}
+
 model Category {
-  id           String     @id @default(uuid())
-  userId       String?    // null = default category
+  id           String       @id @default(uuid())
+  userId       String?      // null = default category
   name         String
-  color        String     // hex color
+  color        String       // hex color
   groupId      String
-  isSystem     Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  isSystem     Boolean      @default(false)
+  type         CategoryType @default(expense)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   group       CategoryGroup @relation(fields: [groupId], references: [id])
   transactions Transaction[]

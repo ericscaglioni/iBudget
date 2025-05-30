@@ -5,7 +5,7 @@ import { ComboboxOption, DeleteModal } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { TransactionWithDetails } from "../types";
+import { CategoryOption, TransactionWithDetails } from "../types";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { TransactionsTable } from "./TransactionsTable";
 
@@ -14,8 +14,8 @@ interface Props {
   totalCount: number;
   page: number;
   pageSize: number;
+  categoryOptions: CategoryOption[];
   accountOptions: ComboboxOption[];
-  categoryOptions: ComboboxOption[];
 }
 
 export const TransactionsPageShell = ({
@@ -78,7 +78,7 @@ const handleEdit = (transaction: TransactionWithDetails) => {
         page={page}
         pageSize={pageSize}
         accountOptions={accountOptions}
-        categoryOptions={categoryOptions}
+        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id }))}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

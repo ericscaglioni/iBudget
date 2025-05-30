@@ -43,6 +43,19 @@ async function main() {
     ],
   });
 
+  const incomeGroup = await prisma.categoryGroup.create({
+    data: { name: 'Income', userId: null },
+  });
+
+  await prisma.category.createMany({
+    data: [
+      { name: 'Salary', groupId: incomeGroup.id, userId: null, color: '#22C55E', type: 'income' },
+      { name: 'Freelance', groupId: incomeGroup.id, userId: null, color: '#0EA5E9', type: 'income' },
+      { name: 'Investments', groupId: incomeGroup.id, userId: null, color: '#EAB308', type: 'income' },
+      { name: 'Gifts', groupId: incomeGroup.id, userId: null, color: '#F472B6', type: 'income' },
+    ],
+  });
+
   const systemGroup = await prisma.categoryGroup.create({
     data: {
       name: "System",
@@ -59,6 +72,7 @@ async function main() {
       groupId: systemGroup.id,
       userId: null,
       isSystem: true,
+      type: 'expense',
     },
   });
 

@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, TransactionFormSchema } from "../schema";
-import { TransactionWithDetails } from "../types";
+import { CategoryOption, TransactionWithDetails } from "../types";
 import { FormFieldsByType } from "./FormFieldsByType";
 
 const getDefaultValues = (type: TransactionTypeEnum) => ({
@@ -27,7 +27,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   accountOptions: ComboboxOption[];
-  categoryOptions: ComboboxOption[];
+  categoryOptions: CategoryOption[];
   transaction?: TransactionWithDetails;
 };
 
@@ -133,6 +133,11 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
     form.trigger("type");
   };
 
+  const filteredCategoryOptions = categoryOptions.filter((option) => option.type === mode);
+  console.log("🚀 ~ TransactionFormModal ~ filteredCategoryOptions:", filteredCategoryOptions)
+  console.log("🚀 ~ TransactionFormModal ~ mode:", mode)
+  console.log("🚀 ~ TransactionFormModal ~ categoryOptions:", categoryOptions)
+
   return (
     <FormModal
       open={open}
@@ -179,7 +184,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
         mode={mode}
         form={form}
         accountOptions={accountOptions}
-        categoryOptions={categoryOptions}
+        categoryOptions={filteredCategoryOptions.map((c) => ({ label: c.name, value: c.id }))}
       />
 
       <FormTextInput

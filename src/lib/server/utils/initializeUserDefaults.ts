@@ -30,11 +30,9 @@ export const initializeUserDefaults = async (userId: string) => {
       group.categories.map(({ id, ...cat }) =>
         prisma.category.create({
           data: {
-            name: cat.name,
-            color: cat.color,
+            ...cat,
             groupId: userGroup.id,
             userId,
-            isSystem: cat.isSystem,
           },
         })
       )

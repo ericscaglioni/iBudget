@@ -3,7 +3,6 @@
 import { ComboboxOption } from "@/components/ui";
 import { Table } from "@/components/ui/Table/Table";
 import { getActionColumns } from "@/components/ui/Table/utils/actionColumns";
-import { useState } from "react";
 import { TransactionWithDetails } from "../types";
 import { transactionsColumns } from "./columns";
 
