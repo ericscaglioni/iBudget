@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { TransactionFormInput, TransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
 import { FormFieldsByType } from "./FormFieldsByType";
+import { showError, showSuccess } from "@/lib/utils/toast";
 
 const getDefaultValues = (type: TransactionTypeEnum) => ({
   type,
@@ -134,9 +135,6 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
   };
 
   const filteredCategoryOptions = categoryOptions.filter((option) => option.type === mode);
-  console.log("🚀 ~ TransactionFormModal ~ filteredCategoryOptions:", filteredCategoryOptions)
-  console.log("🚀 ~ TransactionFormModal ~ mode:", mode)
-  console.log("🚀 ~ TransactionFormModal ~ categoryOptions:", categoryOptions)
 
   return (
     <FormModal

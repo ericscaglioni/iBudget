@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { showSuccess } from "@/lib/utils/toast";
 import { ConfirmationModal } from "./ConfirmationModal";
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelName }: Props) => {
   const handleDelete = async () => {
     await onDelete();
-    toast.success(`${modelName} deleted successfully`);
+    showSuccess(`${modelName} deleted successfully`);
     onClose();
   };
 
