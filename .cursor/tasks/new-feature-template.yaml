@@ -1,0 +1,40 @@
+# .cursor/tasks/new-feature-template.yaml
+
+name: Build Feature (Personal Finance App)
+description: Template for developing new features in the personal finance app.
+
+instructions:
+  - Always respect the Cursor Rule: "Personal Finance App – Project Context".
+  - Infer all architectural decisions based on that rule: folder structure, services, form handling, styling, toast usage, API interactions, etc.
+  - Every feature should be broken into atomic steps:
+      1. Database/schema changes (Prisma schema + migration)
+      2. Backend logic (server/services, route handlers)
+      3. Frontend forms (React Hook Form + Zod)
+      4. UI Components (Tailwind, Headless UI)
+      5. Toasts + optimistic updates if applicable
+      6. Error handling (with user-facing messages)
+  - Avoid unnecessary libraries. Use existing patterns and custom components from `@/components/ui`.
+  - Use types from Prisma and Zod. Generate Zod schemas manually or using `zod-prisma` if available.
+  - Favor modularization: forms in `modals/`, UI bits in `components/`, reusable logic in `hooks/`.
+  - If it involves categories, accounts, or transactions — reuse existing components and typing.
+  - For new lists/tables, use `@tanstack/react-table` with URL-based filters + sorting.
+  - Use Clerk for user context and access control.
+  - Include sample test data or seed updates if needed.
+
+inputs:
+  - Feature Name: ""
+  - Short Description: ""
+  - Affected Entities (Transaction, Account, Category, etc): []
+  - Backend Needs (schema, services, route handlers): ""
+  - UI Components to Build or Extend: ""
+  - UX Notes (modals, toasts, behavior expectations): ""
+
+outputs:
+  - [ ] DB Schema & Migration
+  - [ ] Zod Validation Schema(s)
+  - [ ] Route Handler(s)
+  - [ ] Server-side Service(s)
+  - [ ] Form Component(s)
+  - [ ] Toasts (Success/Error)
+  - [ ] Page/Table Updates
+  - [ ] Optional: Seed data or test helpers

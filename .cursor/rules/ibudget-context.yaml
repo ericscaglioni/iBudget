@@ -1,0 +1,30 @@
+# .cursor/rules/personal-finance-context.yaml
+
+name: iBudget – Project Context
+description: High-level overview of this project’s tech stack, architecture, and patterns. Use this to guide all AI responses.
+
+rules:
+  - Use Next.js (15.3.0) with the App Router and React (19.0.0). Favor Server Components unless interactivity is required.
+  - Use TypeScript and Zod for type safety and schema validation. Zod schemas are used both on client (with React Hook Form) and server (API input validation).
+  - Use Prisma (6.6.0) with PostgreSQL for data modeling. Prisma Client is used in route handlers and server services.
+  - Styling is done with Tailwind CSS. Classnames may also use `clsx` for dynamic composition.
+  - Toast notifications use Sonner. Success and error toasts are styled with custom colors and icons (CheckIcon, XCircleIcon).
+  - Form state is handled with React Hook Form and Zod resolvers. Form components (inputs, comboboxes, modals) are custom and abstracted in `@/components/ui`.
+  - For tables, use @tanstack/react-table. Filtering and sorting are controlled via URL search params.
+  - Category and Transaction types follow a strict domain model:
+      - Transactions may be `income`, `expense`, or `transfer`.
+      - Transfers are stored as two linked transactions (income + expense), both sharing a `transferId`.
+      - Only the "expense" side of a transfer is shown in listings, and editing a transfer loads both sides.
+  - Authentication is handled via Clerk. Auth context is injected into route handlers via middleware.
+  - Use `dayjs` for all date formatting and parsing.
+  - Follow a service-layer architecture with clear separation between:
+      - `client/services` for browser-side API calls
+      - `server/services` for Prisma-based DB logic
+  - Error handling uses a centralized `AppError` pattern and friendly user-facing messages.
+  - All client UI logic follows the principles of clean component decomposition, minimal prop drilling, and separation of concerns.
+  - Custom hooks are encouraged for handling form logic or shared UI behaviors.
+  - Avoid unnecessary libraries. Use native APIs (e.g., Fetch, URLSearchParams) wherever practical.
+  - When building new features, follow the existing design conventions:
+      - Forms follow modal-based UX
+      - Filters use comboboxes or inputs at the top of the table
+      - CRUD operations are optimistic and toast-driven
