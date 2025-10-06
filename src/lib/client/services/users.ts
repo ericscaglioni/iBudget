@@ -1,9 +1,13 @@
-import { post } from "@/lib/api/server";
+import { post } from "@/lib/api/client";
+
+type InitUserResponse = {
+  message: string;
+};
 
 export const initUser = async (userId: string) => {
-  return post(`/api/users/${userId}`, { type: "init" });
-}
+  return post<{ type: "init" }, InitUserResponse>(`/api/users/${userId}`, { type: "init" });
+};
 
 export const deleteUser = async (userId: string) => {
-  return post(`/api/users/${userId}`, { type: "delete" });
-}
+  return post<{ type: "delete" }, void>(`/api/users/${userId}`, { type: "delete" });
+};

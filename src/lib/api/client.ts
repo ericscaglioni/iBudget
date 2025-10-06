@@ -1,4 +1,37 @@
 import { getBaseUrl } from "@/lib/utils/url";
+import { AppError } from "../errors/AppError";
+
+type ApiErrorResponse = {
+  error: {
+    message: string;
+    code?: string;
+  };
+};
+
+type ApiSuccessResponse<T> = {
+  data: T;
+};
+
+type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+const isErrorResponse = (response: any): response is ApiErrorResponse => {
+  return 'error' in response;
+};
+
+const handleResponse = async <T>(response: Response): Promise<T> => {
+  const data = await response.json() as ApiResponse<T>;
+  
+  if (!response.ok || isErrorResponse(data)) {
+    const error = data as ApiErrorResponse;
+    throw new AppError(
+      error.error.message,
+      response.status,
+      error.error.code
+    );
+  }
+
+  return (data as ApiSuccessResponse<T>).data;
+};
 
 export const post = async <TData extends object, TResult = any>(
   url: string,
@@ -12,12 +45,7 @@ export const post = async <TData extends object, TResult = any>(
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
-    }
-
-    return res.json();
+    return handleResponse<TResult>(res);
   } catch (err) {
     throw err;
   }
@@ -34,42 +62,25 @@ export const patch = async <TData extends object, TResult = any>(
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
-    }
-
-    return res.json();
+    return handleResponse<TResult>(res);
   } catch (err) {
     throw err;
   }
 };
 
-export const del = async (url: string): Promise<void> => {
+export const del = async <TResult = void>(url: string): Promise<TResult> => {
   try {
     const res = await fetch(url, { method: "DELETE" });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
-    }
-
-    return res.json();
+    return handleResponse<TResult>(res);
   } catch (err) {
     throw err;
   }
 };
 
-export const get = async <TData extends object, TResult = any>(url: string): Promise<TResult> => {
+export const get = async <TResult = any>(url: string): Promise<TResult> => {
   try {
     const res = await fetch(url);
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
-    }
-
-    return res.json();
+    return handleResponse<TResult>(res);
   } catch (err) {
     throw err;
   }

@@ -1,29 +1,38 @@
-import { prisma } from "@/lib/prisma";
-import { authHandler } from "@/lib/middlewares";
-import { NextResponse } from "next/server";
+import { accountService } from "@/lib/server/services";
+import { parseQueryParams } from "@/lib/utils/parse-query";
+import { createSuccessResponse, createErrorResponse } from "@/lib/utils/api-response";
+import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
-export const GET = authHandler(async ({ userId }) => {
-  const accounts = await prisma.account.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+export async function GET(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return createErrorResponse(new Error("Unauthorized"));
+    }
 
-  return NextResponse.json(accounts);
-});
+    const queryParams = await parseQueryParams(
+      Object.fromEntries(request.nextUrl.searchParams)
+    );
 
-export const POST = authHandler(async ({ userId, request }) => {
-  const body = await request.json();
-  const { name, type, currency, initialBalance } = body;
+    const result = await accountService.getAccountsByUser(userId, queryParams);
+    return createSuccessResponse(result);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
 
-  const account = await prisma.account.create({
-    data: {
-      userId,
-      name,
-      type,
-      currency,
-      initialBalance,
-    },
-  });
+export async function POST(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return createErrorResponse(new Error("Unauthorized"));
+    }
 
-  return NextResponse.json(account, { status: 201 });
-});
+    const data = await request.json();
+    const result = await accountService.createAccount(userId, data);
+    return createSuccessResponse(result, 201);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}

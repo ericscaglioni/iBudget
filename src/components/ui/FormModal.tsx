@@ -7,6 +7,7 @@ import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { showError, showSuccess } from '@/lib/utils/toast';
+import { AppError } from '@/lib/errors/AppError';
 
 type Props<TData extends FieldValues> = {
   form: UseFormReturn<TData>;
@@ -54,7 +55,13 @@ export const FormModal = <TData extends FieldValues,>({
         showSuccess(toastSuccessMessage);
       }
     } catch (error) {
-      showError((error instanceof Error && error.message) ? error.message : toastErrorMessage);
+      if (error instanceof AppError) {
+        showError(error.message);
+      } else if (error instanceof Error) {
+        showError(error.message || toastErrorMessage);
+      } else {
+        showError(toastErrorMessage);
+      }
     } finally {
       stopLoading();
     }

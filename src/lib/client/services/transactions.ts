@@ -16,20 +16,20 @@ type TransactionPayload = Omit<
   transferId?: string;
 };
 
+export const getTransactions = async () => {
+  return get<Transaction[]>(transactionsPath);
+};
+
 export const createTransaction = async (data: TransactionPayload) => {
-  return post(transactionsPath, data);
+  return post<TransactionPayload, Transaction>(transactionsPath, data);
 };
 
 export const updateTransaction = async (id: string, data: TransactionPayload) => {
-  if (data.type === TransactionTypeEnum.transfer) {
-    return patch(`${transactionsPath}/transfer/${id}`, data);
-  } else {
-    return patch(`${transactionsPath}/${id}`, data);
-  }
+  return patch<TransactionPayload, Transaction>(`${transactionsPath}/${id}`, data);
 };
 
 export const deleteTransaction = async (id: string) => {
-  return del(`${transactionsPath}/${id}`);
+  return del<void>(`${transactionsPath}/${id}`);
 };
 
 export const getTransferTransactionByTransferId = async (transferId: string) => {

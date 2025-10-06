@@ -1,40 +1,55 @@
 import { TransactionTypeEnum } from "@/lib/constants";
-import { authHandler } from "@/lib/middlewares";
 import { transactionService } from "@/lib/server/services";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
+import { createSuccessResponse, createErrorResponse } from "@/lib/utils/api-response";
+import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
-export const POST = authHandler(async ({ userId, request }) => {
-  const body = await request.json();
+export async function POST(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return createErrorResponse(new Error("Unauthorized"));
+    }
 
-  const {
-    type,
-    amount,
-    accountId,
-    fromAccountId,
-    toAccountId,
-    categoryId,
-    description,
-    date,
-  } = body;
+    const body = await request.json();
 
-  const sanitizedDescription = sanitizeFilterInput(description);
-
-  if (type === TransactionTypeEnum.transfer) {
-    return await transactionService.createTransferTransaction(userId, {
+    const {
+      type,
+      amount,
+      accountId,
       fromAccountId,
       toAccountId,
-      amount,
-      description: sanitizedDescription,
+      categoryId,
+      description,
       date,
-    });
-  }
+    } = body;
 
-  return await transactionService.createTransaction(userId, {
-    type,
-    amount,
-    accountId,
-    categoryId,
-    description: sanitizedDescription,
-    date,
-  });
-});
+    const sanitizedDescription = sanitizeFilterInput(description);
+
+    let result;
+
+    if (type === TransactionTypeEnum.transfer) {
+      result = await transactionService.createTransferTransaction(userId, {
+        fromAccountId,
+        toAccountId,
+        amount,
+        description: sanitizedDescription,
+        date,
+      });
+    } else {
+      result = await transactionService.createTransaction(userId, {
+        type,
+        amount,
+        accountId,
+        categoryId,
+        description: sanitizedDescription,
+        date,
+      });
+    }
+
+    return createSuccessResponse(result, 201);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}

@@ -1,19 +1,19 @@
-import { authHandler } from "@/lib/middlewares";
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { categoryService } from "@/lib/server/services";
+import { createSuccessResponse, createErrorResponse } from "@/lib/utils/api-response";
+import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
-export const POST = authHandler(async ({ userId, request }) => {
-  const body = await request.json();
-  const { name, color, groupId } = body;
+export async function POST(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return createErrorResponse(new Error("Unauthorized"));
+    }
 
-  const account = await prisma.category.create({
-    data: {
-      userId,
-      name,
-      color,
-      groupId,
-    },
-  });
-
-  return NextResponse.json(account, { status: 201 });
-});
+    const data = await request.json();
+    const result = await categoryService.createCategory(userId, data);
+    return createSuccessResponse(result, 201);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
