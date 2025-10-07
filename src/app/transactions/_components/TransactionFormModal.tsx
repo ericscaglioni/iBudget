@@ -1,6 +1,6 @@
 "use client";
 
-import { ComboboxOption, FormModal, FormTextInput } from "@/components/ui";
+import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
 import { dayjs } from "@/lib/utils/dayjs";
@@ -13,6 +13,13 @@ import { CategoryOption, TransactionWithDetails } from "../types";
 import { FormFieldsByType } from "./FormFieldsByType";
 import { showError, showSuccess } from "@/lib/utils/toast";
 
+const frequencyOptions = [
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+];
+
 const getDefaultValues = (type: TransactionTypeEnum) => ({
   type,
   amount: "",
@@ -22,6 +29,9 @@ const getDefaultValues = (type: TransactionTypeEnum) => ({
   date: dayjs().format("YYYY-MM-DD"),
   fromAccountId: "",
   toAccountId: "",
+  isRecurring: false,
+  frequency: undefined,
+  endsAt: undefined,
 }) as Partial<TransactionFormInput>;
 
 type Props = {
@@ -40,7 +50,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
   defaultValues: getDefaultValues(mode),
 });
 
-  const { reset } = form;
+  const { reset, watch, setValue } = form;
+  const isRecurring = watch("isRecurring");
+  const selectedFrequency = watch("frequency");
 
   const loadTransferTransaction = async (transaction: TransactionWithDetails) => {
     const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
@@ -65,6 +77,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       accountId: transaction.accountId,
       categoryId: transaction.categoryId!,
       type: mode,
+      isRecurring: transaction.isRecurring || false,
+      frequency: transaction.frequency as any,
+      endsAt: transaction.endsAt ? dayjs(transaction.endsAt).format("YYYY-MM-DD") : undefined,
     });
   }
 
@@ -97,6 +112,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       amount: parseFloat(data.amount),
       date: dayjs(data.date).toDate(),
       type: mode,
+      endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
     };
 
     await transactionService.createTransaction(payload);
@@ -110,6 +126,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       amount: parseFloat(data.amount),
       date: dayjs(data.date).toDate(),
       type: mode,
+      endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
     };
 
     await transactionService.updateTransaction(transaction.id, {
@@ -191,6 +208,50 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
         label="Description"
         inputProps={{ placeholder: "Description" }}
       />
+
+      {/* Recurring Transaction Section - Only for expense/income */}
+      {(mode === TransactionTypeEnum.expense || mode === TransactionTypeEnum.income) && (
+        <div className="space-y-4 pt-4 border-t border-gray-200">
+          {/* Checkbox for recurring */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isRecurring"
+              {...form.register("isRecurring")}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            />
+            <label 
+              htmlFor="isRecurring" 
+              className="text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              Make this a recurring transaction
+            </label>
+          </div>
+
+          {/* Conditional fields when isRecurring is true */}
+          {isRecurring && (
+            <div className="space-y-4 pl-6 border-l-2 border-primary/20">
+              {/* Frequency dropdown */}
+              <FormCombobox
+                form={form as any}
+                name="frequency"
+                label="Frequency"
+                options={frequencyOptions}
+                value={selectedFrequency || ""}
+                onChange={(val) => setValue("frequency", val as any)}
+              />
+
+              {/* End date input */}
+              <FormTextInput
+                form={form}
+                name="endsAt"
+                label="End Date (Optional)"
+                inputProps={{ type: "date" }}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </FormModal>
   );
 };

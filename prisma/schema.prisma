@@ -87,6 +87,10 @@ model Transaction {
   description String
   date        DateTime
   transferId  String?   // used to link both sides of a transfer
+  isRecurring Boolean?  @default(false)
+  frequency   String?
+  endsAt      DateTime?
+  recurringId String?   // used to link recurring occurrences
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

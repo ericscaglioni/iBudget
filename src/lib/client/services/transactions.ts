@@ -6,7 +6,7 @@ const transactionsPath = "/api/transactions";
 
 type TransactionPayload = Omit<
   Transaction,
-  "id" | "userId" | "createdAt" | "updatedAt" | "type" | "accountId" | "categoryId" | "transferId"
+  "id" | "userId" | "createdAt" | "updatedAt" | "type" | "accountId" | "categoryId" | "transferId" | "isRecurring" | "frequency" | "endsAt"
 > & {
   type: TransactionTypeEnum;
   accountId?: string;
@@ -14,6 +14,9 @@ type TransactionPayload = Omit<
   toAccountId?: string;
   categoryId?: string;
   transferId?: string;
+  isRecurring?: boolean;
+  frequency?: string;
+  endsAt?: string | Date;
 };
 
 export const getTransactions = async () => {

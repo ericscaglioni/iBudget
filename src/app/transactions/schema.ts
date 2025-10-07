@@ -13,8 +13,14 @@ export const TransactionFormSchema = z
 
     fromAccountId: z.string().optional(),
     toAccountId: z.string().optional(),
+
+    // Recurring transaction fields
+    isRecurring: z.boolean().optional(),
+    frequency: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
+    endsAt: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    // Validate expense/income fields
     if (data.type === "expense" || data.type === "income") {
       if (!data.accountId) {
         ctx.addIssue({
@@ -33,6 +39,7 @@ export const TransactionFormSchema = z
       }
     }
 
+    // Validate transfer fields
     if (data.type === "transfer") {
       if (!data.fromAccountId) {
         ctx.addIssue({
@@ -55,6 +62,31 @@ export const TransactionFormSchema = z
           path: ["toAccountId"],
           code: z.ZodIssueCode.custom,
           message: "Cannot transfer to the same account",
+        });
+      }
+    }
+
+    // Validate recurring transaction fields
+    if (data.isRecurring === true) {
+      if (!data.frequency) {
+        ctx.addIssue({
+          path: ["frequency"],
+          code: z.ZodIssueCode.custom,
+          message: "Frequency is required for recurring transactions",
+        });
+      }
+    }
+
+    // Validate endsAt is after date
+    if (data.endsAt && data.date) {
+      const transactionDate = new Date(data.date);
+      const endsAtDate = new Date(data.endsAt);
+      
+      if (endsAtDate <= transactionDate) {
+        ctx.addIssue({
+          path: ["endsAt"],
+          code: z.ZodIssueCode.custom,
+          message: "End date must be after transaction date",
         });
       }
     }

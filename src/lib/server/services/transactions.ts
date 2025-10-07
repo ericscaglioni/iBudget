@@ -121,10 +121,12 @@ export const createTransferTransaction = async (userId: string, props: TransferT
   return { message: "Transfer created successfully" };
 };
 
-type CreateTransactionProps = Pick<Transaction, "type" | "amount" | "accountId" | "categoryId" | "description" | "date">;
+type CreateTransactionProps = Pick<Transaction, "type" | "amount" | "accountId" | "categoryId" | "description" | "date"> & {
+  isRecurring?: boolean;
+};
 
 export const createTransaction = async (userId: string, props: CreateTransactionProps) => {
-  const { type, amount, accountId, categoryId, description, date } = props;
+  const { type, amount, accountId, categoryId, description, date, isRecurring } = props;
 
   if (!accountId || !categoryId) {
     throw new ValidationError('Missing required transaction data');
@@ -139,10 +141,114 @@ export const createTransaction = async (userId: string, props: CreateTransaction
       categoryId,
       description,
       date,
+      isRecurring: isRecurring || false,
     },
   });
 
   return created;
+};
+
+interface CreateRecurringTransactionProps {
+  type: TransactionType;
+  amount: number;
+  accountId: string;
+  categoryId: string;
+  description: string;
+  date: Date;
+  frequency: string;
+  endsAt?: Date;
+}
+
+export const createRecurringTransaction = async (
+  userId: string,
+  props: CreateRecurringTransactionProps
+) => {
+  const { type, amount, accountId, categoryId, description, date, frequency, endsAt } = props;
+
+  if (!accountId || !categoryId) {
+    throw new ValidationError('Missing required transaction data');
+  }
+
+  // Generate a unique recurringId for all occurrences
+  const recurringId = uuid();
+
+  // Helper function to calculate next date based on frequency
+  const getNextDate = (currentDate: Date, freq: string): Date => {
+    const nextDate = new Date(currentDate);
+    switch (freq) {
+      case 'daily':
+        nextDate.setDate(nextDate.getDate() + 1);
+        break;
+      case 'weekly':
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case 'monthly':
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case 'yearly':
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      default:
+        throw new ValidationError(`Invalid frequency: ${freq}`);
+    }
+    return nextDate;
+  };
+
+  // Generate initial transaction + future occurrences
+  const transactions = [];
+  let currentDate = new Date(date);
+  const maxFutureInstances = 12; // Up to 12 future instances (plus the initial one)
+
+  // First, add the initial transaction
+  transactions.push({
+    userId,
+    type,
+    amount: Math.abs(amount),
+    accountId,
+    categoryId,
+    description,
+    date: new Date(currentDate),
+    isRecurring: true,
+    frequency,
+    endsAt: endsAt || null,
+    recurringId,
+  });
+
+  // Then generate up to 12 future instances
+  for (let i = 0; i < maxFutureInstances; i++) {
+    // Calculate next occurrence date
+    currentDate = getNextDate(currentDate, frequency);
+    
+    // Check if we've reached the end date
+    if (endsAt && currentDate > endsAt) {
+      break;
+    }
+
+    transactions.push({
+      userId,
+      type,
+      amount: Math.abs(amount),
+      accountId,
+      categoryId,
+      description,
+      date: new Date(currentDate),
+      isRecurring: true,
+      frequency,
+      endsAt: endsAt || null,
+      recurringId,
+    });
+  }
+
+  // Create all transactions at once
+  await prisma.transaction.createMany({
+    data: transactions,
+  });
+
+  return {
+    message: `Created ${transactions.length} recurring transaction(s)`,
+    count: transactions.length,
+    recurringId,
+  };
 };
 
 type UpdateTransactionProps = CreateTransactionProps & { id: string };

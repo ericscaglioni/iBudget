@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
       categoryId,
       description,
       date,
+      isRecurring,
+      frequency,
+      endsAt,
     } = body;
 
     const sanitizedDescription = sanitizeFilterInput(description);
@@ -37,7 +40,20 @@ export async function POST(request: NextRequest) {
         description: sanitizedDescription,
         date,
       });
+    } else if (isRecurring && frequency) {
+      // Handle recurring transaction (frequency validated by Zod on frontend)
+      result = await transactionService.createRecurringTransaction(userId, {
+        type,
+        amount,
+        accountId,
+        categoryId,
+        description: sanitizedDescription,
+        date,
+        frequency,
+        endsAt,
+      });
     } else {
+      // Regular one-time transaction
       result = await transactionService.createTransaction(userId, {
         type,
         amount,
@@ -45,6 +61,7 @@ export async function POST(request: NextRequest) {
         categoryId,
         description: sanitizedDescription,
         date,
+        isRecurring: false,
       });
     }
 
