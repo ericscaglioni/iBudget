@@ -1,11 +1,11 @@
 "use client";
 
-import { Combobox, ComboboxOption, Input } from "@/components/ui";
+import { Combobox, ComboboxOption, Input, MonthYearPicker } from "@/components/ui";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type FilterType = "combobox" | "text";
+type FilterType = "combobox" | "text" | "monthYear";
 
 export type TableFilter = {
   type: FilterType;
@@ -85,6 +85,18 @@ export const Filters = ({ filtersConfig, basePath, searchParams, startTransition
               value={pendingTextFilters[filter.name] ?? currentValue}
               onChange={(e) => handleTextChange(filter.name, e.target.value)}
               placeholder={`Search ${filter.label}`}
+            />
+          );
+        }
+
+        if (filter.type === "monthYear") {
+          return (
+            <MonthYearPicker
+              key={filter.name}
+              label={filter.label}
+              value={currentValue}
+              onChange={(value) => handleFilterChange(filter.name, value)}
+              placeholder="Month/Year"
             />
           );
         }

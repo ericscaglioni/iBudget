@@ -43,6 +43,11 @@ export const TransactionsTable = ({
       enableSorting
       filtersConfig={[
         {
+          type: "monthYear",
+          label: "Month",
+          name: "month",
+        },
+        {
           type: "combobox",
           label: "Account",
           name: "accountId",

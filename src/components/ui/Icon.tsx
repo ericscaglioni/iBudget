@@ -6,6 +6,8 @@ import {
   ArrowUpIcon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ChevronUpIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -20,6 +22,8 @@ const iconMap = {
   delete: TrashIcon,
   checkMark: CheckIcon,
   chevronDown: ChevronDownIcon,
+  chevronLeft: ChevronLeftIcon,
+  chevronRight: ChevronRightIcon,
   chevronUp: ChevronUpIcon,
   edit: PencilSquareIcon,
 };

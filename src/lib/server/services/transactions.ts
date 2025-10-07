@@ -1,19 +1,88 @@
 import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
+import { getMonthDateRange } from "@/lib/utils/format";
 import { Prisma, Transaction, TransactionType } from "@prisma/client";
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { v4 as uuid } from "uuid";
 
+// Helper function to calculate installment info for recurring transactions
+const calculateInstallmentInfo = async (transactions: any[]) => {
+  const recurringTransactions = transactions.filter(t => t.isRecurring && t.recurringId);
+  
+  if (recurringTransactions.length === 0) {
+    return transactions;
+  }
+
+  // Get all recurring IDs
+  const recurringIds = [...new Set(recurringTransactions.map(t => t.recurringId))];
+  
+  // Fetch all transactions for each recurring group
+  const recurringGroups = await Promise.all(
+    recurringIds.map(async (recurringId) => {
+      const allRecurring = await prisma.transaction.findMany({
+        where: { recurringId: recurringId! },
+        orderBy: { date: 'asc' },
+        select: { id: true, date: true },
+      });
+      
+      return {
+        recurringId,
+        transactions: allRecurring,
+        total: allRecurring.length,
+      };
+    })
+  );
+
+  // Create a map for quick lookup
+  const recurringMap = new Map();
+  recurringGroups.forEach(group => {
+    group.transactions.forEach((t, index) => {
+      recurringMap.set(t.id, {
+        currentInstallment: index + 1,
+        totalInstallments: group.total,
+      });
+    });
+  });
+
+  // Add installment info to transactions
+  return transactions.map(t => {
+    if (t.isRecurring && t.recurringId && recurringMap.has(t.id)) {
+      const info = recurringMap.get(t.id);
+      return {
+        ...t,
+        currentInstallment: info.currentInstallment,
+        totalInstallments: info.totalInstallments,
+      };
+    }
+    return t;
+  });
+};
+
 export const getTransactionsByUser = async (userId: string, props: QueryParams) => {
   const { page, pageSize, sortField = "createdAt", sortOrder = "desc", filters } = props;
   const sanitizedDescription = filters.description ? sanitizeFilterInput(filters.description) : undefined;
+
+  // Parse month filter if provided (format: YYYY-MM)
+  let dateFilter = {};
+  if (filters.month) {
+    const dateRange = getMonthDateRange(filters.month);
+    if (dateRange) {
+      dateFilter = {
+        date: {
+          gte: dateRange.startDate,
+          lte: dateRange.endDate,
+        },
+      };
+    }
+  }
 
   const where = {
     userId,
     ...(filters.accountId ? { accountId: filters.accountId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(sanitizedDescription ? { description: { contains: sanitizedDescription, mode: "insensitive" as Prisma.QueryMode } } : {}),
+    ...dateFilter,
     OR: [
       { transferId: null },
       {
@@ -42,7 +111,10 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
     prisma.transaction.count({ where }),
   ]);
 
-  return { transactions, total };
+  // Add installment info for recurring transactions
+  const transactionsWithInstallments = await calculateInstallmentInfo(transactions);
+
+  return { transactions: transactionsWithInstallments, total };
 }
 
 interface GetTransferTransactionByTransferIdProps {
@@ -197,7 +269,7 @@ export const createRecurringTransaction = async (
   // Generate initial transaction + future occurrences
   const transactions = [];
   let currentDate = new Date(date);
-  const maxFutureInstances = 12; // Up to 12 future instances (plus the initial one)
+  const maxTotalInstances = 12; // Total number of instances to create
 
   // First, add the initial transaction
   transactions.push({
@@ -214,8 +286,8 @@ export const createRecurringTransaction = async (
     recurringId,
   });
 
-  // Then generate up to 12 future instances
-  for (let i = 0; i < maxFutureInstances; i++) {
+  // Then generate the remaining instances (maxTotalInstances - 1, since we already added the initial one)
+  for (let i = 0; i < maxTotalInstances - 1; i++) {
     // Calculate next occurrence date
     currentDate = getNextDate(currentDate, frequency);
     

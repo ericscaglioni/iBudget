@@ -32,6 +32,21 @@ export const transactionsColumns: ColumnDef<TransactionWithDetails>[] = [
   {
     accessorKey: "description",
     header: "Description",
+    cell: ({ row }) => {
+      const { description, isRecurring, currentInstallment, totalInstallments } = row.original;
+      
+      if (isRecurring && currentInstallment && totalInstallments) {
+        const paddedCurrent = String(currentInstallment).padStart(2, '0');
+        const paddedTotal = String(totalInstallments).padStart(2, '0');
+        return (
+          <span>
+            {description} ({paddedCurrent}/{paddedTotal})
+          </span>
+        );
+      }
+      
+      return description;
+    },
   },
   {
     accessorKey: "account.name",
