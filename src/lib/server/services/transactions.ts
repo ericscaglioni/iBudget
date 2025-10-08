@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 import { getMonthDateRange } from "@/lib/utils/format";
+import { dayjs } from "@/lib/utils/dayjs";
 import { Prisma, Transaction, TransactionType } from "@prisma/client";
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { v4 as uuid } from "uuid";
@@ -244,55 +245,35 @@ export const createRecurringTransaction = async (
   // Generate a unique recurringId for all occurrences
   const recurringId = uuid();
 
-  // Helper function to calculate next date based on frequency
-  const getNextDate = (currentDate: Date, freq: string): Date => {
-    const nextDate = new Date(currentDate);
-    switch (freq) {
-      case 'daily':
-        nextDate.setDate(nextDate.getDate() + 1);
-        break;
-      case 'weekly':
-        nextDate.setDate(nextDate.getDate() + 7);
-        break;
-      case 'monthly':
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        break;
-      case 'yearly':
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        break;
-      default:
-        throw new ValidationError(`Invalid frequency: ${freq}`);
-    }
-    return nextDate;
-  };
-
-  // Generate initial transaction + future occurrences
+  // Generate initial transaction + future occurrences using dayjs for reliable date math
   const transactions = [];
-  let currentDate = new Date(date);
+  let currentDate = dayjs(date); // Use dayjs instead of native Date
   const maxTotalInstances = 12; // Total number of instances to create
 
-  // First, add the initial transaction
-  transactions.push({
-    userId,
-    type,
-    amount: Math.abs(amount),
-    accountId,
-    categoryId,
-    description,
-    date: new Date(currentDate),
-    isRecurring: true,
-    frequency,
-    endsAt: endsAt || null,
-    recurringId,
-  });
-
-  // Then generate the remaining instances (maxTotalInstances - 1, since we already added the initial one)
-  for (let i = 0; i < maxTotalInstances - 1; i++) {
-    // Calculate next occurrence date
-    currentDate = getNextDate(currentDate, frequency);
+  // Create all transactions (including the initial one)
+  for (let i = 0; i < maxTotalInstances; i++) {
+    // For the first iteration, use the original date; for subsequent ones, add to the date
+    if (i > 0) {
+      switch (frequency) {
+        case 'daily':
+          currentDate = currentDate.add(1, 'day');
+          break;
+        case 'weekly':
+          currentDate = currentDate.add(1, 'week');
+          break;
+        case 'monthly':
+          currentDate = currentDate.add(1, 'month');
+          break;
+        case 'yearly':
+          currentDate = currentDate.add(1, 'year');
+          break;
+        default:
+          throw new ValidationError(`Invalid frequency: ${frequency}`);
+      }
+    }
     
     // Check if we've reached the end date
-    if (endsAt && currentDate > endsAt) {
+    if (endsAt && currentDate.toDate() > endsAt) {
       break;
     }
 
@@ -303,7 +284,7 @@ export const createRecurringTransaction = async (
       accountId,
       categoryId,
       description,
-      date: new Date(currentDate),
+      date: currentDate.toDate(), // Convert dayjs to native Date for Prisma
       isRecurring: true,
       frequency,
       endsAt: endsAt || null,
@@ -325,8 +306,17 @@ export const createRecurringTransaction = async (
 
 type UpdateTransactionProps = CreateTransactionProps & { id: string };
 
-export const updateTransaction = async (userId: string, props: UpdateTransactionProps) => {
+interface UpdateTransactionOptions {
+  updateScope?: 'one' | 'future';
+}
+
+export const updateTransaction = async (
+  userId: string, 
+  props: UpdateTransactionProps, 
+  options?: UpdateTransactionOptions
+) => {
   const { id, type, amount, accountId, categoryId, description, date } = props;
+  const updateScope = options?.updateScope || 'one';
 
   const existing = await prisma.transaction.findUnique({
     where: {
@@ -339,6 +329,44 @@ export const updateTransaction = async (userId: string, props: UpdateTransaction
     throw new NotFoundError('Transaction');
   }
 
+  // Handle updateScope=future: update this transaction and all future recurring transactions
+  if (updateScope === 'future') {
+    if (!existing.recurringId) {
+      throw new ValidationError('Cannot update future transactions: transaction is not recurring');
+    }
+
+    if (!existing.date) {
+      throw new ValidationError('Cannot update future transactions: transaction date is missing');
+    }
+
+    // Update all transactions with the same recurringId and date >= current date
+    const updateResult = await prisma.transaction.updateMany({
+      where: {
+        userId,
+        recurringId: existing.recurringId,
+        date: {
+          gte: existing.date,
+        },
+      },
+      data: {
+        type,
+        amount: Math.abs(amount),
+        accountId,
+        categoryId,
+        description,
+        // Note: We don't update the date for bulk updates to maintain the recurring schedule
+      },
+    });
+
+    console.log(`Updated ${updateResult.count} recurring transaction(s) with recurringId: ${existing.recurringId}`);
+    
+    return { 
+      message: `Updated ${updateResult.count} transaction(s) successfully`,
+      count: updateResult.count,
+    };
+  }
+
+  // Handle default updateScope=one: update only this single transaction
   const updated = await prisma.transaction.update({
     where: {
       id: existing.id,
@@ -403,7 +431,13 @@ export const updateTransferTransaction = async (userId: string, props: UpdateTra
   return { message: 'Transaction updated successfully' };
 };
 
-export const deleteTransaction = async (userId: string, id: string) => {
+interface DeleteTransactionOptions {
+  scope?: 'single' | 'future';
+}
+
+export const deleteTransaction = async (userId: string, id: string, options?: DeleteTransactionOptions) => {
+  const scope = options?.scope || 'single';
+  
   const transaction = await prisma.transaction.findUnique({
     where: { id, userId },
   });
@@ -412,6 +446,26 @@ export const deleteTransaction = async (userId: string, id: string) => {
     throw new NotFoundError('Transaction');
   }
 
+  // Handle scope=future: delete this transaction and all future recurring transactions
+  if (scope === 'future') {
+    if (!transaction.recurringId) {
+      throw new ValidationError('Cannot delete future transactions: transaction is not recurring');
+    }
+
+    await prisma.transaction.deleteMany({
+      where: {
+        userId,
+        recurringId: transaction.recurringId,
+        date: {
+          gte: transaction.date,
+        },
+      },
+    });
+
+    return { message: 'Transaction and future occurrences deleted successfully' };
+  }
+
+  // Handle default scope=single or transfers
   if (transaction.transferId) {
     await prisma.transaction.deleteMany({
       where: { transferId: transaction.transferId },

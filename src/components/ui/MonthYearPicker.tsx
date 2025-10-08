@@ -161,9 +161,22 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
             ))}
           </div>
 
-          {/* Clear Button */}
-          {value && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
+          {/* Action Buttons */}
+          <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const currentMonth = dayjs().format('YYYY-MM');
+                onChange(currentMonth);
+                setSelectedDate(dayjs());
+                setIsOpen(false);
+              }}
+              className="w-full text-xs"
+            >
+              Current Month
+            </Button>
+            {value && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -175,8 +188,8 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
               >
                 Clear filter
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -51,7 +51,10 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
           <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
             <Icon name="chevronDown" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
           </ComboboxButton>
-          <ComboboxOptions className="absolute z-10 mt-1 w-full bg-white border rounded shadow-md max-h-60 overflow-auto text-sm">
+          <ComboboxOptions
+            anchor="bottom"
+            className="z-10 w-[var(--input-width)] bg-white border rounded shadow-md max-h-60 overflow-auto text-sm [--anchor-gap:4px] empty:invisible"
+          >
             {allValues && (
               <ComboboxOption
                 value=""

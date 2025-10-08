@@ -1,4 +1,4 @@
-import { showSuccess } from "@/lib/utils/toast";
+import { showSuccess, showError } from "@/lib/utils/toast";
 import { ConfirmationModal } from "./ConfirmationModal";
 
 interface Props {
@@ -11,9 +11,16 @@ interface Props {
 
 export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelName }: Props) => {
   const handleDelete = async () => {
-    await onDelete();
-    showSuccess(`${modelName} deleted successfully`);
-    onClose();
+    try {
+      await onDelete();
+      showSuccess(`${modelName} deleted successfully`);
+      onClose();
+    } catch (error: any) {
+      console.error(`Error deleting ${modelName}:`, error);
+      showError(
+        error?.message || `Failed to delete ${modelName.toLowerCase()}. Please try again.`
+      );
+    }
   };
 
   return (

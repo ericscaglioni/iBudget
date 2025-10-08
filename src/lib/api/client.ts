@@ -19,6 +19,11 @@ const isErrorResponse = (response: any): response is ApiErrorResponse => {
 };
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
+  // Handle 204 No Content responses (e.g., successful DELETE)
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const data = await response.json() as ApiResponse<T>;
   
   if (!response.ok || isErrorResponse(data)) {

@@ -21,6 +21,7 @@ type Props<TData extends FieldValues> = {
   showToast?: boolean;
   toastSuccessMessage?: string;
   toastErrorMessage?: string;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 };
 
 export const FormModal = <TData extends FieldValues,>({
@@ -35,6 +36,7 @@ export const FormModal = <TData extends FieldValues,>({
   showToast = true,
   toastSuccessMessage = 'Operation successful',
   toastErrorMessage = 'Operation failed',
+  maxWidth = 'md',
 }: Props<TData>) => {
   const router = useRouter();
 
@@ -68,7 +70,7 @@ export const FormModal = <TData extends FieldValues,>({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={title} description={description}>
+    <Modal open={open} onClose={onClose} title={title} description={description} maxWidth={maxWidth}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
         {children}
 

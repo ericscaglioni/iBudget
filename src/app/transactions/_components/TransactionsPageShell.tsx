@@ -6,6 +6,7 @@ import { transactionService } from "@/lib/client/services";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CategoryOption, TransactionWithDetails } from "../types";
+import { RecurringDeleteModal } from "./RecurringDeleteModal";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { TransactionsTable } from "./TransactionsTable";
 
@@ -30,11 +31,13 @@ export const TransactionsPageShell = ({
   
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openRecurringDeleteModal, setOpenRecurringDeleteModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithDetails | null>(null);
 
   const handleClose = () => {
     setOpenTransactionModal(false);
     setOpenDeleteModal(false);
+    setOpenRecurringDeleteModal(false);
     setSelectedTransaction(null);
   };
 
@@ -50,13 +53,34 @@ const handleEdit = (transaction: TransactionWithDetails) => {
 
   const handleDelete = (transaction: TransactionWithDetails) => {
     setSelectedTransaction(transaction);
-    setOpenDeleteModal(true);
+    
+    // Check if transaction is recurring
+    if (transaction.isRecurring && transaction.recurringId) {
+      setOpenRecurringDeleteModal(true);
+    } else {
+      setOpenDeleteModal(true);
+    }
   };
 
   const confirmDelete = async () => {
     if (!selectedTransaction) return;
 
     await transactionService.deleteTransaction(selectedTransaction.id);
+    router.refresh();
+    setSelectedTransaction(null);
+  };
+
+  const confirmRecurringDelete = async (scope: 'one' | 'future') => {
+    if (!selectedTransaction) return;
+
+    // Only pass 'future' scope when deleting future transactions
+    // For 'one', don't pass any scope parameter (normal single delete)
+    if (scope === 'future') {
+      await transactionService.deleteTransaction(selectedTransaction.id, 'future');
+    } else {
+      await transactionService.deleteTransaction(selectedTransaction.id);
+    }
+    
     router.refresh();
     setSelectedTransaction(null);
   };
@@ -97,6 +121,13 @@ const handleEdit = (transaction: TransactionWithDetails) => {
         itemDescription={selectedTransaction?.description ?? ""}
         onDelete={confirmDelete}
         modelName="Transaction"
+      />
+
+      <RecurringDeleteModal
+        open={openRecurringDeleteModal}
+        onClose={handleClose}
+        itemDescription={selectedTransaction?.description ?? ""}
+        onDelete={confirmRecurringDelete}
       />
     </PageShell>
   );

@@ -12,6 +12,8 @@ import { TransactionFormInput, TransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
 import { FormFieldsByType } from "./FormFieldsByType";
 import { showError, showSuccess } from "@/lib/utils/toast";
+import { EditRecurringModal } from "./EditRecurringModal";
+import { useRouter } from "next/navigation";
 
 const frequencyOptions = [
   { value: "daily", label: "Daily" },
@@ -43,7 +45,10 @@ type Props = {
 };
 
 export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOptions, transaction }: Props) => {
+  const router = useRouter();
   const [mode, setMode] = useState<TransactionTypeEnum>(TransactionTypeEnum.expense);
+  const [openEditRecurringModal, setOpenEditRecurringModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<TransactionFormInput | null>(null);
 
   const form = useForm<TransactionFormInput>({
   resolver: zodResolver(TransactionFormSchema),
@@ -103,7 +108,14 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
 
   const onCloseModal = () => {
     resetFormToDefault();
+    setPendingFormData(null);
+    setOpenEditRecurringModal(false);
     onClose();
+  };
+
+  const handleCloseEditRecurringModal = () => {
+    setOpenEditRecurringModal(false);
+    setPendingFormData(null);
   };
 
   const handleCreate = async (data: TransactionFormInput) => {
@@ -118,7 +130,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
     await transactionService.createTransaction(payload);
   }
 
-  const handleUpdate = async (data: TransactionFormInput) => {
+  const handleUpdate = async (data: TransactionFormInput, updateScope?: 'one' | 'future') => {
     if (!transaction) return;
 
     const payload = {
@@ -129,20 +141,50 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
     };
 
-    await transactionService.updateTransaction(transaction.id, {
-      ...payload,
-      ...(transaction.transferId ? { transferId: transaction.transferId } : {}),
-    });
+    await transactionService.updateTransaction(
+      transaction.id,
+      {
+        ...payload,
+        ...(transaction.transferId ? { transferId: transaction.transferId } : {}),
+      },
+      updateScope
+    );
   }
 
   const onSubmit = async (data: TransactionFormInput) => {
     if (transaction) {
+      // Check if editing a recurring transaction
+      if (transaction.isRecurring && transaction.recurringId) {
+        // Store form data and show the edit recurring modal
+        setPendingFormData(data);
+        setOpenEditRecurringModal(true);
+        return; // Don't close the form modal yet
+      }
+      
+      // Non-recurring transaction - update directly
       await handleUpdate(data);
+      router.refresh();
+      showSuccess('Transaction updated successfully');
     } else {
       await handleCreate(data);
+      router.refresh();
+      showSuccess('Transaction created successfully');
     }
 
     onCloseModal();
+  };
+
+  const handleConfirmRecurringUpdate = async (scope: 'one' | 'future') => {
+    if (!pendingFormData || !transaction) return;
+
+    try {
+      await handleUpdate(pendingFormData, scope);
+      router.refresh();
+      onCloseModal();
+    } catch (error) {
+      // Error is already handled in EditRecurringModal
+      throw error;
+    }
   };
 
   const handleModeChange = (newMode: typeof mode) => {
@@ -161,8 +203,10 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       onSubmit={onSubmit}
       title="New Transaction"
       description="Log an expense, income, or transfer between accounts."
-      toastErrorMessage="Failed to create transaction"
-      toastSuccessMessage="Transaction created successfully"
+      showToast={false}
+      refreshOnSubmit={false}
+      toastErrorMessage="Failed to save transaction"
+      maxWidth="xl"
     >
       <RadioGroup value={mode} onChange={handleModeChange} className="flex gap-4 mb-4">
         {["expense", "income", "transfer"].map((type) => (
@@ -230,7 +274,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
 
           {/* Conditional fields when isRecurring is true */}
           {isRecurring && (
-            <div className="space-y-4 pl-6 border-l-2 border-primary/20">
+            <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
               {/* Frequency dropdown */}
               <FormCombobox
                 form={form as any}
@@ -252,6 +296,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
           )}
         </div>
       )}
+
+      <EditRecurringModal
+        open={openEditRecurringModal}
+        onClose={handleCloseEditRecurringModal}
+        itemDescription={transaction?.description ?? ""}
+        onUpdate={handleConfirmRecurringUpdate}
+      />
     </FormModal>
   );
 };
