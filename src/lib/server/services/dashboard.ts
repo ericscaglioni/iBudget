@@ -205,6 +205,81 @@ const getMonthlyTotals = async (
 };
 
 /**
+ * Get monthly summary for a specific month
+ */
+export const getMonthlySummary = async (userId: string, month?: string) => {
+  // Default to current month if not provided
+  const targetMonth = month || dayjs().format("YYYY-MM");
+  
+  // Get monthly totals using existing function
+  const monthlyData = await getMonthlyTotals(userId, targetMonth);
+
+  return {
+    income: monthlyData.income,
+    expenses: monthlyData.expenses,
+    net: monthlyData.net,
+    categoryBreakdown: monthlyData.categoryBreakdown.map(cat => ({
+      categoryId: cat.categoryId,
+      categoryName: cat.categoryName,
+      amount: cat.amount,
+      color: cat.color,
+    })),
+  };
+};
+
+/**
+ * Get account overview (balances + 6-month history)
+ */
+export const getAccountOverview = async (userId: string) => {
+  // Get account balances
+  const accountBalancesResult = await getAccountBalances(userId);
+  
+  // Get 6-month history
+  const sixMonthSummary = await getSixMonthHistory(userId);
+
+  return {
+    accountBalances: accountBalancesResult.accountBalances,
+    sixMonthSummary,
+  };
+};
+
+/**
+ * Get account balances for a user
+ */
+export const getAccountBalances = async (userId: string) => {
+  // Get all accounts for the user
+  const accounts = await prisma.account.findMany({
+    where: { userId },
+    select: { id: true, name: true, currency: true },
+    orderBy: { name: "asc" },
+  });
+
+  // Calculate balance for each account
+  const accountBalances = await Promise.all(
+    accounts.map(async (account) => ({
+      accountId: account.id,
+      name: account.name,
+      currency: account.currency,
+      balance: await calculateAccountBalance(account.id),
+    }))
+  );
+
+  // Calculate total balance by currency
+  const totalBalanceByCurrency: Record<string, number> = {};
+  accountBalances.forEach(account => {
+    if (!totalBalanceByCurrency[account.currency]) {
+      totalBalanceByCurrency[account.currency] = 0;
+    }
+    totalBalanceByCurrency[account.currency] += account.balance;
+  });
+
+  return {
+    totalBalanceByCurrency,
+    accountBalances,
+  };
+};
+
+/**
  * Get dashboard data for a user
  */
 export const getDashboardData = async (
