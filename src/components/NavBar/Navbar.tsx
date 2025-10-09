@@ -17,7 +17,7 @@ export const Navbar = () => {
     <nav className="w-full flex justify-between items-center py-4 px-6 bg-white shadow-sm">
       {/* LEFT SIDE: Logo + Nav */}
       <div className="flex items-center gap-6">
-        <Link href="/accounts" className="text-xl font-bold text-primary">
+        <Link href="/dashboard" className="text-xl font-bold text-primary">
           iBudget
         </Link>
         {/* Navigation Links */}
