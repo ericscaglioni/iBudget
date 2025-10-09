@@ -24,10 +24,17 @@ interface MonthlyTotal {
   categoryBreakdown: CategoryBreakdown[];
 }
 
+interface SixMonthHistory {
+  month: string; // YYYY-MM format
+  income: number;
+  expenses: number;
+}
+
 export interface DashboardData {
   totalBalance: number;
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
+  sixMonthHistory: SixMonthHistory[];
 }
 
 interface GetDashboardOptions {

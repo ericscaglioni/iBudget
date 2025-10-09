@@ -6,7 +6,7 @@ import { dashboardService } from "@/lib/client/services";
 import { DashboardData } from "@/lib/client/services/dashboard";
 import { dayjs } from "@/lib/utils/dayjs";
 import { useEffect, useState } from "react";
-import { AccountsOverview, MonthlySummary, TopSpendingCategories } from "./_components";
+import { AccountsOverview, MonthlySummary, SixMonthBarChart, TopSpendingCategories } from "./_components";
 
 const DashboardPage = () => {
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
@@ -59,28 +59,43 @@ const DashboardPage = () => {
         {/* Dashboard Content */}
         {!loading && !error && dashboardData && (
           <div className="space-y-6 sm:space-y-8">
-            {/* Accounts Overview Section */}
+            {/* 1. Accounts Overview Section */}
             <section>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Accounts</h2>
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">Accounts</h2>
               <AccountsOverview
                 accountBalances={dashboardData.accountBalances}
               />
             </section>
 
-            {/* Monthly Summary Section */}
+            {/* 2. Financial Trends Section */}
+            {dashboardData.sixMonthHistory && dashboardData.sixMonthHistory.length > 0 && (
+              <section>
+                <div className="mb-2 sm:mb-3 md:mb-4">
+                  <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+                    Financial Trends (Last 6 Months)
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Compare your income and expenses over time to identify spending patterns
+                  </p>
+                </div>
+                <SixMonthBarChart data={dashboardData.sixMonthHistory} />
+              </section>
+            )}
+
+            {/* 3. Current Month Summary Section */}
             {dashboardData.monthlyTotals.length > 0 && (
-              <section className="space-y-4 sm:space-y-6">
+              <section className="space-y-3 sm:space-y-4 md:space-y-6">
                 {/* Section Header */}
                 <div>
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                    Monthly Summary
+                  <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+                    Current Month Summary
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                    Select a month to view your income, expenses, and spending breakdown
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 md:mb-4">
+                    Select a month to view detailed income, expenses, and spending breakdown
                   </p>
                 </div>
 
-                {/* Month Selector - now within summary section */}
+                {/* Month Selector */}
                 <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4 shadow-sm">
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     {/* Month Navigation */}
@@ -127,7 +142,7 @@ const DashboardPage = () => {
 
                 {/* Monthly Data */}
                 {dashboardData.monthlyTotals.map((monthData: DashboardData['monthlyTotals'][0]) => (
-                  <div key={monthData.month} className="space-y-4 sm:space-y-6">
+                  <div key={monthData.month} className="space-y-3 sm:space-y-4 md:space-y-6">
                     <MonthlySummary
                       income={monthData.income}
                       expenses={monthData.expenses}

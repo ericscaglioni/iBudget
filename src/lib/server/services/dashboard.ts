@@ -24,6 +24,12 @@ interface MonthlyTotal {
   categoryBreakdown: CategoryBreakdown[];
 }
 
+interface SixMonthHistory {
+  month: string; // YYYY-MM format
+  income: number;
+  expenses: number;
+}
+
 interface DashboardQuery {
   includeCurrentMonth?: boolean;
   includePreviousMonth?: boolean;
@@ -34,6 +40,7 @@ interface DashboardData {
   totalBalance: number;
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
+  sixMonthHistory: SixMonthHistory[];
 }
 
 /**
@@ -64,6 +71,67 @@ const calculateAccountBalance = async (accountId: string): Promise<number> => {
   }, 0);
 
   return account.initialBalance + transactionNet;
+};
+
+/**
+ * Get 6-month income and expense history
+ */
+const getSixMonthHistory = async (userId: string): Promise<SixMonthHistory[]> => {
+  // Generate exactly 6 months: from 5 months ago to current month
+  const months: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const month = dayjs().subtract(i, "month").format("YYYY-MM");
+    months.push(month);
+  }
+
+  // Calculate date range for the 6 months
+  const startDate = dayjs().subtract(5, "month").startOf("month").toDate();
+  const endDate = dayjs().endOf("month").toDate();
+  
+  // Use Prisma raw query to group by month using TO_CHAR for direct string formatting
+  const monthlyData = await prisma.$queryRaw<Array<{
+    month_key: string;
+    type: string;
+    total_amount: number;
+  }>>`
+    SELECT 
+      TO_CHAR(date, 'YYYY-MM') as month_key,
+      type,
+      SUM(amount) as total_amount
+    FROM "transactions"
+    WHERE 
+      "userId" = ${userId}
+      AND date >= ${startDate}
+      AND date <= ${endDate}
+      AND "transferId" IS NULL
+      AND type IN ('income', 'expense')
+    GROUP BY TO_CHAR(date, 'YYYY-MM'), type
+    ORDER BY month_key ASC
+  `;
+
+  // Group by month and calculate totals
+  const monthMap = new Map<string, { income: number; expenses: number }>();
+  
+  monthlyData.forEach((row) => {
+    // Use the month_key directly from PostgreSQL (no timezone conversion issues)
+    const monthKey = row.month_key;
+    const existing = monthMap.get(monthKey) || { income: 0, expenses: 0 };
+    
+    if (row.type === "income") {
+      existing.income += Number(row.total_amount);
+    } else if (row.type === "expense") {
+      existing.expenses += Number(row.total_amount);
+    }
+    
+    monthMap.set(monthKey, existing);
+  });
+
+  // Return exactly 6 months with real zero values for months with no transactions
+  return months.map(month => ({
+    month,
+    income: monthMap.get(month)?.income || 0,
+    expenses: monthMap.get(month)?.expenses || 0,
+  }));
 };
 
 /**
@@ -192,10 +260,14 @@ export const getDashboardData = async (
     }
   }
 
+  // Get 6-month history (always included regardless of month filter)
+  const sixMonthHistory = await getSixMonthHistory(userId);
+
   return {
     totalBalance,
     accountBalances,
     monthlyTotals,
+    sixMonthHistory,
   };
 };
 
