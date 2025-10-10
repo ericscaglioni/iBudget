@@ -46,20 +46,17 @@ interface DashboardData {
 /**
  * Calculate the current balance for an account
  * Balance = initialBalance + income transactions - expense transactions
+ * Excludes future transactions by filtering date <= now
  */
-const calculateAccountBalance = async (accountId: string): Promise<number> => {
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-    select: { initialBalance: true },
-  });
-
-  if (!account) {
-    return 0;
-  }
-
-  // Get all transactions for this account
+const calculateAccountBalance = async (
+  account: { id: string; initialBalance: number }
+): Promise<number> => {
+  // Get all transactions for this account (excluding future transactions)
   const transactions = await prisma.transaction.findMany({
-    where: { accountId },
+    where: { 
+      accountId: account.id,
+      date: { lte: new Date() },
+    },
     select: { type: true, amount: true },
   });
 
@@ -249,10 +246,10 @@ export const getAccountOverview = async (userId: string) => {
  * Get account balances for a user
  */
 export const getAccountBalances = async (userId: string) => {
-  // Get all accounts for the user
+  // Get all accounts for the user with initialBalance
   const accounts = await prisma.account.findMany({
     where: { userId },
-    select: { id: true, name: true, currency: true },
+    select: { id: true, name: true, currency: true, initialBalance: true },
     orderBy: { name: "asc" },
   });
 
@@ -262,7 +259,7 @@ export const getAccountBalances = async (userId: string) => {
       accountId: account.id,
       name: account.name,
       currency: account.currency,
-      balance: await calculateAccountBalance(account.id),
+      balance: await calculateAccountBalance(account),
     }))
   );
 
@@ -294,10 +291,10 @@ export const getDashboardData = async (
     month 
   } = query || {};
 
-  // Get all accounts for the user
+  // Get all accounts for the user with initialBalance
   const accounts = await prisma.account.findMany({
     where: { userId },
-    select: { id: true, name: true, currency: true },
+    select: { id: true, name: true, currency: true, initialBalance: true },
     orderBy: { name: "asc" },
   });
 
@@ -307,7 +304,7 @@ export const getDashboardData = async (
       accountId: account.id,
       name: account.name,
       currency: account.currency,
-      balance: await calculateAccountBalance(account.id),
+      balance: await calculateAccountBalance(account),
     }))
   );
 
