@@ -248,36 +248,42 @@ export const createRecurringTransaction = async (
 
   // Generate initial transaction + future occurrences using dayjs for reliable date math
   const transactions = [];
-  let currentDate = dayjs(date); // Use dayjs instead of native Date
-  const maxTotalInstances = 12; // Total number of instances to create
+  const startDate = dayjs(date); // Original transaction date
+  let currentDate = startDate;
 
-  // Create all transactions (including the initial one)
-  for (let i = 0; i < maxTotalInstances; i++) {
-    // For the first iteration, use the original date; for subsequent ones, add to the date
-    if (i > 0) {
-      switch (frequency) {
-        case 'daily':
-          currentDate = currentDate.add(1, 'day');
-          break;
-        case 'weekly':
-          currentDate = currentDate.add(1, 'week');
-          break;
-        case 'monthly':
-          currentDate = currentDate.add(1, 'month');
-          break;
-        case 'yearly':
-          currentDate = currentDate.add(1, 'year');
-          break;
-        default:
-          throw new ValidationError(`Invalid frequency: ${frequency}`);
-      }
+  // Determine how many occurrences to generate
+  const defaultOccurrences = 12; // Default if no end date provided
+  const finalDate = endsAt ? dayjs(endsAt) : null;
+
+  // Calculate the interval unit based on frequency
+  const getIntervalConfig = (freq: string): { amount: number; unit: any } => {
+    switch (freq) {
+      case 'daily':
+        return { amount: 1, unit: 'day' };
+      case 'weekly':
+        return { amount: 1, unit: 'week' };
+      case 'monthly':
+        return { amount: 1, unit: 'month' };
+      case 'yearly':
+        return { amount: 1, unit: 'year' };
+      default:
+        throw new ValidationError(`Invalid frequency: ${freq}`);
     }
-    
-    // Check if we've reached the end date
-    if (endsAt && currentDate.toDate() > endsAt) {
+  };
+
+  const interval = getIntervalConfig(frequency);
+
+  // Generate occurrences
+  let occurrenceCount = 0;
+  const maxOccurrences = finalDate ? 1000 : defaultOccurrences; // Safety limit when finalDate is provided
+
+  while (occurrenceCount < maxOccurrences) {
+    // Check if current date exceeds final date (if provided)
+    if (finalDate && currentDate.isAfter(finalDate, 'day')) {
       break;
     }
 
+    // Add the transaction
     transactions.push({
       userId,
       type,
@@ -286,6 +292,28 @@ export const createRecurringTransaction = async (
       categoryId,
       description,
       date: currentDate.toDate(), // Convert dayjs to native Date for Prisma
+      isRecurring: true,
+      frequency,
+      endsAt: endsAt || null,
+      recurringId,
+    });
+
+    occurrenceCount++;
+
+    // Calculate next occurrence date
+    currentDate = currentDate.add(interval.amount, interval.unit);
+  }
+
+  // Edge case: If no transactions were generated, create at least the original one
+  if (transactions.length === 0) {
+    transactions.push({
+      userId,
+      type,
+      amount: Math.abs(amount),
+      accountId,
+      categoryId,
+      description,
+      date: startDate.toDate(),
       isRecurring: true,
       frequency,
       endsAt: endsAt || null,
