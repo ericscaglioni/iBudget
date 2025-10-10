@@ -55,15 +55,40 @@ export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
     ...chartData.flatMap(item => [item.Income, item.Expenses])
   );
   
-  // Smart Y-axis scaling: always start from 0, scale appropriately
-  let yAxisMax = 0;
-  if (maxValue > 0) {
-    // Add 10% padding but ensure we don't go too high
-    yAxisMax = Math.ceil(maxValue * 1.1);
-  } else {
-    // If all values are 0, set a small scale
-    yAxisMax = 100;
-  }
+  // Smart Y-axis scaling: round to nice increments with padding above max
+  const calculateYAxisConfig = (max: number): { yAxisMax: number; stepSize: number } => {
+    if (max === 0) return { yAxisMax: 100, stepSize: 20 };
+    
+    // Determine the step size based on max value
+    let stepSize: number;
+    if (max <= 100) stepSize = 20;
+    else if (max <= 500) stepSize = 100;
+    else if (max <= 2000) stepSize = 500;
+    else if (max <= 10000) stepSize = 1000;
+    else if (max <= 50000) stepSize = 5000;
+    else if (max <= 100000) stepSize = 10000;
+    else stepSize = 50000;
+    
+    // Round up to the nearest step, then add one more step for padding
+    // This ensures the max value never coincides with the top tick
+    const roundedMax = Math.ceil(max / stepSize) * stepSize;
+    const yAxisMax = roundedMax === max ? roundedMax + stepSize : roundedMax;
+    
+    return { yAxisMax, stepSize };
+  };
+  
+  const { yAxisMax, stepSize } = calculateYAxisConfig(maxValue);
+  
+  // Generate tick values based on step size for perfect alignment
+  const generateTicks = (max: number, step: number): number[] => {
+    const ticks: number[] = [];
+    for (let i = 0; i <= max; i += step) {
+      ticks.push(i);
+    }
+    return ticks;
+  };
+  
+  const yAxisTicks = generateTicks(yAxisMax, stepSize);
 
   // Format Y-axis tick values
   const formatYAxisTick = (value: number) => {
@@ -116,6 +141,7 @@ export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
               tickLine={{ stroke: '#e5e7eb' }}
               tickFormatter={formatYAxisTick}
               domain={[0, yAxisMax]}
+              ticks={yAxisTicks}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend 
