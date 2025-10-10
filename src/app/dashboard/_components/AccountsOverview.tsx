@@ -1,6 +1,4 @@
-"use client";
-
-import { formatCurrency } from "@/lib/utils/format";
+import { ClientOnlyCurrency } from "@/components/ui";
 
 interface AccountBalance {
   accountId: string;
@@ -42,9 +40,12 @@ export const AccountsOverview = ({ accountBalances }: Props) => {
           {Object.entries(accountsByCurrency).map(([currency, accounts]) => {
             const currencyTotal = accounts.reduce((sum, acc) => sum + acc.balance, 0);
             return (
-              <div key={currency} className="text-2xl sm:text-4xl font-bold text-white">
-                {formatCurrency(currencyTotal, currency)}
-              </div>
+              <ClientOnlyCurrency
+                key={currency}
+                value={currencyTotal}
+                currency={currency}
+                className="text-2xl sm:text-4xl font-bold text-white"
+              />
             );
           })}
         </div>
@@ -65,9 +66,11 @@ export const AccountsOverview = ({ accountBalances }: Props) => {
               
               {/* Balance and Currency */}
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                  {formatCurrency(account.balance, account.currency)}
-                </span>
+                <ClientOnlyCurrency
+                  value={account.balance}
+                  currency={account.currency}
+                  className="text-xl sm:text-2xl font-bold text-gray-900 truncate"
+                />
                 <span className="text-xs font-semibold text-gray-400 uppercase shrink-0">
                   {account.currency}
                 </span>
