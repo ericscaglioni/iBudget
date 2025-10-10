@@ -40,12 +40,13 @@ export const AccountsOverview = ({ accountBalances }: Props) => {
           {Object.entries(accountsByCurrency).map(([currency, accounts]) => {
             const currencyTotal = accounts.reduce((sum, acc) => sum + acc.balance, 0);
             return (
-              <ClientOnlyCurrency
-                key={currency}
-                value={currencyTotal}
-                currency={currency}
-                className="text-2xl sm:text-4xl font-bold text-white"
-              />
+              <div key={currency} className="block">
+                <ClientOnlyCurrency
+                  value={currencyTotal}
+                  currency={currency}
+                  className="text-2xl sm:text-4xl font-bold text-white"
+                />
+              </div>
             );
           })}
         </div>
