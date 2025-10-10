@@ -37,19 +37,6 @@ model Account {
   @@map("accounts")
 }
 
-model CategoryGroup {
-  id        String     @id @default(uuid())
-  userId    String?    // null = default group
-  name      String
-  isSystem  Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  categories Category[]
-
-  @@map("category_groups")
-}
-
 enum CategoryType {
   income
   expense
@@ -60,13 +47,11 @@ model Category {
   userId       String?      // null = default category
   name         String
   color        String       // hex color
-  groupId      String
   isSystem     Boolean      @default(false)
   type         CategoryType @default(expense)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  group       CategoryGroup @relation(fields: [groupId], references: [id])
   transactions Transaction[]
 
   @@map("categories")
