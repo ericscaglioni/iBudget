@@ -3,12 +3,13 @@
 import { PageShell } from "@/components";
 import { ComboboxOption, DeleteModal } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
 import { CategoryOption, TransactionWithDetails } from "../types";
 import { RecurringDeleteModal } from "./RecurringDeleteModal";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { TransactionsTable } from "./TransactionsTable";
+import { TransactionFilters } from "./TransactionFilters";
 
 interface Props {
   transactions: TransactionWithDetails[];
@@ -28,6 +29,8 @@ export const TransactionsPageShell = ({
   categoryOptions,
 }: Props) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [_, startTransition] = useTransition();
   
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -96,13 +99,21 @@ const handleEdit = (transaction: TransactionWithDetails) => {
         onClick: handleCreate,
       }}
     >
+      <TransactionFilters
+        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
+        accountOptions={accountOptions}
+        searchParams={searchParams}
+        basePath="/transactions"
+        startTransition={startTransition}
+      />
+
       <TransactionsTable
         data={transactions}
         totalCount={totalCount}
         page={page}
         pageSize={pageSize}
         accountOptions={accountOptions}
-        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id }))}
+        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

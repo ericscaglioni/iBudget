@@ -84,7 +84,7 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
   const currentYear = selectedDate.year();
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
       
       <div className="flex items-stretch gap-1">
@@ -103,7 +103,7 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex-1 min-w-[180px] text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white hover:bg-gray-50"
+          className="flex-1 min-w-[140px] sm:min-w-[180px] text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white hover:bg-gray-50"
         >
           {displayValue}
         </button>

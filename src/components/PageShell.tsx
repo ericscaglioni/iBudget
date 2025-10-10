@@ -16,22 +16,27 @@ export function PageShell({ title, subtitle, children, actionButton }: Props) {
     <div className="w-full px-3 sm:px-6 py-4 sm:py-10">
       <div className="max-w-7xl mx-auto">
         <header className="mb-4 sm:mb-8">
-          <h1 className="text-xl sm:text-3xl font-bold text-slate-900">{title}</h1>
-          {subtitle && (
-            <p className="text-gray-500 text-xs sm:text-sm mt-1">{subtitle}</p>
-          )}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+            <div>
+              <h1 className="text-xl sm:text-3xl font-bold text-slate-900">{title}</h1>
+              {subtitle && (
+                <p className="text-gray-500 text-xs sm:text-sm mt-1">{subtitle}</p>
+              )}
+            </div>
+            {actionButton && (
+              <div className="flex justify-center sm:justify-end">
+                <Button
+                  {...actionButton}
+                  className="w-full sm:w-auto"
+                >
+                  {actionButton.text}
+                </Button>
+              </div>
+            )}
+          </div>
         </header>
 
         <section className="w-full">
-          {actionButton && (
-            <div className="flex justify-end mb-4 sm:mb-6">
-              <Button
-                {...actionButton}
-              >
-                {actionButton.text}
-              </Button>
-            </div>
-          )}
           {children}
         </section>
       </div>

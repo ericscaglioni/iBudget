@@ -85,7 +85,7 @@ export function Table<TData>({
           </div>
         )}
         {/* 🚀 TABLE */}
-        <table className="table-auto w-full min-w-full bg-white text-sm text-left">
+        <table className="table-auto w-full min-w-[600px] sm:min-w-full bg-white text-sm text-left">
           <thead className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -93,7 +93,7 @@ export function Table<TData>({
                   <th
                     key={header.id}
                     className={clsx(
-                      "px-4 py-2 font-medium text-gray-700",
+                      "px-2 sm:px-4 py-2 font-medium text-gray-700 text-xs sm:text-sm",
                       header.column.columnDef.meta?.className,
                       enableSorting && header.column.getCanSort() && "cursor-pointer"
                     )}
@@ -129,7 +129,7 @@ export function Table<TData>({
               <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className={clsx(
-                    "px-4 py-2 text-gray-800",
+                    "px-2 sm:px-4 py-2 text-gray-800 text-xs sm:text-sm",
                     cell.column.columnDef.meta?.className,
                   )}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

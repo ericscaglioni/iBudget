@@ -12,5 +12,6 @@ export * from './Input';
 export * from './LoadingOverlay';
 export * from './Modal';
 export * from './MonthYearPicker';
+export * from './SegmentedControl';
 export * from './Spinner';
 export * from './Table/Table';

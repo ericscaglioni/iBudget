@@ -82,6 +82,7 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
     userId,
     ...(filters.accountId ? { accountId: filters.accountId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
+    ...(filters.type ? { type: filters.type as TransactionType } : {}),
     ...(sanitizedDescription ? { description: { contains: sanitizedDescription, mode: "insensitive" as Prisma.QueryMode } } : {}),
     ...dateFilter,
     OR: [

@@ -8,7 +8,7 @@ type Props = { label?: string } & InputHTMLAttributes<HTMLInputElement>;
 export const Input = (props: Props) => {
   const { label, ...rest } = props;
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
       <HeadlessInput
         {...rest}

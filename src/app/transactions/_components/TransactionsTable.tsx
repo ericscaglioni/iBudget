@@ -41,30 +41,6 @@ export const TransactionsTable = ({
       basePath="/transactions"
       enablePagination
       enableSorting
-      filtersConfig={[
-        {
-          type: "monthYear",
-          label: "Month",
-          name: "month",
-        },
-        {
-          type: "combobox",
-          label: "Account",
-          name: "accountId",
-          options: accountOptions,
-        },
-        {
-          type: "combobox",
-          label: "Category",
-          name: "categoryId",
-          options: categoryOptions,
-        },
-        {
-          type: "text",
-          label: "Description",
-          name: "description",
-        },
-      ]}
     />
   );
 };

@@ -13,6 +13,7 @@ import { Icon } from "./Icon";
 export type ComboboxOption = {
   label: string;
   value: string;
+  type?: string;
 };
 
 type Props = {
@@ -38,12 +39,14 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
   const selected = options.find((opt) => opt.value === value);
 
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
       <HeadlessCombobox value={value ?? ""} onChange={onChange} disabled={disabled}>
         <div className="relative">
           <ComboboxInput
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+              disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+            }`}
             onChange={(event) => setQuery(event.target.value)}
             displayValue={() => selected?.label ?? ""}
             placeholder={placeholder}
