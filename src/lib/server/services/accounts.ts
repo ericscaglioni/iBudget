@@ -7,22 +7,38 @@ import { redirect } from "next/navigation";
 
 /**
  * Calculate the current balance for an account
- * Balance = initialBalance + income transactions - expense transactions
+ * Balance = initialBalance + income - expense + incoming transfers - outgoing transfers
+ * 
+ * How transfers work:
+ * - Outgoing transfer: expense transaction with transferId on fromAccount (subtract)
+ * - Incoming transfer: income transaction with transferId on toAccount (add)
+ * 
  * Excludes future transactions by filtering date <= now
  */
 export const calculateAccountBalance = async (
   account: { id: string; initialBalance: number }
 ): Promise<number> => {
   // Get all transactions for this account (excluding future transactions)
+  // This includes:
+  // - Regular income transactions (add to balance)
+  // - Regular expense transactions (subtract from balance)
+  // - Transfer income transactions (incoming transfers - add to balance)
+  // - Transfer expense transactions (outgoing transfers - subtract from balance)
   const transactions = await prisma.transaction.findMany({
     where: { 
       accountId: account.id,
       date: { lte: new Date() },
     },
-    select: { type: true, amount: true },
+    select: { 
+      type: true, 
+      amount: true,
+      transferId: true,
+    },
   });
 
-  // Calculate net from transactions
+  // Calculate net from all transactions
+  // Income (including incoming transfers): +amount
+  // Expense (including outgoing transfers): -amount
   const transactionNet = transactions.reduce((sum, tx) => {
     return tx.type === TransactionType.income 
       ? sum + tx.amount 
