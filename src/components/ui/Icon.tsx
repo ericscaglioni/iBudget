@@ -11,6 +11,8 @@ import {
   ChevronUpIcon,
   PencilSquareIcon,
   TrashIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/react/20/solid';
 
 const iconMap = {
@@ -26,6 +28,8 @@ const iconMap = {
   chevronRight: ChevronRightIcon,
   chevronUp: ChevronUpIcon,
   edit: PencilSquareIcon,
+  menu: Bars3Icon,
+  close: XMarkIcon,
 };
 
 export type IconType = keyof typeof iconMap;
