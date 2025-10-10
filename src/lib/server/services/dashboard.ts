@@ -172,24 +172,26 @@ const getMonthlyTotals = async (
     .filter(tx => tx.type === TransactionType.expense)
     .reduce((sum, tx) => sum + tx.amount, 0);
 
-  // Group by category for breakdown
+  // Group by category for breakdown (expenses only)
   const categoryMap = new Map<string, CategoryBreakdown>();
 
-  filteredTransactions.forEach(tx => {
-    if (tx.category) {
-      const existing = categoryMap.get(tx.category.id);
-      if (existing) {
-        existing.amount += tx.amount;
-      } else {
-        categoryMap.set(tx.category.id, {
-          categoryId: tx.category.id,
-          categoryName: tx.category.name,
-          amount: tx.amount,
-          color: tx.category.color,
-        });
+  filteredTransactions
+    .filter(tx => tx.type === TransactionType.expense)
+    .forEach(tx => {
+      if (tx.category) {
+        const existing = categoryMap.get(tx.category.id);
+        if (existing) {
+          existing.amount += tx.amount;
+        } else {
+          categoryMap.set(tx.category.id, {
+            categoryId: tx.category.id,
+            categoryName: tx.category.name,
+            amount: tx.amount,
+            color: tx.category.color,
+          });
+        }
       }
-    }
-  });
+    });
 
   const categoryBreakdown = Array.from(categoryMap.values()).sort(
     (a, b) => b.amount - a.amount
