@@ -91,7 +91,7 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
         AND: [
           { transferId: { not: null } },
           { type: TransactionType.expense },
-          { category: { isSystem: true } },
+          { category: { userId: null } },
         ],
       },
     ],
@@ -154,7 +154,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
   const { fromAccountId, toAccountId, amount, description, date } = props;
 
   const transferCategory = await prisma.category.findFirst({
-    where: { userId: null, name: "Transfer", isSystem: true },
+    where: { userId: null, name: "Transfer" },
   });
 
   if (!transferCategory) {

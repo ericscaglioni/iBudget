@@ -3,7 +3,7 @@ import { Category } from "@prisma/client";
 
 const categoriesPath = "/api/categories";
 
-type CategoryPayload = Omit<Category, "id" | "userId" | "createdAt" | "updatedAt" | "isSystem">;
+type CategoryPayload = Omit<Category, "id" | "userId" | "createdAt" | "updatedAt">;
 
 export const getCategories = async () => {
   return get<Category[]>(categoriesPath);

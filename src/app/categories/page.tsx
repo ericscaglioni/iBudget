@@ -3,14 +3,33 @@ import { redirect } from "next/navigation";
 import { categoryService } from "@/lib/server/services";
 import { CategoriesPageShell } from "./_components";
 import { handleServerError } from "@/lib/utils/server-error-handler";
+import { parseQueryParams } from "@/lib/utils/parse-query";
 
-const CategoriesPage = async () => {
+interface Props {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+const CategoriesPage = async ({ searchParams }: Props) => {
   try {
     const { userId } = await auth();
     if (!userId) redirect("/login");
 
-    const categories = await categoryService.getUserCategories(userId);
-    return <CategoriesPageShell categories={categories} />;
+    const params = await searchParams;
+    const queryParams = await parseQueryParams(params);
+
+    const { categories, total } = await categoryService.getCategoriesByUser(
+      userId,
+      queryParams
+    );
+
+    return (
+      <CategoriesPageShell
+        categories={categories}
+        totalCount={total}
+        page={queryParams.page}
+        pageSize={queryParams.pageSize}
+      />
+    );
   } catch (error) {
     handleServerError(error);
   }

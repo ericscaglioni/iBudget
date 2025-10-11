@@ -1,14 +1,22 @@
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
-import { Category, CategoryType } from "@prisma/client";
+import { sanitizeFilterInput } from "@/lib/utils/sanitize";
+import { Category, CategoryType, Prisma } from "@prisma/client";
 
 export const getCategoriesByUser = async (userId: string, props: QueryParams) => {
-  const { page, pageSize, sortField = "createdAt", sortOrder = "desc", filters } = props;
+  const { page, pageSize, sortField = "name", sortOrder = "asc", filters } = props;
+  const sanitizedName = filters.name ? sanitizeFilterInput(filters.name) : undefined;
 
   const where = {
     userId,
     ...(filters.type && { type: filters.type as CategoryType }),
+    ...(sanitizedName && {
+      name: {
+        contains: sanitizedName,
+        mode: "insensitive" as Prisma.QueryMode,
+      },
+    }),
   };
 
   const [categories, total] = await prisma.$transaction([
@@ -35,7 +43,7 @@ export const getUserCategories = async (userId: string) => {
   return categories;
 };
 
-export const createCategory = async (userId: string, data: Omit<Category, "id" | "userId" | "createdAt" | "updatedAt" | "isSystem">) => {
+export const createCategory = async (userId: string, data: Omit<Category, "id" | "userId" | "createdAt" | "updatedAt">) => {
   const { name, color, type } = data;
 
   if (!name || !color || !type) {

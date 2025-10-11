@@ -11,7 +11,7 @@ export const initializeUserDefaults = async (userId: string) => {
 
   // Clone default categories
   const defaultCategories = await prisma.category.findMany({
-    where: { userId: null },
+    where: { userId: null, name: { not: "Transfer" } }, // Exclude Transfer category
   });
 
   // Copy each category for the user

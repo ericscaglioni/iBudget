@@ -5,14 +5,22 @@ import { DeleteModal } from "@/components/ui";
 import { categoryService } from "@/lib/client/services";
 import { Category } from "@prisma/client";
 import { useState } from "react";
-import { CategoryList, CategoryFormModal } from "./";
+import { CategoriesTable, CategoryFormModal } from "./";
 import { useRouter } from "next/navigation";
 
 interface Props {
   categories: Category[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 }
 
-export const CategoriesPageShell = ({ categories }: Props) => {
+export const CategoriesPageShell = ({
+  categories,
+  totalCount,
+  page,
+  pageSize,
+}: Props) => {
   const router = useRouter();
   
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -53,10 +61,13 @@ export const CategoriesPageShell = ({ categories }: Props) => {
         onClick: handleCreate,
       }} 
     >
-      <CategoryList 
-        categories={categories} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete} 
+      <CategoriesTable
+        data={categories}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
 
       <CategoryFormModal

@@ -1,4 +1,5 @@
 export * from './CategoriesPageShell';
-export * from './CategoryList';
+export * from './CategoriesTable';
 export * from './CategoryFormModal';
+export * from './columns';
 
