@@ -9,39 +9,25 @@ export const initializeUserDefaults = async (userId: string) => {
 
   if (existing) return;
 
-  // 1. Clone default groups
-  const defaultGroups = await prisma.categoryGroup.findMany({
+  // Clone default categories
+  const defaultCategories = await prisma.category.findMany({
     where: { userId: null },
-    include: { categories: true },
   });
 
-  for (const group of defaultGroups) {
-    // Create a copy of the group for the user
-    const userGroup = await prisma.categoryGroup.create({
-      data: {
-        name: group.name,
-        isSystem: group.isSystem,
-        userId,
-      },
-    });
-
-    // Copy each category under this group
-    await Promise.all(
-      group.categories.map(({ id, ...cat }) =>
-        prisma.category.create({
-          data: {
-            ...cat,
-            groupId: userGroup.id,
-            userId,
-          },
-        })
-      )
-    );
-  }
+  // Copy each category for the user
+  await Promise.all(
+    defaultCategories.map(({ id, ...cat }) =>
+      prisma.category.create({
+        data: {
+          ...cat,
+          userId,
+        },
+      })
+    )
+  );
 };
 
 export const deleteUserCategories = async (userId: string) => {
-  // Delete all user-specific categories and groups
+  // Delete all user-specific categories
   await prisma.category.deleteMany({ where: { userId } });
-  await prisma.categoryGroup.deleteMany({ where: { userId } });
 }

@@ -1,19 +1,18 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ConfirmationModal, DeleteModal } from "@/components/ui";
+import { DeleteModal } from "@/components/ui";
 import { categoryService } from "@/lib/client/services";
 import { Category } from "@prisma/client";
 import { useState } from "react";
-import { CategoryGroupWithCategories } from "../types";
 import { CategoryList, CategoryFormModal } from "./";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  groups: CategoryGroupWithCategories[];
-};
+  categories: Category[];
+}
 
-export const CategoriesPageShell = ({ groups }: Props) => {
+export const CategoriesPageShell = ({ categories }: Props) => {
   const router = useRouter();
   
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -33,7 +32,7 @@ export const CategoriesPageShell = ({ groups }: Props) => {
   const handleDelete = (category: Category) => {
     setSelectedCategory(category);
     setOpenDeleteModal(true);
-  }
+  };
 
   const confirmDelete = async () => {
     if (!selectedCategory) return;
@@ -46,7 +45,7 @@ export const CategoriesPageShell = ({ groups }: Props) => {
   return (
     <PageShell
       title="Categories"
-      subtitle="Manage your budget categories by group."
+      subtitle="Manage your expense and income categories."
       actionButton={{
         text: "+ New Category",
         variant: "primary",
@@ -54,12 +53,15 @@ export const CategoriesPageShell = ({ groups }: Props) => {
         onClick: handleCreate,
       }} 
     >
-      <CategoryList groups={groups} onEdit={handleEdit} onDelete={handleDelete} />
+      <CategoryList 
+        categories={categories} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete} 
+      />
 
       <CategoryFormModal
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
-        groups={groups}
         category={selectedCategory ?? undefined}
       />
       

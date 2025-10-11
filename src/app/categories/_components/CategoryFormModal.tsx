@@ -1,41 +1,44 @@
 "use client";
 
-import { ColorInput, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
+import { ColorInput, FormModal, FormRadioGroup, FormTextInput } from "@/components/ui";
 import { categoryService } from "@/lib/client/services";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Category, CategoryGroup } from "@prisma/client";
+import { Category } from "@prisma/client";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { CategoryFormInput, CategoryFormSchema } from "../schema";
 
-const DEFAULT_VALUES = {
+const DEFAULT_VALUES: CategoryFormInput = {
   name: "",
   color: "#10B981",
-  groupId: "",
+  type: "expense" as const,
 };
+
+const TYPE_OPTIONS = [
+  { value: "expense", label: "Expense" },
+  { value: "income", label: "Income" },
+];
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  groups: CategoryGroup[];
   category?: Category;
 };
 
-export const CategoryFormModal = ({ open, onClose, category, groups }: Props) => {
+export const CategoryFormModal = ({ open, onClose, category }: Props) => {
   const form = useForm<CategoryFormInput>({
     resolver: zodResolver(CategoryFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
-  const { reset, watch, setValue } = form;
-  const selectedGroupId = watch("groupId");
+  const { reset } = form;
 
   useEffect(() => {
     if (category) {
       reset({
         name: category.name,
         color: category.color,
-        groupId: category.groupId,
+        type: category.type,
       });
     } else {
       reset(DEFAULT_VALUES);
@@ -65,7 +68,7 @@ export const CategoryFormModal = ({ open, onClose, category, groups }: Props) =>
       onSubmit={onSubmit}
       form={form}
       title={!!category ? "Edit Category" : "New Category"}
-      description="Choose a name, color, and group for your category."
+      description="Choose a name, color, and type for your category."
       toastSuccessMessage="Category saved successfully"
       toastErrorMessage="Failed to save category"
     >
@@ -73,19 +76,13 @@ export const CategoryFormModal = ({ open, onClose, category, groups }: Props) =>
         name="name"
         label="Name"
         form={form}
-        inputProps={{ disabled: !!category?.isSystem }}
       />
 
-      <FormCombobox
+      <FormRadioGroup
         form={form}
-        name="groupId"
-        label="Group"
-        options={groups.map((g) => ({
-          value: g.id,
-          label: g.name,
-        }))}
-        value={selectedGroupId}
-        onChange={(val) => setValue("groupId", val)}
+        name="type"
+        label="Type"
+        options={TYPE_OPTIONS}
       />
 
       <ColorInput

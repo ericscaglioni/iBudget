@@ -1,59 +1,65 @@
 "use client";
 
 import { Button, Icon } from "@/components/ui";
-import { TrashIcon } from "@heroicons/react/20/solid";
 import { Category } from "@prisma/client";
-import { CategoryGroupWithCategories } from "../types";
 
 interface Props {
-  groups: CategoryGroupWithCategories[];
+  categories: Category[];
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
 }
 
-export const CategoryList = ({ groups, onEdit, onDelete}: Props) => {
+export const CategoryList = ({ categories, onEdit, onDelete }: Props) => {
+  // Group categories by type
+  const expenseCategories = categories.filter((cat) => cat.type === "expense");
+  const incomeCategories = categories.filter((cat) => cat.type === "income");
+
+  const renderCategorySection = (title: string, categoryList: Category[]) => (
+    <div className="mb-8">
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+
+      {categoryList.length === 0 ? (
+        <p className="text-sm text-gray-400">No categories yet.</p>
+      ) : (
+        <ul className="border rounded divide-y divide-gray-200 bg-white shadow-sm">
+          {categoryList.map((cat) => (
+            <li key={cat.id} className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ backgroundColor: cat.color }}
+                />
+                <span>{cat.name}</span>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onEdit(cat)}
+                >
+                  <Icon name="edit" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onDelete(cat)}
+                >
+                  <Icon name="delete" />
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
   return (
-    groups.map((group) => (
-      <div key={group.id} className="mb-8">
-        <h3 className="text-lg font-semibold mb-2">{group.name}</h3>
-
-        {group.categories.length === 0 ? (
-          <p className="text-sm text-gray-400">No categories yet.</p>
-        ) : (
-          <ul className="border rounded divide-y divide-gray-200 bg-white shadow-sm">
-            {group.categories.map((cat) => (
-              <li key={cat.id} className="flex items-center justify-between p-3">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-block w-3 h-3 rounded-full`}
-                    style={{ backgroundColor: cat.color }}
-                  />
-                  <span>{cat.name}</span>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onEdit(cat)}
-                  >
-                    <Icon name="edit" />
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onDelete(cat)}
-                    disabled={cat.isSystem}
-                  >
-                    <Icon name="delete" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    ))
+    <>
+      {renderCategorySection("Expense Categories", expenseCategories)}
+      {renderCategorySection("Income Categories", incomeCategories)}
+    </>
   );
 };
