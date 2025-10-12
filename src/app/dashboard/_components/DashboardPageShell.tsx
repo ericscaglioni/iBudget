@@ -49,6 +49,7 @@ interface Props {
   sixMonthHistory: SixMonthHistory[];
   accountOptions: ComboboxOption[];
   categoryOptions: CategoryOption[];
+  transferCategoryId: string;
 }
 
 export const DashboardPageShell = ({
@@ -57,6 +58,7 @@ export const DashboardPageShell = ({
   sixMonthHistory,
   accountOptions,
   categoryOptions,
+  transferCategoryId,
 }: Props) => {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
@@ -204,6 +206,7 @@ export const DashboardPageShell = ({
         onClose={handleCloseTransactionModal}
         accountOptions={accountOptions}
         categoryOptions={categoryOptions}
+        transferCategoryId={transferCategoryId}
       />
     </>
   );

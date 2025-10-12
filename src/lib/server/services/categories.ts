@@ -43,6 +43,21 @@ export const getUserCategories = async (userId: string) => {
   return categories;
 };
 
+export const getSystemTransferCategory = async () => {
+  const category = await prisma.category.findFirst({
+    where: {
+      userId: null,
+      name: "Transfer"
+    }
+  });
+
+  if (!category) {
+    throw new Error("Transfer category not found");
+  }
+
+  return category;
+};
+
 export const createCategory = async (userId: string, data: Omit<Category, "id" | "userId" | "createdAt" | "updatedAt">) => {
   const { name, color, type } = data;
 

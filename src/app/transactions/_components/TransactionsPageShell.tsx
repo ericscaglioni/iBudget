@@ -18,6 +18,7 @@ interface Props {
   pageSize: number;
   categoryOptions: CategoryOption[];
   accountOptions: ComboboxOption[];
+  transferCategoryId: string;
 }
 
 export const TransactionsPageShell = ({
@@ -27,6 +28,7 @@ export const TransactionsPageShell = ({
   pageSize,
   accountOptions,
   categoryOptions,
+  transferCategoryId,
 }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -124,6 +126,7 @@ const handleEdit = (transaction: TransactionWithDetails) => {
         accountOptions={accountOptions}
         categoryOptions={categoryOptions}
         transaction={selectedTransaction ?? undefined}
+        transferCategoryId={transferCategoryId}
       />
 
       <DeleteModal

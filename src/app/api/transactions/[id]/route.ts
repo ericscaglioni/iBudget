@@ -1,5 +1,4 @@
 import { authHandler } from "@/lib/middlewares";
-import { prisma } from "@/lib/prisma";
 import { transactionService } from "@/lib/server/services";
 import { NextResponse } from "next/server";
 

@@ -18,6 +18,7 @@ const DashboardPage = async () => {
     // Fetch accounts and categories for transaction modal
     const userAccounts = await accountService.getUserAccounts(userId);
     const userCategories = await categoryService.getUserCategories(userId);
+    const transferCategory = await categoryService.getSystemTransferCategory();
 
     const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id }));
 
@@ -28,6 +29,7 @@ const DashboardPage = async () => {
         sixMonthHistory={dashboardData.sixMonthHistory}
         accountOptions={accountOptions}
         categoryOptions={userCategories}
+        transferCategoryId={transferCategory.id}
       />
     );
   } catch (error) {

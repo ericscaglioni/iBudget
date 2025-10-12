@@ -4,16 +4,16 @@ import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/compon
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
 import { dayjs } from "@/lib/utils/dayjs";
+import { showSuccess } from "@/lib/utils/toast";
 import { Radio, RadioGroup } from "@headlessui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, TransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
-import { FormFieldsByType } from "./FormFieldsByType";
-import { showError, showSuccess } from "@/lib/utils/toast";
 import { EditRecurringModal } from "./EditRecurringModal";
-import { useRouter } from "next/navigation";
+import { FormFieldsByType } from "./FormFieldsByType";
 
 const frequencyOptions = [
   { value: "daily", label: "Daily" },
@@ -42,23 +42,24 @@ type Props = {
   accountOptions: ComboboxOption[];
   categoryOptions: CategoryOption[];
   transaction?: TransactionWithDetails;
+  transferCategoryId: string;
 };
 
-export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOptions, transaction }: Props) => {
+export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOptions, transaction, transferCategoryId }: Props) => {
   const router = useRouter();
   const [mode, setMode] = useState<TransactionTypeEnum>(TransactionTypeEnum.expense);
   const [openEditRecurringModal, setOpenEditRecurringModal] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<TransactionFormInput | null>(null);
-
+  
   const form = useForm<TransactionFormInput>({
-  resolver: zodResolver(TransactionFormSchema),
-  defaultValues: getDefaultValues(mode),
-});
-
+    resolver: zodResolver(TransactionFormSchema),
+    defaultValues: getDefaultValues(mode),
+  });
+  
   const { reset, watch, setValue } = form;
   const isRecurring = watch("isRecurring");
   const selectedFrequency = watch("frequency");
-
+  
   const loadTransferTransaction = async (transaction: TransactionWithDetails) => {
     const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
     setMode(TransactionTypeEnum.transfer);
@@ -69,6 +70,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       type: TransactionTypeEnum.transfer,
       fromAccountId: transaction.accountId,
       toAccountId: transferTransaction.accountId,
+      categoryId: transferCategoryId,
     });
   }
 

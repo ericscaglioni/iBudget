@@ -344,7 +344,7 @@ export const updateTransaction = async (
   props: UpdateTransactionProps, 
   options?: UpdateTransactionOptions
 ) => {
-  const { id, type, amount, accountId, categoryId, description, date } = props;
+  const { id, amount, accountId, categoryId, description, date } = props;
   const updateScope = options?.updateScope || 'one';
 
   const existing = await prisma.transaction.findUnique({
@@ -378,7 +378,7 @@ export const updateTransaction = async (
         },
       },
       data: {
-        type,
+        type: existing.type,
         amount: Math.abs(amount),
         accountId,
         categoryId,
@@ -401,7 +401,7 @@ export const updateTransaction = async (
       id: existing.id,
     },
     data: {
-      type,
+      type: existing.type,
       amount: Math.abs(amount),
       accountId,
       categoryId,

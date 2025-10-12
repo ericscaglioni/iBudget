@@ -19,6 +19,7 @@ const TransactionsPage = async ({ searchParams }: Props) => {
     const { transactions, total } = await transactionService.getTransactionsByUser(userId, queryParams);
     const userAccounts = await accountService.getUserAccounts(userId);
     const userCategories = await categoryService.getUserCategories(userId);
+    const transferCategory = await categoryService.getSystemTransferCategory();
 
     const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id }));
 
@@ -30,6 +31,7 @@ const TransactionsPage = async ({ searchParams }: Props) => {
         pageSize={queryParams.pageSize}
         categoryOptions={userCategories}
         accountOptions={accountOptions}
+        transferCategoryId={transferCategory.id}
       />
     );
   } catch (error) {
