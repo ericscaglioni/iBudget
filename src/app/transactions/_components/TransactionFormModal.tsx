@@ -276,7 +276,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
 
           {/* Conditional fields when isRecurring is true */}
           {isRecurring && (
-            <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
               {/* Frequency dropdown */}
               <FormCombobox
                 form={form as any}

@@ -74,13 +74,14 @@ export const FormModal = <TData extends FieldValues,>({
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
         {children}
 
-        <div className="pt-4 flex justify-end gap-4">
+        <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
           <Button
             type='button'
             variant='ghost'
             onClick={onClose}
             disabled={isSubmitting}
             size='sm'
+            className="w-full sm:w-auto order-2 sm:order-1"
           >
             Cancel
           </Button>
@@ -90,6 +91,7 @@ export const FormModal = <TData extends FieldValues,>({
             size='md'
             isLoading={isSubmitting}
             disabled={!isDirty}
+            className="w-full sm:w-auto order-1 sm:order-2"
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>

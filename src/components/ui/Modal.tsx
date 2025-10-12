@@ -30,18 +30,20 @@ export const Modal = ({ open, onClose, title, children, description, maxWidth = 
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/20" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className={`w-full ${maxWidthClasses[maxWidth]} rounded bg-white p-6 shadow-xl`}>
-          <DialogTitle className="text-lg font-semibold text-slate-800 mb-4">
+      <div className="fixed inset-0 flex items-center justify-center p-0 sm:p-4">
+        <DialogPanel className={`w-full h-full sm:h-auto sm:max-h-[90vh] ${maxWidthClasses[maxWidth]} rounded-none sm:rounded bg-white p-6 shadow-xl flex flex-col`}>
+          <DialogTitle className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0">
             {title}
           </DialogTitle>
           {/* Optional description can be added here */}
           {description && (
-            <Description className="text-sm text-slate-600 mb-4">
+            <Description className="text-sm text-slate-600 mb-4 flex-shrink-0">
               {description}
             </Description>
           )}
-          {children}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {children}
+          </div>
         </DialogPanel>
       </div>
     </Dialog>
