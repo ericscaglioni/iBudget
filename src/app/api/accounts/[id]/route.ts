@@ -3,7 +3,8 @@ import { authHandler } from "@/lib/middlewares";
 import { NextResponse } from "next/server";
 
 export const PATCH = authHandler(async ({ userId, request, params }) => {
-  const { id } = await params ?? {};
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
   const body = await request.json();
   const { name, type, currency, initialBalance } = body;
 
@@ -24,7 +25,8 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
 });
 
 export const DELETE = authHandler(async ({ userId, params }) => {
-  const { id } = await params ?? {};
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
 
   // Later: check for related transactions
 

@@ -32,7 +32,7 @@ export const TransactionsPageShell = ({
 }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [_, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+// import { useState } from 'react'; // Commented out as it's not currently used
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { Combobox, ComboboxOption } from './Combobox';
 
@@ -24,7 +24,7 @@ export const FormCombobox = <TData extends FieldValues>({
   form,
   disabled = false,
 }: Props<TData>) => {
-  const [query, setQuery] = useState("");
+  // Note: query and setQuery are not used in this component but may be needed for future functionality
   
   const { formState: { errors } } = form;
   const error = errors[name]?.message as string | undefined;

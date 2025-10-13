@@ -16,7 +16,7 @@ export const initializeUserDefaults = async (userId: string) => {
 
   // Copy each category for the user
   await Promise.all(
-    defaultCategories.map(({ id, ...cat }) =>
+    defaultCategories.map(({ id: _id, ...cat }) => // eslint-disable-line @typescript-eslint/no-unused-vars
       prisma.category.create({
         data: {
           ...cat,

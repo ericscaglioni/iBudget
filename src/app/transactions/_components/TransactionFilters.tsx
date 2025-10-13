@@ -1,8 +1,7 @@
 "use client";
 
 import { ComboboxOption, SegmentedControl, Combobox, Input, MonthYearPicker } from "@/components/ui";
-import { useSearchParams } from "next/navigation";
-import { useTransition, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
@@ -140,8 +139,8 @@ export const TransactionFilters = ({ accountOptions, categoryOptions, searchPara
     let filteredOptions = filter.options;
     if (filter.conditionalFilter?.filterOptionsBy && filter.options) {
       const dependentValue = searchParams.get(filter.conditionalFilter.dependsOn) || "";
-      filteredOptions = filter.options.filter((opt: any) => {
-        return opt[filter.conditionalFilter!.filterOptionsBy!] === dependentValue;
+      filteredOptions = filter.options.filter((opt: ComboboxOption) => {
+        return (opt as Record<string, unknown>)[filter.conditionalFilter!.filterOptionsBy!] === dependentValue;
       });
     }
 

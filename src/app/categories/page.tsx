@@ -5,6 +5,9 @@ import { CategoriesPageShell } from "./_components";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 import { parseQueryParams } from "@/lib/utils/parse-query";
 
+// Force dynamic rendering since we use auth() and searchParams
+export const dynamic = 'force-dynamic';
+
 interface Props {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }

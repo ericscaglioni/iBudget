@@ -3,7 +3,6 @@
 import {
   Description,
   Dialog,
-  DialogDescription,
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react';

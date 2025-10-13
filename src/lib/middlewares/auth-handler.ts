@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 type HandlerContext = {
   userId: string;
   request: NextRequest;
-  params?: Record<string, string>;
+  params: Promise<Record<string, string>>;
 };
 
 export const authHandler = (
@@ -12,7 +12,7 @@ export const authHandler = (
 ) => {
   return async (
     request: NextRequest,
-    context: { params?: Record<string, string> }
+    context: { params: Promise<Record<string, string>> }
   ) => {
     const { userId } = await auth();
 

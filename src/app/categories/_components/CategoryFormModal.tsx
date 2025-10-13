@@ -43,7 +43,7 @@ export const CategoryFormModal = ({ open, onClose, category }: Props) => {
     } else {
       reset(DEFAULT_VALUES);
     }
-  }, [category?.id, category?.name, category?.color, category?.type]);
+  }, [category, reset]);
 
   const onCloseModal = () => {
     reset();

@@ -5,6 +5,9 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 
+// Force dynamic rendering since we use auth() and searchParams
+export const dynamic = 'force-dynamic';
+
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }

@@ -29,11 +29,10 @@ export const RecurringDeleteModal = ({
           : 'Transaction and future occurrences deleted successfully'
       );
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting transaction:', error);
-      showError(
-        error?.message || 'Failed to delete transaction. Please try again.'
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete transaction. Please try again.';
+      showError(errorMessage);
     } finally {
       setIsDeleting(false);
     }

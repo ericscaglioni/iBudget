@@ -15,11 +15,10 @@ export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelNam
       await onDelete();
       showSuccess(`${modelName} deleted successfully`);
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Error deleting ${modelName}:`, error);
-      showError(
-        error?.message || `Failed to delete ${modelName.toLowerCase()}. Please try again.`
-      );
+      const errorMessage = error instanceof Error ? error.message : `Failed to delete ${modelName.toLowerCase()}. Please try again.`;
+      showError(errorMessage);
     }
   };
 

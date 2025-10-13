@@ -8,15 +8,27 @@ import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { v4 as uuid } from "uuid";
 
 // Helper function to calculate installment info for recurring transactions
-const calculateInstallmentInfo = async (transactions: any[]) => {
-  const recurringTransactions = transactions.filter(t => t.isRecurring && t.recurringId);
+interface TransactionWithRecurring {
+  isRecurring?: boolean;
+  recurringId?: string | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const calculateInstallmentInfo = async (transactions: any[]): Promise<any[]> => {
+  const recurringTransactions = transactions.filter((t) => {
+    const transaction = t as TransactionWithRecurring;
+    return transaction.isRecurring && transaction.recurringId;
+  });
   
   if (recurringTransactions.length === 0) {
     return transactions;
   }
 
   // Get all recurring IDs
-  const recurringIds = [...new Set(recurringTransactions.map(t => t.recurringId))];
+  const recurringIds = [...new Set(recurringTransactions.map((t) => {
+    const transaction = t as TransactionWithRecurring;
+    return transaction.recurringId;
+  }))];
   
   // Fetch all transactions for each recurring group
   const recurringGroups = await Promise.all(
@@ -47,13 +59,14 @@ const calculateInstallmentInfo = async (transactions: any[]) => {
   });
 
   // Add installment info to transactions
-  return transactions.map(t => {
-    if (t.isRecurring && t.recurringId && recurringMap.has(t.id)) {
-      const info = recurringMap.get(t.id);
+  return transactions.map((t) => {
+    const transaction = t as TransactionWithRecurring & { id: string };
+    if (transaction.isRecurring && transaction.recurringId && recurringMap.has(transaction.id)) {
+      const info = recurringMap.get(transaction.id);
       return {
         ...t,
-        currentInstallment: info.currentInstallment,
-        totalInstallments: info.totalInstallments,
+        currentInstallment: info?.currentInstallment,
+        totalInstallments: info?.totalInstallments,
       };
     }
     return t;
@@ -256,7 +269,7 @@ export const createRecurringTransaction = async (
   const finalDate = endsAt ? dayjs(endsAt) : null;
 
   // Calculate the interval unit based on frequency
-  const getIntervalConfig = (freq: string): { amount: number; unit: any } => {
+  const getIntervalConfig = (freq: string): { amount: number; unit: string } => {
     switch (freq) {
       case 'daily':
         return { amount: 1, unit: 'day' };
@@ -301,7 +314,8 @@ export const createRecurringTransaction = async (
     occurrenceCount++;
 
     // Calculate next occurrence date
-    currentDate = currentDate.add(interval.amount, interval.unit);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentDate = currentDate.add(interval.amount, interval.unit as any);
   }
 
   // Edge case: If no transactions were generated, create at least the original one

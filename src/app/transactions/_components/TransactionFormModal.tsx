@@ -8,7 +8,7 @@ import { showSuccess } from "@/lib/utils/toast";
 import { Radio, RadioGroup } from "@headlessui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, TransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
@@ -60,7 +60,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
   const isRecurring = watch("isRecurring");
   const selectedFrequency = watch("frequency");
   
-  const loadTransferTransaction = async (transaction: TransactionWithDetails) => {
+  const loadTransferTransaction = useCallback(async (transaction: TransactionWithDetails) => {
     const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
     setMode(TransactionTypeEnum.transfer);
     form.reset({
@@ -72,9 +72,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       toAccountId: transferTransaction.accountId,
       categoryId: transferCategoryId,
     });
-  }
+  }, [form, transferCategoryId]);
 
-  const loadRegularTransaction = async (transaction: TransactionWithDetails) => {
+  const loadRegularTransaction = useCallback(async (transaction: TransactionWithDetails) => {
     const mode = transaction.type as TransactionTypeEnum;
     setMode(mode);
     form.reset({
@@ -85,15 +85,15 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
       categoryId: transaction.categoryId!,
       type: mode,
       isRecurring: transaction.isRecurring || false,
-      frequency: transaction.frequency as any,
+      frequency: transaction.frequency as "daily" | "weekly" | "monthly" | "yearly",
       endsAt: transaction.endsAt ? dayjs(transaction.endsAt).format("YYYY-MM-DD") : undefined,
     });
-  }
+  }, [form]);
 
-  const resetFormToDefault = () => {
+  const resetFormToDefault = useCallback(() => {
     setMode(TransactionTypeEnum.expense);
     form.reset(getDefaultValues(TransactionTypeEnum.expense));
-  };
+  }, [form]);
 
   useEffect(() => {
     if (!transaction) {
@@ -106,7 +106,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
     } else {
       loadRegularTransaction(transaction);
     }
-  }, [transaction, reset]);
+  }, [transaction, reset, loadRegularTransaction, loadTransferTransaction, resetFormToDefault]);
 
   const onCloseModal = () => {
     resetFormToDefault();
@@ -279,12 +279,12 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
               {/* Frequency dropdown */}
               <FormCombobox
-                form={form as any}
+                form={form}
                 name="frequency"
                 label="Frequency"
                 options={frequencyOptions}
                 value={selectedFrequency || ""}
-                onChange={(val) => setValue("frequency", val as any)}
+                onChange={(val) => setValue("frequency", val as "daily" | "weekly" | "monthly" | "yearly")}
               />
 
               {/* End date input */}

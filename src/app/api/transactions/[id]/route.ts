@@ -39,25 +39,25 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
     );
 
     return NextResponse.json({ data: result }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating transaction:', error);
     
     // Handle specific error types
-    if (error.message?.includes('not found')) {
+    if (error instanceof Error && error.message?.includes('not found')) {
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
       );
     }
     
-    if (error.message?.includes('not recurring')) {
+    if (error instanceof Error && error.message?.includes('not recurring')) {
       return NextResponse.json(
         { error: 'Cannot update future transactions: transaction is not recurring' },
         { status: 400 }
       );
     }
 
-    if (error.message?.includes('date is missing')) {
+    if (error instanceof Error && error.message?.includes('date is missing')) {
       return NextResponse.json(
         { error: 'Cannot update future transactions: transaction date is missing' },
         { status: 400 }
@@ -93,16 +93,16 @@ export const DELETE = authHandler(async ({ userId, request, params }) => {
     
     // Return 204 No Content on success
     return new NextResponse(null, { status: 204 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle specific error types
-    if (error.message?.includes('not found')) {
+    if (error instanceof Error && error.message?.includes('not found')) {
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
       );
     }
     
-    if (error.message?.includes('not recurring')) {
+    if (error instanceof Error && error.message?.includes('not recurring')) {
       return NextResponse.json(
         { error: 'Cannot delete future transactions: transaction is not recurring' },
         { status: 400 }

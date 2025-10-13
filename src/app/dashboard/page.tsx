@@ -4,6 +4,9 @@ import { accountService, categoryService, dashboardService } from "@/lib/server/
 import { DashboardPageShell } from "./_components";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 
+// Force dynamic rendering since we use auth()
+export const dynamic = 'force-dynamic';
+
 const DashboardPage = async () => {
   try {
     const { userId } = await auth();

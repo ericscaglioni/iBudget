@@ -7,7 +7,7 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { SelectHTMLAttributes, useState } from "react";
+import { useState } from "react";
 import { Icon } from "./Icon";
 
 export type ComboboxOption = {

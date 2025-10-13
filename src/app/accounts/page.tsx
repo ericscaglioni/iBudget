@@ -3,6 +3,9 @@ import { AccountsPageShell } from "./_components";
 import { parseQueryParams } from "@/lib/utils/parse-query";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
+
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }

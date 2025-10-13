@@ -1,7 +1,7 @@
 'use client';
 
 import { InputHTMLAttributes } from 'react';
-import { FieldValues, Path, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
+import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 import { Input } from './Input';
 
 type Props<TData extends FieldValues> = {

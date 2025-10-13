@@ -37,7 +37,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
       <RadioGroup
         options={options}
         value={value}
-        onChange={(val) => setValue(name, val as any, { shouldValidate: true, shouldDirty: true })}
+        onChange={(val) => setValue(name, val as never, { shouldValidate: true, shouldDirty: true })}
         name={name}
         className="mt-2"
       />

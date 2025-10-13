@@ -14,8 +14,8 @@ type ApiSuccessResponse<T> = {
 
 type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-const isErrorResponse = (response: any): response is ApiErrorResponse => {
-  return 'error' in response;
+const isErrorResponse = (response: unknown): response is ApiErrorResponse => {
+  return typeof response === 'object' && response !== null && 'error' in response;
 };
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
@@ -38,7 +38,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
   return (data as ApiSuccessResponse<T>).data;
 };
 
-export const post = async <TData extends object, TResult = any>(
+export const post = async <TData extends object, TResult = unknown>(
   url: string,
   data: TData
 ): Promise<TResult> => {
@@ -56,7 +56,7 @@ export const post = async <TData extends object, TResult = any>(
   }
 };
 
-export const patch = async <TData extends object, TResult = any>(
+export const patch = async <TData extends object, TResult = unknown>(
   url: string,
   data: TData
 ): Promise<TResult> => {
@@ -82,7 +82,7 @@ export const del = async <TResult = void>(url: string): Promise<TResult> => {
   }
 };
 
-export const get = async <TResult = any>(url: string): Promise<TResult> => {
+export const get = async <TResult = unknown>(url: string): Promise<TResult> => {
   try {
     const res = await fetch(url);
     return handleResponse<TResult>(res);

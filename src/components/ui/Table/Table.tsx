@@ -15,7 +15,7 @@ import clsx from "clsx";
 
 type Props<TData> = {
   data: TData[];
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   totalCount?: number;
   page?: number;
   pageSize?: number;

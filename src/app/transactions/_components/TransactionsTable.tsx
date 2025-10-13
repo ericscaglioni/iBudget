@@ -22,8 +22,6 @@ export const TransactionsTable = ({
   totalCount,
   page,
   pageSize,
-  accountOptions,
-  categoryOptions,
   onEdit,
   onDelete,
 }: Props) => {

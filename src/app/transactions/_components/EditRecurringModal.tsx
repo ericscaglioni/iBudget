@@ -29,11 +29,10 @@ export const EditRecurringModal = ({
           : 'Transaction and future occurrences updated successfully'
       );
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating transaction:', error);
-      showError(
-        error?.message || 'Failed to update transaction. Please try again.'
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update transaction. Please try again.';
+      showError(errorMessage);
     } finally {
       setIsUpdating(false);
     }

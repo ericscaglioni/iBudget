@@ -1,6 +1,6 @@
 import { getBaseUrl } from "@/lib/utils/url";
 
-export const post = async <TData extends object, TResult = any>(
+export const post = async <TData extends object, TResult = unknown>(
   url: string,
   data: TData,
   headersOverride?: HeadersInit
