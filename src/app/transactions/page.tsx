@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 
 interface Props {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 const TransactionsPage = async ({ searchParams }: Props) => {
@@ -14,7 +14,8 @@ const TransactionsPage = async ({ searchParams }: Props) => {
     const { userId } = await auth();
     if (!userId) redirect("/login");
     
-    const queryParams = await parseQueryParams(searchParams);
+    const resolvedSearchParams = await searchParams;
+    const queryParams = await parseQueryParams(resolvedSearchParams);
 
     const { transactions, total } = await transactionService.getTransactionsByUser(userId, queryParams);
     const userAccounts = await accountService.getUserAccounts(userId);
