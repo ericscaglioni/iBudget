@@ -1,6 +1,6 @@
 "use client";
 
-import { UseFormReturn, Path, FieldValues } from "react-hook-form";
+import { UseFormReturn, Path, FieldValues, useWatch } from "react-hook-form";
 import { RadioGroup } from "./RadioGroup";
 
 interface RadioOption {
@@ -24,12 +24,11 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
   className,
 }: FormRadioGroupProps<TFormValues>) => {
   const {
-    watch,
     setValue,
     formState: { errors },
   } = form;
 
-  const value = watch(name) as string;
+  const value = useWatch({ control: form.control, name });
   const error = errors[name]?.message as string | undefined;
 
   return (
@@ -38,7 +37,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
       <RadioGroup
         options={options}
         value={value}
-        onChange={(val) => setValue(name, val as any)}
+        onChange={(val) => setValue(name, val as any, { shouldValidate: true, shouldDirty: true })}
         name={name}
         className="mt-2"
       />

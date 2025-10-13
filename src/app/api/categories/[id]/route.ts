@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export const PATCH = authHandler(async ({ userId, request, params }) => {
   const { id } = await params ?? {};
   const body = await request.json();
-  const { name, color, groupId } = body;
+  const { name, color, type } = body;
 
   const updated = await prisma.category.update({
     where: {
@@ -15,7 +15,7 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
     data: {
       name,
       color,
-      groupId,
+      type,
     },
   });
 

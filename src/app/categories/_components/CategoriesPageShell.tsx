@@ -71,6 +71,7 @@ export const CategoriesPageShell = ({
       />
 
       <CategoryFormModal
+        key={selectedCategory?.id ?? "new"}
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         category={selectedCategory ?? undefined}
