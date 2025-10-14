@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import { dayjs } from "@/lib/utils/dayjs";
+
+// Helper function to convert Decimal to number
+const toNumber = (value: Decimal | number): number => {
+  return typeof value === 'number' ? value : value.toNumber();
+};
 
 interface AccountBalance {
   accountId: string;
@@ -54,7 +60,7 @@ interface DashboardData {
  * Excludes future transactions by filtering date <= now
  */
 const calculateAccountBalance = async (
-  account: { id: string; initialBalance: number }
+  account: { id: string; initialBalance: Decimal }
 ): Promise<number> => {
   // Get all transactions for this account (excluding future transactions)
   // This includes:
@@ -78,12 +84,14 @@ const calculateAccountBalance = async (
   // Income (including incoming transfers): +amount
   // Expense (including outgoing transfers): -amount
   const transactionNet = transactions.reduce((sum, tx) => {
+    const amount = toNumber(tx.amount);
     return tx.type === TransactionType.income 
-      ? sum + tx.amount 
-      : sum - tx.amount;
+      ? sum + amount 
+      : sum - amount;
   }, 0);
 
-  return account.initialBalance + transactionNet;
+  const initialBalance = toNumber(account.initialBalance);
+  return initialBalance + transactionNet;
 };
 
 /**
@@ -101,24 +109,24 @@ const getSixMonthHistory = async (userId: string): Promise<SixMonthHistory[]> =>
   const startDate = dayjs().subtract(5, "month").startOf("month").toDate();
   const endDate = dayjs().endOf("month").toDate();
   
-  // Use Prisma raw query to group by month using TO_CHAR for direct string formatting
+  // Use Prisma raw query to group by month using DATE_FORMAT for MySQL
   const monthlyData = await prisma.$queryRaw<Array<{
     month_key: string;
     type: string;
     total_amount: number;
   }>>`
     SELECT 
-      TO_CHAR(date, 'YYYY-MM') as month_key,
+      DATE_FORMAT(date, '%Y-%m') as month_key,
       type,
       SUM(amount) as total_amount
-    FROM "transactions"
+    FROM transactions
     WHERE 
-      "userId" = ${userId}
+      userId = ${userId}
       AND date >= ${startDate}
       AND date <= ${endDate}
-      AND "transferId" IS NULL
+      AND transferId IS NULL
       AND type IN ('income', 'expense')
-    GROUP BY TO_CHAR(date, 'YYYY-MM'), type
+    GROUP BY DATE_FORMAT(date, '%Y-%m'), type
     ORDER BY month_key ASC
   `;
 
@@ -179,11 +187,11 @@ const getMonthlyTotals = async (
   // Calculate income and expenses
   const income = filteredTransactions
     .filter(tx => tx.type === TransactionType.income)
-    .reduce((sum, tx) => sum + tx.amount, 0);
+    .reduce((sum, tx) => sum + toNumber(tx.amount), 0);
 
   const expenses = filteredTransactions
     .filter(tx => tx.type === TransactionType.expense)
-    .reduce((sum, tx) => sum + tx.amount, 0);
+    .reduce((sum, tx) => sum + toNumber(tx.amount), 0);
 
   // Group by category for breakdown (expenses only)
   const categoryMap = new Map<string, CategoryBreakdown>();
@@ -193,13 +201,14 @@ const getMonthlyTotals = async (
     .forEach(tx => {
       if (tx.category) {
         const existing = categoryMap.get(tx.category.id);
+        const amount = toNumber(tx.amount);
         if (existing) {
-          existing.amount += tx.amount;
+          existing.amount += amount;
         } else {
           categoryMap.set(tx.category.id, {
             categoryId: tx.category.id,
             categoryName: tx.category.name,
-            amount: tx.amount,
+            amount: amount,
             color: tx.category.color,
           });
         }

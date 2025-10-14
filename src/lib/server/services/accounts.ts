@@ -1,9 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { Account, AccountType, TransactionType } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+
+// Helper function to convert Decimal to number
+const toNumber = (value: Decimal | number): number => {
+  return typeof value === 'number' ? value : value.toNumber();
+};
 
 /**
  * Calculate the current balance for an account
@@ -16,7 +22,7 @@ import { redirect } from "next/navigation";
  * Excludes future transactions by filtering date <= now
  */
 export const calculateAccountBalance = async (
-  account: { id: string; initialBalance: number }
+  account: { id: string; initialBalance: Decimal }
 ): Promise<number> => {
   // Get all transactions for this account (excluding future transactions)
   // This includes:
@@ -40,12 +46,14 @@ export const calculateAccountBalance = async (
   // Income (including incoming transfers): +amount
   // Expense (including outgoing transfers): -amount
   const transactionNet = transactions.reduce((sum, tx) => {
+    const amount = toNumber(tx.amount);
     return tx.type === TransactionType.income 
-      ? sum + tx.amount 
-      : sum - tx.amount;
+      ? sum + amount 
+      : sum - amount;
   }, 0);
 
-  return account.initialBalance + transactionNet;
+  const initialBalance = toNumber(account.initialBalance);
+  return initialBalance + transactionNet;
 };
 
 /**

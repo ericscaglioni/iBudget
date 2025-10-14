@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -24,12 +24,12 @@ enum AccountType {
 }
 
 model Account {
-  id             String      @id @default(uuid())
+  id             String      @id @default(cuid())
   userId         String
   name           String
   type           AccountType
   currency       String
-  initialBalance Float
+  initialBalance Decimal     @db.Decimal(10, 2)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -43,7 +43,7 @@ enum CategoryType {
 }
 
 model Category {
-  id           String       @id @default(uuid())
+  id           String       @id @default(cuid())
   userId       String?      // null = default category
   name         String
   color        String       // hex color
@@ -62,12 +62,12 @@ enum TransactionType {
 }
 
 model Transaction {
-  id          String    @id @default(uuid()) // ✅ use uuid
+  id          String    @id @default(cuid())
   userId      String
   accountId   String
   categoryId  String?   // nullable for transfers/incomes
   type        TransactionType
-  amount      Float
+  amount      Decimal   @db.Decimal(10, 2)
   description String
   date        DateTime
   transferId  String?   // used to link both sides of a transfer

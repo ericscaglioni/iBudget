@@ -4,13 +4,17 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Resetting DB...');
-  await prisma.$executeRaw`TRUNCATE TABLE "accounts" CASCADE;`;
-  await prisma.$executeRaw`TRUNCATE TABLE "transactions" CASCADE;`;
+  
+  // MySQL doesn't support CASCADE with TRUNCATE, so we'll use DELETE instead
+  await prisma.$executeRaw`SET FOREIGN_KEY_CHECKS = 0;`;
+  await prisma.$executeRaw`DELETE FROM transactions;`;
+  await prisma.$executeRaw`DELETE FROM accounts;`;
+  await prisma.$executeRaw`DELETE FROM categories;`;
+  await prisma.$executeRaw`SET FOREIGN_KEY_CHECKS = 1;`;
+  
   console.log('✅ Done resetting DB!');
 
   console.log('🌱 Seeding default categories...');
-
-  await prisma.category.deleteMany();
 
   // Seed expense categories
   await prisma.category.createMany({
