@@ -106,7 +106,13 @@ export const listAccounts = async (props: QueryParams) => {
     prisma.account.count({ where }),
   ]);
 
-  return { accounts, total };
+  // Convert Decimal values to numbers for client serialization
+  const serializedAccounts = accounts.map(account => ({
+    ...account,
+    initialBalance: toNumber(account.initialBalance),
+  }));
+
+  return { accounts: serializedAccounts, total };
 };
 
 export const getAccountsByUser = async (userId: string, props: QueryParams) => {
@@ -124,7 +130,13 @@ export const getAccountsByUser = async (userId: string, props: QueryParams) => {
     prisma.account.count({ where: { userId } }),
   ]);
 
-  return { accounts, total };
+  // Convert Decimal values to numbers for client serialization
+  const serializedAccounts = accounts.map(account => ({
+    ...account,
+    initialBalance: toNumber(account.initialBalance),
+  }));
+
+  return { accounts: serializedAccounts, total };
 };
 
 export const getUserAccounts = async (userId: string) => {
@@ -138,6 +150,7 @@ export const getUserAccounts = async (userId: string) => {
   const accountsWithBalances = await Promise.all(
     accounts.map(async (account) => ({
       ...account,
+      initialBalance: toNumber(account.initialBalance),
       balance: await calculateAccountBalance(account),
     }))
   );

@@ -4,8 +4,14 @@ import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 import { getMonthDateRange } from "@/lib/utils/format";
 import { dayjs } from "@/lib/utils/dayjs";
 import { Prisma, Transaction, TransactionType } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { v4 as uuid } from "uuid";
+
+// Helper function to convert Decimal to number
+const toNumber = (value: Decimal | number): number => {
+  return typeof value === 'number' ? value : value.toNumber();
+};
 
 // Helper function to calculate installment info for recurring transactions
 interface TransactionWithRecurring {
@@ -96,7 +102,7 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
     ...(filters.accountId ? { accountId: filters.accountId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.type ? { type: filters.type as TransactionType } : {}),
-    ...(sanitizedDescription ? { description: { contains: sanitizedDescription, mode: "insensitive" as Prisma.QueryMode } } : {}),
+    ...(sanitizedDescription ? { description: { contains: sanitizedDescription } } : {}),
     ...dateFilter,
     OR: [
       { transferId: null },
@@ -129,7 +135,18 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
   // Add installment info for recurring transactions
   const transactionsWithInstallments = await calculateInstallmentInfo(transactions);
 
-  return { transactions: transactionsWithInstallments, total };
+  // Convert Decimal values to numbers for client serialization
+  const serializedTransactions = transactionsWithInstallments.map(transaction => ({
+    ...transaction,
+    amount: toNumber(transaction.amount),
+    // Also serialize account initialBalance if it exists
+    account: transaction.account.initialBalance ? {
+      ...transaction.account,
+      initialBalance: toNumber(transaction.account.initialBalance),
+    } : transaction.account,
+  }));
+
+  return { transactions: serializedTransactions, total };
 }
 
 interface GetTransferTransactionByTransferIdProps {
@@ -152,7 +169,15 @@ export const getTransferTransactionByTransferId = async (props: GetTransferTrans
     throw new NotFoundError('Transfer transaction');
   }
 
-  return transferTransaction;
+  // Convert Decimal values to numbers for client serialization
+  return {
+    ...transferTransaction,
+    amount: toNumber(transferTransaction.amount),
+    account: transferTransaction.account.initialBalance ? {
+      ...transferTransaction.account,
+      initialBalance: toNumber(transferTransaction.account.initialBalance),
+    } : transferTransaction.account,
+  };
 }
 
 interface TransferTransactionProps {
@@ -208,7 +233,8 @@ export const createTransferTransaction = async (userId: string, props: TransferT
   return { message: "Transfer created successfully" };
 };
 
-type CreateTransactionProps = Pick<Transaction, "type" | "amount" | "accountId" | "categoryId" | "description" | "date"> & {
+type CreateTransactionProps = Pick<Transaction, "type" | "accountId" | "categoryId" | "description" | "date"> & {
+  amount: number;
   isRecurring?: boolean;
 };
 
@@ -232,7 +258,11 @@ export const createTransaction = async (userId: string, props: CreateTransaction
     },
   });
 
-  return created;
+  // Convert Decimal values to numbers for client serialization
+  return {
+    ...created,
+    amount: toNumber(created.amount),
+  };
 };
 
 interface CreateRecurringTransactionProps {
@@ -424,7 +454,11 @@ export const updateTransaction = async (
     },
   });
 
-  return updated;
+  // Convert Decimal values to numbers for client serialization
+  return {
+    ...updated,
+    amount: toNumber(updated.amount),
+  };
 };
 
 type UpdateTransferTransactionProps = UpdateTransactionProps & { transferId: string };

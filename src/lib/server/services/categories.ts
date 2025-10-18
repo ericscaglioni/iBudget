@@ -14,7 +14,6 @@ export const getCategoriesByUser = async (userId: string, props: QueryParams) =>
     ...(sanitizedName && {
       name: {
         contains: sanitizedName,
-        mode: "insensitive" as Prisma.QueryMode,
       },
     }),
   };
