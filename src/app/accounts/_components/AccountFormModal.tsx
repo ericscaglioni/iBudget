@@ -8,7 +8,6 @@ import {
 } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AccountType } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AccountFormInput, AccountFormSchema } from "../schema";
@@ -62,7 +61,7 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
       name: data.name,
       type: data.type as AccountType,
       currency: data.currency,
-      initialBalance: new Decimal(parseFloat(data.initialBalance)),
+      initialBalance: parseFloat(data.initialBalance),
     };
 
     const isEdit = !!account;

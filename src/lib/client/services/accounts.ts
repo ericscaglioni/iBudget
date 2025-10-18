@@ -3,7 +3,10 @@ import type { Account } from "@prisma/client";
 
 const accountsPath = "/api/accounts";
 
-type AccountPayload = Omit<Account, "id" | "userId" | "createdAt" | "updatedAt">;
+// Client-safe account payload (Decimal fields converted to numbers)
+type AccountPayload = Omit<Account, "id" | "userId" | "createdAt" | "updatedAt" | "initialBalance"> & {
+  initialBalance: number;
+};
 
 export const getAccounts = async () => {
   return get<Account[]>(accountsPath);
