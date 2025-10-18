@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/ui";
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 
 interface Props {
   selectedMonth: string; // Format: YYYY-MM

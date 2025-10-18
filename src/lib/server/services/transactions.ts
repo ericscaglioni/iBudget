@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 import { getMonthDateRange } from "@/lib/utils/format";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";

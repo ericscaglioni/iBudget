@@ -6,6 +6,11 @@ import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+// Serialized account type for client-side usage (Decimal fields converted to numbers)
+type SerializedAccount = Omit<Account, 'initialBalance'> & {
+  initialBalance: number;
+};
+
 // Helper function to convert Decimal to number
 const toNumber = (value: Decimal | number): number => {
   return typeof value === 'number' ? value : value.toNumber();
@@ -85,7 +90,7 @@ export const getAccountWithBalance = async (userId: string, accountId: string) =
   };
 };
 
-export const listAccounts = async (props: QueryParams) => {
+export const listAccounts = async (props: QueryParams): Promise<{ accounts: SerializedAccount[]; total: number }> => {
   const { userId } = await auth();
   if (!userId) redirect("/login");
 

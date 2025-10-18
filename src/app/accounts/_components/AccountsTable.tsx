@@ -3,16 +3,16 @@
 import { Table } from '@/components/ui/Table/Table';
 import { getActionColumns } from '@/components/ui/Table/utils/actionColumns';
 import { accountCurrencies, accountTypes } from '@/lib/constants';
-import { Account } from '@prisma/client';
+import { SerializedAccount } from '../types';
 import { accountColumns } from './columns';
 
 interface Props {
-  data: Account[];
+  data: SerializedAccount[];
   totalCount: number;
   page: number;
   pageSize: number;
-  onEdit: (account: Account) => void;
-  onDelete: (account: Account) => void;
+  onEdit: (account: SerializedAccount) => void;
+  onDelete: (account: SerializedAccount) => void;
 }
 
 export const AccountsTable = ({ data, totalCount, page, pageSize, onEdit, onDelete }: Props) => {

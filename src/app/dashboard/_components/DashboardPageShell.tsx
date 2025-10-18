@@ -1,7 +1,7 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AccountsOverview } from "./AccountsOverview";

@@ -1,16 +1,16 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { accountService } from "@/lib/client/services";
 import { DeleteModal } from "@/components/ui";
-import { Account } from "@prisma/client";
+import { accountService } from "@/lib/client/services";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SerializedAccount } from "../types";
 import { AccountsTable } from "./";
 import { AccountFormModal } from "./AccountFormModal";
 
 interface Props {
-  accounts: Account[];
+  accounts: SerializedAccount[];
   totalCount: number;
   page: number;
   pageSize: number;
@@ -21,7 +21,7 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
 
   const [openAccountModal, setOpenAccountModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<SerializedAccount | null>(null);
 
   const handleClose = () => {
     setOpenAccountModal(false);
@@ -33,12 +33,12 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
     setOpenAccountModal(true);
   }
 
-  const handleEdit = (account: Account) => {
+  const handleEdit = (account: SerializedAccount) => {
     setSelectedAccount(account);
     setOpenAccountModal(true);
   };
 
-  const handleDelete = (account: Account) => {
+  const handleDelete = (account: SerializedAccount) => {
     setSelectedAccount(account);
     setOpenDeleteModal(true);
   };

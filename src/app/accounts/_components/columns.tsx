@@ -1,8 +1,8 @@
 import { CurrencyCell, DateCell } from "@/components/utils/components";
-import { Account } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
+import { SerializedAccount } from "../types";
 
-export const accountColumns: ColumnDef<Account>[] = [
+export const accountColumns: ColumnDef<SerializedAccount>[] = [
   {
     header: "Name",
     accessorKey: "name",

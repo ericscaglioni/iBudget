@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 
 // Helper function to convert Decimal to number
 const toNumber = (value: Decimal | number): number => {

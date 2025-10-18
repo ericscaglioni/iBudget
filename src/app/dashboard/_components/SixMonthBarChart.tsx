@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 
 interface SixMonthBarChartProps {
   data: { month: string; income: number; expenses: number }[];

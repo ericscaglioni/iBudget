@@ -7,10 +7,12 @@ import {
   accountTypes,
 } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Account, AccountType } from "@prisma/client";
+import { AccountType } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AccountFormInput, AccountFormSchema } from "../schema";
+import { SerializedAccount } from "../types";
 
 const DEFAULT_VALUES = {
   name: "",
@@ -22,7 +24,7 @@ const DEFAULT_VALUES = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  account?: Account;
+  account?: SerializedAccount;
 };
 
 export const AccountFormModal = ({ open, onClose, account }: Props) => {
@@ -60,7 +62,7 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
       name: data.name,
       type: data.type as AccountType,
       currency: data.currency,
-      initialBalance: parseFloat(data.initialBalance),
+      initialBalance: new Decimal(parseFloat(data.initialBalance)),
     };
 
     const isEdit = !!account;

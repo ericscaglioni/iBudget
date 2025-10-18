@@ -3,10 +3,11 @@
 import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
-import { dayjs } from "@/lib/utils/dayjs";
+import { dayjs } from "@/lib/utils/dayjs.js";
 import { showSuccess } from "@/lib/utils/toast";
 import { Radio, RadioGroup } from "@headlessui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Decimal } from "@prisma/client/runtime/library";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -123,7 +124,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
   const handleCreate = async (data: TransactionFormInput) => {
     const payload = {
       ...data,
-      amount: parseFloat(data.amount),
+      amount: new Decimal(parseFloat(data.amount)),
       date: dayjs(data.date).toDate(),
       type: mode,
       endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
@@ -137,7 +138,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
 
     const payload = {
       ...data,
-      amount: parseFloat(data.amount),
+      amount: new Decimal(parseFloat(data.amount)),
       date: dayjs(data.date).toDate(),
       type: mode,
       endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,

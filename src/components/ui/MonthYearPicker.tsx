@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { Button } from './Button';
-import { dayjs } from '@/lib/utils/dayjs';
+import { dayjs } from '@/lib/utils/dayjs.js';
 
 interface Props {
   label?: string;
