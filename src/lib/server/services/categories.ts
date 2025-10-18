@@ -2,7 +2,7 @@ import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
-import { Category, CategoryType, Prisma } from "@prisma/client";
+import { Category, CategoryType } from "@prisma/client";
 
 export const getCategoriesByUser = async (userId: string, props: QueryParams) => {
   const { page, pageSize, sortField = "name", sortOrder = "asc", filters } = props;
