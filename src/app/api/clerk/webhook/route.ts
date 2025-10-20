@@ -37,9 +37,11 @@ export async function POST(req: NextRequest) {
 
   switch (event.type) {
     case "user.created":
-      return NextResponse.json(await userService.initUser(event.data.id));
+      const response =await userService.initUser(event.data.id)
+      return NextResponse.json(response);
     case "user.deleted":
-      return NextResponse.json(await userService.deleteUser(event.data.id));
+      const deleteResponse = await userService.deleteUser(event.data.id)
+      return NextResponse.json(deleteResponse);
     default:
       console.log("Unhandled event type:", event.type);
       // Handle other event types if needed

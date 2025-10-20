@@ -12,10 +12,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ use
   const body = await request.json();
   if (body.type === "init") {
     await initializeUserDefaults(userId as string);
-    return NextResponse.json({ status: 201 });
+    return NextResponse.json({ data: { message: "User initialized successfully" } });
   }
   
   await deleteUserCategories(userId as string);
-  return NextResponse.json({ status: 200 });
+  return NextResponse.json({ data: { message: "User deleted successfully" } });
   
 }
