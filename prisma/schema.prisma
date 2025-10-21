@@ -16,7 +16,7 @@ datasource db {
 enum AccountType {
   cash
   card
-  current
+  checking
   savings
   investment
   wallet

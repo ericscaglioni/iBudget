@@ -8,7 +8,7 @@ export type AccountCurrency = (typeof accountCurrencies)[keyof typeof accountCur
 export const accountTypes: AccountType[] = [
   "cash",
   "card",
-  "current",
+  "checking",
   "savings",
   "investment",
   "wallet",
