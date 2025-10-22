@@ -9,6 +9,7 @@ import {
 } from "@headlessui/react";
 import { useState, useEffect } from "react";
 import { Icon } from "./Icon";
+import { SelectModal } from "./SelectModal";
 
 export type ComboboxOption = {
   label: string;
@@ -69,66 +70,17 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
             <Icon name="chevronDown" className="size-4 fill-black/60" />
           </div>
           
-          {/* Mobile Modal */}
-          {isMobileModalOpen && (
-            <div className="fixed inset-0 bg-white z-50 flex flex-col">
-              <div className="bg-white w-full h-full flex flex-col">
-                <div className="p-4 border-b">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-semibold">Select Option</h3>
-                    <button 
-                      onClick={() => setIsMobileModalOpen(false)}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <Icon name="close" className="size-6" />
-                    </button>
-                  </div>
-                  {/* Search input for mobile */}
-                  <input
-                    type="text"
-                    placeholder="Search options..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  {allValues && (
-                    <button
-                      onClick={() => {
-                        onChange("");
-                        setIsMobileModalOpen(false);
-                        setQuery("");
-                      }}
-                      className="w-full px-4 py-4 text-left border-b border-gray-100 hover:bg-gray-50 flex items-center gap-3"
-                    >
-                      <Icon name='checkMark' className={`size-5 ${value === "" ? "visible" : "invisible"}`} />
-                      All
-                    </button>
-                  )}
-                  {filteredOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        onChange(option.value);
-                        setIsMobileModalOpen(false);
-                        setQuery("");
-                      }}
-                      className="w-full px-4 py-4 text-left border-b border-gray-100 hover:bg-gray-50 last:border-b-0 flex items-center gap-3"
-                    >
-                      <Icon name='checkMark' className={`size-5 ${value === option.value ? "visible" : "invisible"}`} />
-                      {option.label}
-                    </button>
-                  ))}
-                  {filteredOptions.length === 0 && query && (
-                    <div className="px-4 py-4 text-gray-500 text-center">
-                      No options found
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          <SelectModal
+            isOpen={isMobileModalOpen}
+            onClose={() => setIsMobileModalOpen(false)}
+            title="Select Option"
+            options={options}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            allValues={allValues}
+            searchPlaceholder="Search options..."
+          />
         </>
       ) : (
         /* Desktop Version */

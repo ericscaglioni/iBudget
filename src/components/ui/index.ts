@@ -16,5 +16,6 @@ export * from './Modal';
 export * from './MonthYearPicker';
 export * from './RadioGroup';
 export * from './SegmentedControl';
+export * from './SelectModal';
 export * from './Spinner';
 export * from './Table/Table';
