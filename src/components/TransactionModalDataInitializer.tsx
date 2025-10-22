@@ -1,0 +1,38 @@
+"use client";
+
+import { useEffect } from "react";
+import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
+import { accountService, categoryService } from "@/lib/client/services";
+
+export const TransactionModalDataInitializer = () => {
+  const { setAccountOptions, setCategoryOptions, setTransferCategoryId } = useTransactionModal();
+
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        // Fetch accounts and categories
+        const [accounts, categories, transferCategory] = await Promise.all([
+          accountService.getAccounts(),
+          categoryService.getCategories(),
+          categoryService.getSystemTransferCategory(),
+        ]);
+
+        // Transform data for the modal
+        const accountOptions = accounts.map((account) => ({
+          label: account.name,
+          value: account.id,
+        }));
+
+        setAccountOptions(accountOptions);
+        setCategoryOptions(categories);
+        setTransferCategoryId(transferCategory.id);
+      } catch (error) {
+        console.error("Failed to initialize transaction modal data:", error);
+      }
+    };
+
+    initializeData();
+  }, [setAccountOptions, setCategoryOptions, setTransferCategoryId]);
+
+  return null;
+};

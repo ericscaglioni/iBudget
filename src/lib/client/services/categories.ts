@@ -9,6 +9,10 @@ export const getCategories = async () => {
   return get<Category[]>(categoriesPath);
 };
 
+export const getSystemTransferCategory = async () => {
+  return get<Category>("/api/categories/system-transfer");
+};
+
 export const createCategory = async (data: CategoryPayload) => {
   return post<CategoryPayload, Category>(categoriesPath, data);
 };

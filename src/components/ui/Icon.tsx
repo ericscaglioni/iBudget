@@ -13,6 +13,7 @@ import {
   TrashIcon,
   Bars3Icon,
   XMarkIcon,
+  PlusIcon,
 } from '@heroicons/react/20/solid';
 
 const iconMap = {
@@ -30,6 +31,7 @@ const iconMap = {
   edit: PencilSquareIcon,
   menu: Bars3Icon,
   close: XMarkIcon,
+  plus: PlusIcon,
 };
 
 export type IconType = keyof typeof iconMap;

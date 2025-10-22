@@ -1,7 +1,11 @@
 import { Navbar } from "@/components/NavBar";
+import { FloatingTransactionButton } from "@/components/FloatingTransactionButton";
+import { GlobalTransactionModal } from "@/components/GlobalTransactionModal";
+import { TransactionModalDataInitializer } from "@/components/TransactionModalDataInitializer";
 import { LoadingOverlay } from "@/components/ui";
 import { LoadingProvider } from "@/lib/hooks/useLoading";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { TransactionModalProvider } from "@/lib/providers/TransactionModalProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -22,14 +26,19 @@ export default function RootLayout({
         <body className="font-sans bg-background text-slateDark" suppressHydrationWarning>
           <QueryProvider>
             <LoadingProvider>
-              <Navbar />
-              <Toaster
-                position="top-right"
-              />
-              <main className="min-h-screen">
-                {children}
-              </main>
-              <LoadingOverlay />
+              <TransactionModalProvider>
+                <Navbar />
+                <Toaster
+                  position="top-right"
+                />
+                <main className="min-h-screen">
+                  {children}
+                </main>
+                <FloatingTransactionButton />
+                <GlobalTransactionModal />
+                <TransactionModalDataInitializer />
+                <LoadingOverlay />
+              </TransactionModalProvider>
             </LoadingProvider>
           </QueryProvider>
         </body>
