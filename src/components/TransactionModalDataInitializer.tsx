@@ -5,11 +5,13 @@ import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
 import { accountService, categoryService } from "@/lib/client/services";
 
 export const TransactionModalDataInitializer = () => {
-  const { setAccountOptions, setCategoryOptions, setTransferCategoryId } = useTransactionModal();
+  const { setAccountOptions, setCategoryOptions, setTransferCategoryId, setIsLoading } = useTransactionModal();
 
   useEffect(() => {
     const initializeData = async () => {
       try {
+        setIsLoading(true);
+        
         // Fetch accounts and categories
         const [accounts, categories, transferCategory] = await Promise.all([
           accountService.getAccounts(),
@@ -26,13 +28,15 @@ export const TransactionModalDataInitializer = () => {
         setAccountOptions(accountOptions);
         setCategoryOptions(categories);
         setTransferCategoryId(transferCategory.id);
+        setIsLoading(false);
       } catch (error) {
         console.error("Failed to initialize transaction modal data:", error);
+        setIsLoading(false);
       }
     };
 
     initializeData();
-  }, [setAccountOptions, setCategoryOptions, setTransferCategoryId]);
+  }, [setAccountOptions, setCategoryOptions, setTransferCategoryId, setIsLoading]);
 
   return null;
 };

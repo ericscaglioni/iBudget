@@ -5,7 +5,7 @@ import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
 import { usePathname } from "next/navigation";
 
 export const FloatingTransactionButton = () => {
-  const { openModal } = useTransactionModal();
+  const { openModal, isLoading } = useTransactionModal();
   const pathname = usePathname();
   
   // Don't show on login page
@@ -17,10 +17,15 @@ export const FloatingTransactionButton = () => {
         onClick={openModal}
         variant="primary"
         size="lg"
+        disabled={isLoading}
         className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center"
         aria-label="Add new transaction"
       >
-        <Icon name="plus" className="w-6 h-6" />
+        {isLoading ? (
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Icon name="plus" className="w-6 h-6" />
+        )}
       </Button>
     </div>
   );

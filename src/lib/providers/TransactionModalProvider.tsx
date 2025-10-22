@@ -11,9 +11,11 @@ interface TransactionModalContextType {
   accountOptions: ComboboxOption[];
   categoryOptions: CategoryOption[];
   transferCategoryId: string;
+  isLoading: boolean;
   setAccountOptions: (options: ComboboxOption[]) => void;
   setCategoryOptions: (options: CategoryOption[]) => void;
   setTransferCategoryId: (id: string) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const TransactionModalContext = createContext<TransactionModalContextType | undefined>(undefined);
@@ -27,8 +29,14 @@ export const TransactionModalProvider = ({ children }: Props) => {
   const [accountOptions, setAccountOptions] = useState<ComboboxOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [transferCategoryId, setTransferCategoryId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const openModal = () => setIsOpen(true);
+  const openModal = () => {
+    // Only open modal if data is loaded
+    if (!isLoading && accountOptions.length > 0 && categoryOptions.length > 0) {
+      setIsOpen(true);
+    }
+  };
   const closeModal = () => setIsOpen(false);
 
   return (
@@ -40,9 +48,11 @@ export const TransactionModalProvider = ({ children }: Props) => {
         accountOptions,
         categoryOptions,
         transferCategoryId,
+        isLoading,
         setAccountOptions,
         setCategoryOptions,
         setTransferCategoryId,
+        setIsLoading,
       }}
     >
       {children}
