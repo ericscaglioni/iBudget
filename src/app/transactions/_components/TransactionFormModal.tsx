@@ -231,7 +231,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
         form={form}
         name="amount"
         label="Amount"
-        inputProps={{ type: "number", step: "0.01" }}
+        inputProps={{ type: "number", step: "0.01", autoFocus: true }}
       />
 
       <FormTextInput
