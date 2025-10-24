@@ -9,7 +9,7 @@ import {
 } from "@headlessui/react";
 import { useState, useEffect } from "react";
 import { Icon } from "./Icon";
-import { SelectModal } from "./SelectModal";
+import { MobileCombobox } from "./MobileCombobox";
 
 export type ComboboxOption = {
   label: string;
@@ -29,7 +29,6 @@ type Props = {
 
 export const Combobox = ({ options, value, onChange, placeholder, label, allValues = false, disabled = false }: Props) => {
   const [query, setQuery] = useState("");
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile screen size
@@ -57,31 +56,15 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
       
       {/* Mobile Modal Version */}
       {isMobile ? (
-        <>
-          <div 
-            onClick={() => !disabled && setIsMobileModalOpen(true)}
-            className={`w-full border rounded px-3 py-2 text-base cursor-pointer flex items-center justify-between ${
-              disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"
-            }`}
-          >
-            <span className={selected?.label ? "text-gray-900" : "text-gray-500"}>
-              {selected?.label || placeholder || "Select an option"}
-            </span>
-            <Icon name="chevronDown" className="size-4 fill-black/60" />
-          </div>
-          
-          <SelectModal
-            isOpen={isMobileModalOpen}
-            onClose={() => setIsMobileModalOpen(false)}
-            title="Select Option"
-            options={options}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            allValues={allValues}
-            searchPlaceholder="Search options..."
-          />
-        </>
+        <MobileCombobox
+          options={options}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          label={label}
+          allValues={allValues}
+          disabled={disabled}
+        />
       ) : (
         /* Desktop Version */
         <HeadlessCombobox value={value ?? ""} onChange={onChange} disabled={disabled}>

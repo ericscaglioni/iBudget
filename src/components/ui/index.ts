@@ -3,6 +3,7 @@ export * from './Chip';
 export * from './ClientOnlyCurrency';
 export * from './ColorInput';
 export * from './Combobox';
+export * from './MobileCombobox';
 export * from './ConfirmationModal';
 export * from './DeleteModal';
 export * from './FormCombobox';

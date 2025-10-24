@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Icon } from "./Icon";
+import { Button } from "./Button";
+import { Input } from "./Input";
 import { ComboboxOption } from "./Combobox";
 
 interface SelectModalProps {
@@ -11,7 +13,6 @@ interface SelectModalProps {
   options: ComboboxOption[];
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
   allValues?: boolean;
   searchPlaceholder?: string;
 }
@@ -23,7 +24,6 @@ export const SelectModal = ({
   options,
   value,
   onChange,
-  placeholder = "Select an option",
   allValues = false,
   searchPlaceholder = "Search options...",
 }: SelectModalProps) => {
@@ -52,41 +52,47 @@ export const SelectModal = ({
         <div className="p-4 border-b">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">{title}</h3>
-            <button 
+            <Button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded"
+              variant="ghost"
+              size="sm"
+              className="p-1"
             >
               <Icon name="close" className="size-6" />
-            </button>
+            </Button>
           </div>
           {/* Search input */}
-          <input
+          <Input
             type="text"
             placeholder={searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="text-base"
           />
         </div>
         <div className="flex-1 overflow-y-auto">
           {allValues && (
-            <button
+            <Button
               onClick={() => handleSelect("")}
-              className="w-full px-4 py-4 text-left border-b border-gray-100 hover:bg-gray-50 flex items-center gap-3"
+              variant="ghost"
+              size="lg"
+              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none"
             >
-              <Icon name='checkMark' className={`size-5 ${value === "" ? "visible" : "invisible"}`} />
+              <Icon name='checkMark' className={`size-5 ${selected?.value === "" ? "visible" : "invisible"}`} />
               All
-            </button>
+            </Button>
           )}
           {filteredOptions.map((option) => (
-            <button
+            <Button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className="w-full px-4 py-4 text-left border-b border-gray-100 hover:bg-gray-50 last:border-b-0 flex items-center gap-3"
+              variant="ghost"
+              size="lg"
+              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 last:border-b-0 rounded-none"
             >
-              <Icon name='checkMark' className={`size-5 ${value === option.value ? "visible" : "invisible"}`} />
+              <Icon name='checkMark' className={`size-5 ${selected?.value === option.value ? "visible" : "invisible"}`} />
               {option.label}
-            </button>
+            </Button>
           ))}
           {filteredOptions.length === 0 && query && (
             <div className="px-4 py-4 text-gray-500 text-center">
