@@ -91,7 +91,7 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
                 disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
               }`}
               onChange={(event) => setQuery(event.target.value)}
-              displayValue={() => selected?.label ?? ""}
+              displayValue={() => selected?.label ?? query}
               placeholder={placeholder}
             />
             <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
@@ -110,16 +110,22 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
                   All
                 </ComboboxOption>
               )}
-              {filteredOptions.map((option) => (
-                <ComboboxOption
-                  key={option.value}
-                  value={option.value}
-                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
-                >
-                  <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
-                  {option.label}
-                </ComboboxOption>
-              ))}
+              {filteredOptions.length === 0 && query ? (
+                <div className="px-3 py-2 text-gray-500 text-center text-sm">
+                  No options found
+                </div>
+              ) : (
+                filteredOptions.map((option) => (
+                  <ComboboxOption
+                    key={option.value}
+                    value={option.value}
+                    className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                  >
+                    <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
+                    {option.label}
+                  </ComboboxOption>
+                ))
+              )}
             </ComboboxOptions>
           </div>
         </HeadlessCombobox>

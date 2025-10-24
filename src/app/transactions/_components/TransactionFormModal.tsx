@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { TransactionFormInput, TransactionFormSchema } from "../schema";
+import { TransactionFormInput, createTransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
 import { EditRecurringModal } from "./EditRecurringModal";
 import { FormFieldsByType } from "./FormFieldsByType";
@@ -52,7 +52,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions, categoryOp
   const [pendingFormData, setPendingFormData] = useState<TransactionFormInput | null>(null);
   
   const form = useForm<TransactionFormInput>({
-    resolver: zodResolver(TransactionFormSchema),
+    resolver: zodResolver(createTransactionFormSchema(accountOptions, categoryOptions)),
     defaultValues: getDefaultValues(mode),
   });
   
