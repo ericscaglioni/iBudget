@@ -207,6 +207,23 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     onCloseModal();
   };
 
+  // Save and keep the modal open for the next entry. Type, date and account(s) carry over since
+  // batches of entries usually share them; everything else is cleared so nothing is saved twice by accident.
+  const onSubmitAndAddAnother = async (data: TransactionFormInput) => {
+    await handleCreate(data);
+    router.refresh();
+    showSuccess('Transaction created successfully');
+
+    form.reset({
+      ...getDefaultValues(mode),
+      date: data.date,
+      ...(mode === TransactionTypeEnum.transfer
+        ? { fromAccountId: data.fromAccountId, toAccountId: data.toAccountId }
+        : { accountId: data.accountId }),
+    });
+    form.setFocus("amount");
+  };
+
   const handleConfirmRecurringUpdate = async (scope: 'one' | 'future') => {
     if (!pendingFormData || !transaction) return;
 
@@ -265,6 +282,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
         refreshOnSubmit={false}
         toastErrorMessage="Failed to save transaction"
         maxWidth="xl"
+        secondaryAction={
+          transaction ? undefined : { label: "Save & add another", onSubmit: onSubmitAndAddAnother }
+        }
       >
         <RadioGroup value={mode} onChange={handleModeChange} className="flex gap-4 mb-4">
           {["expense", "income", "transfer"].map((type) => (

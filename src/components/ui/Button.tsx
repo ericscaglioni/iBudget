@@ -51,8 +51,15 @@ export const Button = ({
         isDisabled && 'opacity-60 cursor-not-allowed',
         className
       )}
+      aria-busy={isLoading || undefined}
       {...props}
     >
+      {isLoading && (
+        <span
+          aria-hidden="true"
+          className="mr-2 size-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+        />
+      )}
       {children}
     </button>
   );

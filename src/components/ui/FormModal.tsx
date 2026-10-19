@@ -1,13 +1,17 @@
 'use client';
 
-import { useLoading } from '@/lib/hooks/useLoading';
 import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { showError, showSuccess } from '@/lib/utils/toast';
 import { AppError } from '@/lib/errors/AppError';
+
+type SecondaryAction<TData extends FieldValues> = {
+  label: string;
+  onSubmit: (data: TData) => Promise<void>;
+};
 
 type Props<TData extends FieldValues> = {
   form: UseFormReturn<TData>;
@@ -22,6 +26,8 @@ type Props<TData extends FieldValues> = {
   toastSuccessMessage?: string;
   toastErrorMessage?: string;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Optional second submit button next to Save (e.g. "Save & add another"). Runs its own handler. */
+  secondaryAction?: SecondaryAction<TData>;
 };
 
 export const FormModal = <TData extends FieldValues,>({
@@ -37,18 +43,17 @@ export const FormModal = <TData extends FieldValues,>({
   toastSuccessMessage = 'Operation successful',
   toastErrorMessage = 'Operation failed',
   maxWidth = 'md',
+  secondaryAction,
 }: Props<TData>) => {
   const router = useRouter();
 
-  const { startLoading, stopLoading } = useLoading();
-
   const { formState: { isSubmitting, isDirty } } = form;
-  
-  const onFormSubmit = async (data: TData) => {
+  const [activeAction, setActiveAction] = useState<'primary' | 'secondary'>('primary');
+
+  const runSubmit = (handler: (data: TData) => Promise<void>) => async (data: TData) => {
+    // No page-wide overlay: the pressed button shows the loading state instead
     try {
-      startLoading();
-      
-      await onSubmit(data);
+      await handler(data);
 
       if (refreshOnSubmit) {
         router.refresh();
@@ -64,13 +69,26 @@ export const FormModal = <TData extends FieldValues,>({
       } else {
         showError(toastErrorMessage);
       }
-    } finally {
-      stopLoading();
     }
   }
 
+  // Esc, backdrop click and the X all land here; ignore them mid-save so the form isn't reset under the request
+  const handleClose = () => {
+    if (!isSubmitting) onClose();
+  };
+
+  const onFormSubmit = (data: TData) => {
+    setActiveAction('primary');
+    return runSubmit(onSubmit)(data);
+  };
+
+  const onSecondarySubmit = (data: TData) => {
+    setActiveAction('secondary');
+    return runSubmit(secondaryAction!.onSubmit)(data);
+  };
+
   return (
-    <Modal open={open} onClose={onClose} title={title} description={description} maxWidth={maxWidth}>
+    <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth}>
       <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
         {children}
 
@@ -81,19 +99,32 @@ export const FormModal = <TData extends FieldValues,>({
             onClick={onClose}
             disabled={isSubmitting}
             size='sm'
-            className="w-full sm:w-auto order-2 sm:order-1"
+            className="w-full sm:w-auto order-3 sm:order-1"
           >
             Cancel
           </Button>
+          {secondaryAction && (
+            <Button
+              type='button'
+              variant='outline'
+              size='md'
+              onClick={form.handleSubmit(onSecondarySubmit)}
+              isLoading={isSubmitting && activeAction === 'secondary'}
+              disabled={!isDirty || isSubmitting}
+              className="w-full sm:w-auto order-2"
+            >
+              {isSubmitting && activeAction === 'secondary' ? 'Saving...' : secondaryAction.label}
+            </Button>
+          )}
           <Button
             type='submit'
             variant='primary'
             size='md'
-            isLoading={isSubmitting}
-            disabled={!isDirty}
-            className="w-full sm:w-auto order-1 sm:order-2"
+            isLoading={isSubmitting && activeAction === 'primary'}
+            disabled={!isDirty || isSubmitting}
+            className="w-full sm:w-auto order-1 sm:order-3"
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isSubmitting && activeAction === 'primary' ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </form>
