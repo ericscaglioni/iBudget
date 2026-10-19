@@ -24,9 +24,11 @@ type Props = {
   open: boolean;
   onClose: () => void;
   account?: SerializedAccount;
+  defaultName?: string;
+  onCreate?: (account: { id: string; name: string }) => void;
 };
 
-export const AccountFormModal = ({ open, onClose, account }: Props) => {
+export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate }: Props) => {
   const form = useForm<AccountFormInput>({
     resolver: zodResolver(AccountFormSchema),
     defaultValues: DEFAULT_VALUES,
@@ -45,8 +47,12 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
       });
     } else {
       reset(DEFAULT_VALUES);
+      // Set after reset so the prefilled name counts as a change (Save is disabled until the form is dirty)
+      if (defaultName) {
+        setValue("name", defaultName, { shouldDirty: true });
+      }
     }
-  }, [account, reset]);
+  }, [account, defaultName, open, reset, setValue]);
 
   const selectedType = watch('type');
   const selectedCurrency = watch('currency');
@@ -68,7 +74,8 @@ export const AccountFormModal = ({ open, onClose, account }: Props) => {
     if (isEdit) {
       await accountService.updateAccount(account!.id, payload);
     } else {
-      await accountService.createAccount(payload);
+      const createdAccount = await accountService.createAccount(payload);
+      onCreate?.({ id: createdAccount.id, name: createdAccount.name });
     }
 
     onCloseModal();

@@ -7,11 +7,15 @@ import { TransactionFormInput } from "../schema";
 import { ComboboxOption } from "@/components/ui";
 import { TransferFields } from "./TransferFields";
 
+export type AccountField = "accountId" | "fromAccountId" | "toAccountId";
+
 type FormFieldsByTypeParams = {
   mode: TransactionTypeEnum;
   form: UseFormReturn<TransactionFormInput>;
   accountOptions: ComboboxOption[];
   categoryOptions: ComboboxOption[];
+  onCreateAccount?: (field: AccountField, name: string) => void;
+  onCreateCategory?: (name: string) => void;
 };
 
 export function FormFieldsByType({
@@ -19,6 +23,8 @@ export function FormFieldsByType({
   form,
   accountOptions,
   categoryOptions,
+  onCreateAccount,
+  onCreateCategory,
 }: FormFieldsByTypeParams) {
   const { watch, setValue } = form;
 
@@ -27,6 +33,7 @@ export function FormFieldsByType({
       <TransferFields
         form={form}
         accountOptions={accountOptions}
+        onCreateAccount={onCreateAccount}
       />
     );
   }
@@ -40,6 +47,7 @@ export function FormFieldsByType({
         value={watch("accountId") ?? ""}
         onChange={(val) => setValue("accountId", val)}
         options={accountOptions}
+        onCreateOption={onCreateAccount && ((name) => onCreateAccount("accountId", name))}
       />
       <FormCombobox
         form={form}
@@ -48,6 +56,7 @@ export function FormFieldsByType({
         value={watch("categoryId") ?? ""}
         onChange={(val) => setValue("categoryId", val)}
         options={categoryOptions}
+        onCreateOption={onCreateCategory}
       />
     </>
   );

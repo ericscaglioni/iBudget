@@ -3,13 +3,15 @@
 import { FormCombobox, ComboboxOption } from "@/components/ui";
 import { UseFormReturn } from "react-hook-form";
 import { TransactionFormInput } from "../schema";
+import { AccountField } from "./FormFieldsByType";
 
 type Props = {
   form: UseFormReturn<TransactionFormInput>;
   accountOptions: ComboboxOption[];
+  onCreateAccount?: (field: AccountField, name: string) => void;
 };
 
-export const TransferFields = ({ form, accountOptions }: Props) => {
+export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props) => {
   const fromAccountId = form.watch("fromAccountId");
 
   return (
@@ -21,6 +23,7 @@ export const TransferFields = ({ form, accountOptions }: Props) => {
         value={fromAccountId ?? ""}
         onChange={(val) => form.setValue("fromAccountId", val)}
         options={accountOptions}
+        onCreateOption={onCreateAccount && ((name) => onCreateAccount("fromAccountId", name))}
       />
 
       <FormCombobox
@@ -31,6 +34,7 @@ export const TransferFields = ({ form, accountOptions }: Props) => {
         onChange={(val) => form.setValue("toAccountId", val)}
         disabled={!fromAccountId}
         options={accountOptions.filter((option) => option.value !== fromAccountId)}
+        onCreateOption={onCreateAccount && ((name) => onCreateAccount("toAccountId", name))}
       />
     </>
   );
