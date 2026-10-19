@@ -1,5 +1,6 @@
 "use client";
 
+import { useEscapeKey } from "@/lib/hooks/useEscapeKey";
 import { useState } from "react";
 import { Icon } from "./Icon";
 import { Button } from "./Button";
@@ -40,6 +41,14 @@ export const SelectModal = ({
 
   const selected = options.find((opt) => opt.value === value);
 
+  const handleClose = () => {
+    onClose();
+    setQuery("");
+  };
+
+  // Esc closes the picker only, not the form it was opened from
+  useEscapeKey(handleClose, isOpen);
+
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     onClose();
@@ -67,7 +76,7 @@ export const SelectModal = ({
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">{title}</h3>
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="ghost"
               size="sm"
               className="p-1"
