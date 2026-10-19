@@ -5,6 +5,7 @@ import { dayjs } from "@/lib/utils/dayjs.js";
 
 interface SixMonthBarChartProps {
   data: { month: string; income: number; expenses: number }[];
+  currency: string;
 }
 
 // Custom tooltip component
@@ -18,7 +19,7 @@ interface TooltipProps {
   label?: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+const CustomTooltip = ({ active, payload, label, currency }: TooltipProps & { currency: string }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
@@ -27,7 +28,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
         </p>
         {payload.map((entry, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {formatCurrency(entry.value)}
+            {entry.name}: {formatCurrency(entry.value, currency)}
           </p>
         ))}
       </div>
@@ -37,12 +38,22 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 };
 
 // Format currency helper
-const formatCurrency = (amount: number): string => {
+const formatCurrency = (amount: number, currency: string): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Compact Y-axis ticks (e.g. "R$12K"), in the currency being displayed
+const formatCompactCurrency = (amount: number, currency: string): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    notation: 'compact',
+    maximumFractionDigits: 1,
   }).format(amount);
 };
 
@@ -51,7 +62,7 @@ const formatMonth = (month: string): string => {
   return dayjs(month, "YYYY-MM").format("MMM YYYY");
 };
 
-export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
+export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
   // Transform data for Recharts
   const chartData = data.map(item => ({
     month: item.month,
@@ -101,12 +112,7 @@ export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
   const yAxisTicks = generateTicks(yAxisMax, stepSize);
 
   // Format Y-axis tick values
-  const formatYAxisTick = (value: number) => {
-    if (value === 0) return '$0';
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}k`;
-    return `$${value.toFixed(0)}`;
-  };
+  const formatYAxisTick = (value: number) => formatCompactCurrency(value, currency);
 
   if (chartData.length === 0) {
     return (
@@ -124,7 +130,7 @@ export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
       <h3 className="text-sm font-semibold text-gray-700 mb-4 sm:mb-6 uppercase tracking-wide">
-        6-Month Trend
+        6-Month Trend <span className="text-gray-400 font-normal normal-case">({currency})</span>
       </h3>
       
       <div className="h-64 sm:h-80">
@@ -153,7 +159,7 @@ export const SixMonthBarChart = ({ data }: SixMonthBarChartProps) => {
               domain={[0, yAxisMax]}
               ticks={yAxisTicks}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip currency={currency} />} />
             <Legend 
               wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }}
             />

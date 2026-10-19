@@ -9,11 +9,13 @@ export const GET = authHandler(async ({ userId, request }) => {
     const includeCurrentMonth = searchParams.get("includeCurrentMonth") !== "false";
     const includePreviousMonth = searchParams.get("includePreviousMonth") !== "false";
     const month = searchParams.get("month");
+    const currency = searchParams.get("currency");
 
     const result = await dashboardService.getDashboardData(userId, {
       includeCurrentMonth,
       includePreviousMonth,
       month: month || undefined,
+      currency: currency || undefined,
     });
 
     return createSuccessResponse(result);

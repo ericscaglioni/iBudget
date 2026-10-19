@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@headlessui/react';
 import { ReactNode } from 'react';
+import { Icon } from './Icon';
 
 type Props = {
   open: boolean;
@@ -15,6 +16,7 @@ type Props = {
   children: ReactNode;
   description?: string;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  fullHeight?: boolean;
 };
 
 const maxWidthClasses = {
@@ -25,14 +27,21 @@ const maxWidthClasses = {
   '2xl': 'max-w-2xl',
 };
 
-export const Modal = ({ open, onClose, title, children, description, maxWidth = 'md' }: Props) => {
+export const Modal = ({ open, onClose, title, children, description, maxWidth = 'md', fullHeight = false }: Props) => {
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/20" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center sm:p-4">
-        <DialogPanel className={`w-full h-full sm:h-auto sm:max-h-[90vh] ${maxWidthClasses[maxWidth]} rounded-none sm:rounded bg-white p-4 shadow-xl flex flex-col`}>
-          <DialogTitle className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0">
-            {title}
+        <DialogPanel className={`w-full h-full ${fullHeight ? 'sm:h-full' : 'sm:h-auto sm:max-h-[90vh]'} ${maxWidthClasses[maxWidth]} rounded-none sm:rounded bg-white p-4 shadow-xl flex flex-col`}>
+          <DialogTitle className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0 flex items-center justify-between">
+            <span>{title}</span>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+              aria-label="Close modal"
+            >
+              <Icon name="close" className="size-5 text-gray-500" />
+            </button>
           </DialogTitle>
           {/* Optional description can be added here */}
           {description && (

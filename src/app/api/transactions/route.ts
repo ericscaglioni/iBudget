@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       accountId,
       fromAccountId,
       toAccountId,
+      toAmount,
       categoryId,
       description,
       date,
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
         fromAccountId,
         toAccountId,
         amount,
+        toAmount,
         description: sanitizedDescription,
         date,
       });

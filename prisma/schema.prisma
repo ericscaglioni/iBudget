@@ -84,3 +84,25 @@ model Transaction {
   @@map("transactions")
 }
 
+
+// Per-user preferences (base currency used to aggregate multi-currency data)
+model UserSettings {
+  userId       String   @id
+  baseCurrency String   @db.VarChar(8)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// Daily exchange rates, all expressed as "units of <currency> per 1 USD".
+// Any pair can be derived: amount / ratePerUsd[from] * ratePerUsd[to].
+model ExchangeRate {
+  date       DateTime @db.Date
+  currency   String   @db.VarChar(8)
+  ratePerUsd Decimal  @db.Decimal(24, 10)
+  createdAt  DateTime @default(now())
+
+  @@id([date, currency])
+  @@map("exchange_rates")
+}

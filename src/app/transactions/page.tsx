@@ -25,7 +25,7 @@ const TransactionsPage = async ({ searchParams }: Props) => {
     const userCategories = await categoryService.getUserCategories(userId);
     const transferCategory = await categoryService.getSystemTransferCategory();
 
-    const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id }));
+    const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id, currency: a.currency }));
 
     return (
       <TransactionsPageShell

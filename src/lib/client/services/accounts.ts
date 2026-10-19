@@ -9,7 +9,8 @@ type AccountPayload = Omit<Account, "id" | "userId" | "createdAt" | "updatedAt" 
 };
 
 export const getAccounts = async () => {
-  return get<Account[]>(accountsPath);
+  const response = await get<{ accounts: Account[]; total: number }>(accountsPath);
+  return response.accounts;
 };
 
 export const createAccount = async (data: AccountPayload) => {

@@ -5,9 +5,24 @@ interface Props {
   expenses: number;
   net: number;
   currency?: string;
+  /** Expenses of the month before, to show how spending moved. */
+  previousExpenses?: number;
+  previousLabel?: string;
 }
 
-export const MonthlySummary = ({ income, expenses, net, currency = "USD" }: Props) => {
+export const MonthlySummary = ({
+  income,
+  expenses,
+  net,
+  currency = "USD",
+  previousExpenses,
+  previousLabel = "last month",
+}: Props) => {
+  // Spending vs. the previous month (lower spending is good, so down = green)
+  const expenseChange =
+    previousExpenses !== undefined && previousExpenses > 0
+      ? ((expenses - previousExpenses) / previousExpenses) * 100
+      : null;
   // Format as currency
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -38,6 +53,11 @@ export const MonthlySummary = ({ income, expenses, net, currency = "USD" }: Prop
         <p className="text-2xl sm:text-3xl font-bold text-red-900">
           {formatAmount(expenses)}
         </p>
+        {expenseChange !== null && (
+          <p className={`mt-1 text-xs sm:text-sm font-medium ${expenseChange > 0 ? "text-red-700" : "text-green-700"}`}>
+            {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}
+          </p>
+        )}
       </div>
 
       {/* Net Card - Color changes based on positive/negative */}

@@ -13,6 +13,7 @@ type Props<TData extends FieldValues> = {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  onCreateOption?: (label: string) => void;
 };
 
 export const FormCombobox = <TData extends FieldValues>({
@@ -23,6 +24,7 @@ export const FormCombobox = <TData extends FieldValues>({
   onChange,
   form,
   disabled = false,
+  onCreateOption,
 }: Props<TData>) => {
   // Note: query and setQuery are not used in this component but may be needed for future functionality
   
@@ -37,6 +39,7 @@ export const FormCombobox = <TData extends FieldValues>({
         value={value}
         onChange={onChange}
         disabled={disabled}
+        onCreateOption={onCreateOption}
       />
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>

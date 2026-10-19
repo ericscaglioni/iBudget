@@ -2,27 +2,28 @@ import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { dayjs } from "@/lib/utils/dayjs.js";
+import { resolveCurrency } from "./settings";
 
 // Helper function to convert Decimal to number
 const toNumber = (value: Decimal | number): number => {
   return typeof value === 'number' ? value : value.toNumber();
 };
 
-interface AccountBalance {
+export interface AccountBalance {
   accountId: string;
   name: string;
   balance: number;
   currency: string;
 }
 
-interface CategoryBreakdown {
+export interface CategoryBreakdown {
   categoryId: string;
   categoryName: string;
   amount: number;
   color: string;
 }
 
-interface MonthlyTotal {
+export interface MonthlyTotal {
   month: string; // YYYY-MM format
   income: number;
   expenses: number;
@@ -30,240 +31,198 @@ interface MonthlyTotal {
   categoryBreakdown: CategoryBreakdown[];
 }
 
-interface SixMonthHistory {
+export interface SixMonthHistory {
   month: string; // YYYY-MM format
   income: number;
   expenses: number;
+}
+
+export interface CurrencyBalance {
+  currency: string;
+  balance: number; // total held in this currency, native amount
+}
+
+export interface NetWorth {
+  total: number;
+  previousMonthTotal: number; // total at the end of the previous month
+  change: number;
+  changePercent: number | null;
 }
 
 interface DashboardQuery {
   includeCurrentMonth?: boolean;
   includePreviousMonth?: boolean;
   month?: string; // YYYY-MM format for filtering specific month
+  currency?: string; // currency to show; falls back to the user's default
 }
 
-interface DashboardData {
+export interface DashboardData {
+  /** The one currency everything below is expressed in. Money is never mixed across currencies. */
+  currency: string;
+  /** Currencies the user has accounts in (what they can switch between). */
+  availableCurrencies: string[];
+  /** Total held in each of those currencies, for the switcher. */
+  currencyBalances: CurrencyBalance[];
   totalBalance: number;
+  netWorth: NetWorth;
+  /** Accounts in the shown currency. */
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
   sixMonthHistory: SixMonthHistory[];
 }
 
+type AccountRecord = { id: string; name: string; currency: string; initialBalance: Decimal };
+
 /**
- * Calculate the current balance for an account
+ * Calculate current balances (and the balance at the end of the previous month) for accounts.
  * Balance = initialBalance + income - expense + incoming transfers - outgoing transfers
- * 
+ *
  * How transfers work:
  * - Outgoing transfer: expense transaction with transferId on fromAccount (subtract)
  * - Incoming transfer: income transaction with transferId on toAccount (add)
- * 
- * Excludes future transactions by filtering date <= now
+ *
+ * Excludes future transactions by filtering date <= now.
  */
-const calculateAccountBalance = async (
-  account: { id: string; initialBalance: Decimal }
-): Promise<number> => {
-  // Get all transactions for this account (excluding future transactions)
-  // This includes:
-  // - Regular income transactions (add to balance)
-  // - Regular expense transactions (subtract from balance)
-  // - Transfer income transactions (incoming transfers - add to balance)
-  // - Transfer expense transactions (outgoing transfers - subtract from balance)
-  const transactions = await prisma.transaction.findMany({
-    where: { 
-      accountId: account.id,
-      date: { lte: new Date() },
-    },
-    select: { 
-      type: true, 
-      amount: true,
-      transferId: true,
-    },
+const calculateBalances = async (accounts: AccountRecord[]) => {
+  const now = new Date();
+  const previousMonthEnd = dayjs().subtract(1, "month").endOf("month").toDate();
+
+  const transactions = accounts.length
+    ? await prisma.transaction.findMany({
+        where: {
+          accountId: { in: accounts.map((account) => account.id) },
+          date: { lte: now },
+        },
+        select: { accountId: true, type: true, amount: true, date: true },
+      })
+    : [];
+
+  const balances = new Map<string, { current: number; previousMonthEnd: number }>();
+  accounts.forEach((account) => {
+    const initial = toNumber(account.initialBalance);
+    balances.set(account.id, { current: initial, previousMonthEnd: initial });
   });
 
-  // Calculate net from all transactions
-  // Income (including incoming transfers): +amount
-  // Expense (including outgoing transfers): -amount
-  const transactionNet = transactions.reduce((sum, tx) => {
-    const amount = toNumber(tx.amount);
-    return tx.type === TransactionType.income 
-      ? sum + amount 
-      : sum - amount;
-  }, 0);
+  transactions.forEach((tx) => {
+    const entry = balances.get(tx.accountId);
+    if (!entry) return;
 
-  const initialBalance = toNumber(account.initialBalance);
-  return initialBalance + transactionNet;
-};
-
-/**
- * Get 6-month income and expense history
- */
-const getSixMonthHistory = async (userId: string): Promise<SixMonthHistory[]> => {
-  // Generate exactly 6 months: from 5 months ago to current month
-  const months: string[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const month = dayjs().subtract(i, "month").format("YYYY-MM");
-    months.push(month);
-  }
-
-  // Calculate date range for the 6 months
-  const startDate = dayjs().subtract(5, "month").startOf("month").toDate();
-  const endDate = dayjs().endOf("month").toDate();
-  
-  // Use Prisma raw query to group by month using DATE_FORMAT for MySQL
-  const monthlyData = await prisma.$queryRaw<Array<{
-    month_key: string;
-    type: string;
-    total_amount: number;
-  }>>`
-    SELECT 
-      DATE_FORMAT(date, '%Y-%m') as month_key,
-      type,
-      SUM(amount) as total_amount
-    FROM transactions
-    WHERE 
-      userId = ${userId}
-      AND date >= ${startDate}
-      AND date <= ${endDate}
-      AND transferId IS NULL
-      AND type IN ('income', 'expense')
-    GROUP BY DATE_FORMAT(date, '%Y-%m'), type
-    ORDER BY month_key ASC
-  `;
-
-  // Group by month and calculate totals
-  const monthMap = new Map<string, { income: number; expenses: number }>();
-  
-  monthlyData.forEach((row) => {
-    // Use the month_key directly from PostgreSQL (no timezone conversion issues)
-    const monthKey = row.month_key;
-    const existing = monthMap.get(monthKey) || { income: 0, expenses: 0 };
-    
-    if (row.type === "income") {
-      existing.income += Number(row.total_amount);
-    } else if (row.type === "expense") {
-      existing.expenses += Number(row.total_amount);
+    const signed = tx.type === TransactionType.income ? toNumber(tx.amount) : -toNumber(tx.amount);
+    entry.current += signed;
+    if (tx.date <= previousMonthEnd) {
+      entry.previousMonthEnd += signed;
     }
-    
-    monthMap.set(monthKey, existing);
   });
 
-  // Return exactly 6 months with real zero values for months with no transactions
-  return months.map(month => ({
-    month,
-    income: monthMap.get(month)?.income || 0,
-    expenses: monthMap.get(month)?.expenses || 0,
-  }));
+  return balances;
 };
 
-/**
- * Get monthly totals for a specific month
- */
-const getMonthlyTotals = async (
-  userId: string, 
-  month: string // YYYY-MM format
-): Promise<MonthlyTotal> => {
-  const startDate = dayjs(month, "YYYY-MM").startOf("month").toDate();
-  const endDate = dayjs(month, "YYYY-MM").endOf("month").toDate();
+/** Month keys (YYYY-MM) for the last `count` months, oldest first. */
+const lastMonths = (count: number) =>
+  Array.from({ length: count }, (_, i) => dayjs().subtract(count - 1 - i, "month").format("YYYY-MM"));
 
-  // Get all transactions for the month, excluding transfers entirely
-  // Transfers are just movements between accounts and shouldn't affect income/expense totals
+/**
+ * Income / expense totals and category breakdown for each given month, only counting accounts in
+ * `currency`. Transfers are excluded entirely: they are just movements between accounts and
+ * shouldn't affect income/expense totals.
+ */
+const calculateMonthlyTotals = async (
+  userId: string,
+  months: string[],
+  currency: string
+): Promise<MonthlyTotal[]> => {
+  const sorted = [...months].sort();
+  const startDate = dayjs(sorted[0], "YYYY-MM").startOf("month").toDate();
+  const endDate = dayjs(sorted[sorted.length - 1], "YYYY-MM").endOf("month").toDate();
+
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-      // Exclude all transfer transactions
+      date: { gte: startDate, lte: endDate },
       transferId: null,
+      account: { currency },
     },
-    include: {
-      category: true,
+    select: {
+      type: true,
+      amount: true,
+      date: true,
+      category: { select: { id: true, name: true, color: true } },
     },
   });
 
-  const filteredTransactions = transactions;
+  const byMonth = new Map<string, { income: number; expenses: number; categories: Map<string, CategoryBreakdown> }>();
+  months.forEach((month) => byMonth.set(month, { income: 0, expenses: 0, categories: new Map() }));
 
-  // Calculate income and expenses
-  const income = filteredTransactions
-    .filter(tx => tx.type === TransactionType.income)
-    .reduce((sum, tx) => sum + toNumber(tx.amount), 0);
+  transactions.forEach((tx) => {
+    const entry = byMonth.get(dayjs(tx.date).format("YYYY-MM"));
+    if (!entry) return;
 
-  const expenses = filteredTransactions
-    .filter(tx => tx.type === TransactionType.expense)
-    .reduce((sum, tx) => sum + toNumber(tx.amount), 0);
+    const amount = toNumber(tx.amount);
 
-  // Group by category for breakdown (expenses only)
-  const categoryMap = new Map<string, CategoryBreakdown>();
+    if (tx.type === TransactionType.income) {
+      entry.income += amount;
+      return;
+    }
 
-  filteredTransactions
-    .filter(tx => tx.type === TransactionType.expense)
-    .forEach(tx => {
-      if (tx.category) {
-        const existing = categoryMap.get(tx.category.id);
-        const amount = toNumber(tx.amount);
-        if (existing) {
-          existing.amount += amount;
-        } else {
-          categoryMap.set(tx.category.id, {
-            categoryId: tx.category.id,
-            categoryName: tx.category.name,
-            amount: amount,
-            color: tx.category.color,
-          });
-        }
+    entry.expenses += amount;
+    if (tx.category) {
+      const existing = entry.categories.get(tx.category.id);
+      if (existing) {
+        existing.amount += amount;
+      } else {
+        entry.categories.set(tx.category.id, {
+          categoryId: tx.category.id,
+          categoryName: tx.category.name,
+          amount,
+          color: tx.category.color,
+        });
       }
-    });
+    }
+  });
 
-  const categoryBreakdown = Array.from(categoryMap.values()).sort(
-    (a, b) => b.amount - a.amount
-  );
-
-  return {
-    month,
-    income,
-    expenses,
-    net: income - expenses,
-    categoryBreakdown,
-  };
+  return months.map((month) => {
+    const { income, expenses, categories } = byMonth.get(month)!;
+    return {
+      month,
+      income,
+      expenses,
+      net: income - expenses,
+      categoryBreakdown: Array.from(categories.values()).sort((a, b) => b.amount - a.amount),
+    };
+  });
 };
 
 /**
- * Get monthly summary for a specific month
+ * Get monthly summary for a specific month (in the shown currency)
  */
-export const getMonthlySummary = async (userId: string, month?: string) => {
+export const getMonthlySummary = async (userId: string, month?: string, requestedCurrency?: string) => {
   // Default to current month if not provided
   const targetMonth = month || dayjs().format("YYYY-MM");
-  
-  // Get monthly totals using existing function
-  const monthlyData = await getMonthlyTotals(userId, targetMonth);
+  const { currency } = await resolveCurrency(userId, requestedCurrency);
+
+  const [monthlyData] = await calculateMonthlyTotals(userId, [targetMonth], currency);
 
   return {
+    currency,
     income: monthlyData.income,
     expenses: monthlyData.expenses,
     net: monthlyData.net,
-    categoryBreakdown: monthlyData.categoryBreakdown.map(cat => ({
-      categoryId: cat.categoryId,
-      categoryName: cat.categoryName,
-      amount: cat.amount,
-      color: cat.color,
-    })),
+    categoryBreakdown: monthlyData.categoryBreakdown,
   };
 };
 
 /**
  * Get account overview (balances + 6-month history)
  */
-export const getAccountOverview = async (userId: string) => {
-  // Get account balances
+export const getAccountOverview = async (userId: string, requestedCurrency?: string) => {
+  const { currency } = await resolveCurrency(userId, requestedCurrency);
   const accountBalancesResult = await getAccountBalances(userId);
-  
-  // Get 6-month history
-  const sixMonthSummary = await getSixMonthHistory(userId);
+  const monthlyTotals = await calculateMonthlyTotals(userId, lastMonths(6), currency);
 
   return {
-    accountBalances: accountBalancesResult.accountBalances,
-    sixMonthSummary,
+    currency,
+    accountBalances: accountBalancesResult.accountBalances.filter((account) => account.currency === currency),
+    sixMonthSummary: monthlyTotals.map(({ month, income, expenses }) => ({ month, income, expenses })),
   };
 };
 
@@ -271,30 +230,25 @@ export const getAccountOverview = async (userId: string) => {
  * Get account balances for a user
  */
 export const getAccountBalances = async (userId: string) => {
-  // Get all accounts for the user with initialBalance
   const accounts = await prisma.account.findMany({
     where: { userId },
     select: { id: true, name: true, currency: true, initialBalance: true },
     orderBy: { name: "asc" },
   });
 
-  // Calculate balance for each account
-  const accountBalances = await Promise.all(
-    accounts.map(async (account) => ({
-      accountId: account.id,
-      name: account.name,
-      currency: account.currency,
-      balance: await calculateAccountBalance(account),
-    }))
-  );
+  const balances = await calculateBalances(accounts);
+
+  const accountBalances: AccountBalance[] = accounts.map((account) => ({
+    accountId: account.id,
+    name: account.name,
+    currency: account.currency,
+    balance: balances.get(account.id)!.current,
+  }));
 
   // Calculate total balance by currency
   const totalBalanceByCurrency: Record<string, number> = {};
   accountBalances.forEach(account => {
-    if (!totalBalanceByCurrency[account.currency]) {
-      totalBalanceByCurrency[account.currency] = 0;
-    }
-    totalBalanceByCurrency[account.currency] += account.balance;
+    totalBalanceByCurrency[account.currency] = (totalBalanceByCurrency[account.currency] ?? 0) + account.balance;
   });
 
   return {
@@ -304,69 +258,87 @@ export const getAccountBalances = async (userId: string) => {
 };
 
 /**
- * Get dashboard data for a user
+ * Get dashboard data for a user, for one currency at a time.
+ *
+ * The currency shown is the requested one if the user has an account in it, otherwise their saved
+ * default. Amounts from different currencies are never added together.
  */
 export const getDashboardData = async (
   userId: string,
   query?: DashboardQuery
 ): Promise<DashboardData> => {
-  const { 
-    includeCurrentMonth = true, 
+  const {
+    includeCurrentMonth = true,
     includePreviousMonth = true,
-    month 
+    month,
+    currency: requestedCurrency,
   } = query || {};
 
-  // Get all accounts for the user with initialBalance
-  const accounts = await prisma.account.findMany({
+  const { currency, available } = await resolveCurrency(userId, requestedCurrency);
+
+  const allAccounts = await prisma.account.findMany({
     where: { userId },
     select: { id: true, name: true, currency: true, initialBalance: true },
     orderBy: { name: "asc" },
   });
 
-  // Calculate balance for each account
-  const accountBalances: AccountBalance[] = await Promise.all(
-    accounts.map(async (account) => ({
-      accountId: account.id,
-      name: account.name,
-      currency: account.currency,
-      balance: await calculateAccountBalance(account),
-    }))
-  );
+  const balances = await calculateBalances(allAccounts);
 
-  // Calculate total balance across all accounts
-  const totalBalance = accountBalances.reduce(
-    (sum, account) => sum + account.balance,
-    0
-  );
+  // Totals per currency, for the switcher
+  const totals = new Map<string, number>();
+  allAccounts.forEach((account) => {
+    totals.set(account.currency, (totals.get(account.currency) ?? 0) + balances.get(account.id)!.current);
+  });
+  const currencyBalances: CurrencyBalance[] = available.map((code) => ({
+    currency: code,
+    balance: totals.get(code) ?? 0,
+  }));
 
-  // Get monthly totals
-  const monthlyTotals: MonthlyTotal[] = [];
-  
-  if (month) {
-    // If specific month is requested, only return that month's data
-    monthlyTotals.push(await getMonthlyTotals(userId, month));
-  } else {
-    // Default behavior: include current and/or previous month
-    const currentMonth = dayjs().format("YYYY-MM");
-    const previousMonth = dayjs().subtract(1, "month").format("YYYY-MM");
+  const accounts = allAccounts.filter((account) => account.currency === currency);
+  const accountBalances: AccountBalance[] = accounts.map((account) => ({
+    accountId: account.id,
+    name: account.name,
+    currency: account.currency,
+    balance: balances.get(account.id)!.current,
+  }));
 
-    if (includeCurrentMonth) {
-      monthlyTotals.push(await getMonthlyTotals(userId, currentMonth));
-    }
+  const total = accounts.reduce((sum, account) => sum + balances.get(account.id)!.current, 0);
+  const previousMonthTotal = accounts.reduce((sum, account) => sum + balances.get(account.id)!.previousMonthEnd, 0);
+  const change = total - previousMonthTotal;
 
-    if (includePreviousMonth) {
-      monthlyTotals.push(await getMonthlyTotals(userId, previousMonth));
-    }
-  }
+  // Monthly totals for the last 6 months (plus the requested one, if it is older)
+  const recentMonths = lastMonths(6);
+  const months = month && !recentMonths.includes(month) ? [...recentMonths, month] : recentMonths;
+  const allMonthlyTotals = await calculateMonthlyTotals(userId, months, currency);
 
-  // Get 6-month history (always included regardless of month filter)
-  const sixMonthHistory = await getSixMonthHistory(userId);
+  const sixMonthHistory = allMonthlyTotals
+    .filter((entry) => recentMonths.includes(entry.month))
+    .map(({ month: m, income, expenses }) => ({ month: m, income, expenses }));
+
+  const currentMonth = dayjs().format("YYYY-MM");
+  const previousMonth = dayjs().subtract(1, "month").format("YYYY-MM");
+
+  const monthlyTotals = month
+    ? allMonthlyTotals.filter((entry) => entry.month === month)
+    : allMonthlyTotals.filter(
+        (entry) =>
+          (includeCurrentMonth || entry.month !== currentMonth) &&
+          (includePreviousMonth || entry.month !== previousMonth)
+      );
 
   return {
-    totalBalance,
+    currency,
+    availableCurrencies: available,
+    currencyBalances,
+    totalBalance: total,
+    netWorth: {
+      total,
+      previousMonthTotal,
+      change,
+      changePercent: previousMonthTotal !== 0 ? (change / Math.abs(previousMonthTotal)) * 100 : null,
+    },
     accountBalances,
     monthlyTotals,
     sixMonthHistory,
   };
 };
-

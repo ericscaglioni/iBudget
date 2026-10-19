@@ -2,13 +2,15 @@
 
 import { PageShell } from "@/components";
 import { dayjs } from "@/lib/utils/dayjs.js";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AccountsOverview } from "./AccountsOverview";
 import { MonthlySummary } from "./MonthlySummary";
+import { NetWorthHero } from "./NetWorthHero";
 import { TopSpendingCategories } from "./TopSpendingCategories";
 import { Icon } from "@/components/ui";
 import { SixMonthBarChart } from "./SixMonthBarChart";
+import type { CurrencyBalance, NetWorth } from "@/lib/server/services/dashboard";
 import { TransactionFormModal } from "../../transactions/_components";
 import { ComboboxOption } from "@/components/ui";
 import { Category } from "@prisma/client";
@@ -44,6 +46,9 @@ interface SixMonthHistory {
 type CategoryOption = Pick<Category, "id" | "name" | "type">;
 
 interface Props {
+  currency: string;
+  currencyBalances: CurrencyBalance[];
+  netWorth: NetWorth;
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
   sixMonthHistory: SixMonthHistory[];
@@ -53,6 +58,9 @@ interface Props {
 }
 
 export const DashboardPageShell = ({
+  currency,
+  currencyBalances,
+  netWorth,
   accountBalances,
   monthlyTotals,
   sixMonthHistory,
@@ -63,6 +71,14 @@ export const DashboardPageShell = ({
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // The shown currency lives in the URL so the page is server-rendered with the right data
+  const handleCurrencyChange = (next: string) => {
+    startTransition(() => {
+      router.replace(`/dashboard?currency=${next}`);
+    });
+  };
 
   const handleOpenTransactionModal = () => {
     setOpenTransactionModal(true);
@@ -77,8 +93,12 @@ export const DashboardPageShell = ({
     setSelectedMonth(month);
   };
 
-  // Find the monthly data for the selected month
+  // Find the monthly data for the selected month (and the one before, for the comparison)
   const selectedMonthData = monthlyTotals.find((m) => m.month === selectedMonth);
+  const previousMonthKey = dayjs(selectedMonth, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
+  const previousMonthData = monthlyTotals.find((m) => m.month === previousMonthKey);
+  const hasPreviousMonthData = !!previousMonthData;
+  const isCurrentMonth = selectedMonth >= dayjs().format("YYYY-MM");
 
   // Format the selected month for display
   const formattedMonth = dayjs(selectedMonth, "YYYY-MM").format("MMMM YYYY");
@@ -96,37 +116,26 @@ export const DashboardPageShell = ({
       }}
     >
       <div className="space-y-4 sm:space-y-6">
-        {/* Section 1: Accounts */}
+        {/* Section 1: Net worth in the base currency, with the per-currency breakdown */}
         <section>
-          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">
-            Accounts
-          </h2>
-          <AccountsOverview accountBalances={accountBalances} />
+          <NetWorthHero
+            netWorth={netWorth}
+            currency={currency}
+            currencyBalances={currencyBalances}
+            onCurrencyChange={handleCurrencyChange}
+            disabled={isPending}
+          />
         </section>
 
-        {/* Section 2: Financial Trends */}
-        {sixMonthHistory && sixMonthHistory.length > 0 && (
-          <section>
-            <div className="mb-2 sm:mb-3 md:mb-4">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
-                Financial Trends (Last 6 Months)
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600">
-                Compare your income and expenses over time to identify spending patterns
-              </p>
-            </div>
-            <SixMonthBarChart data={sixMonthHistory} />
-          </section>
-        )}
-
-        {/* Section 3: Monthly Summary with Month Selector */}
+        {/* Section 2: Month at a glance, with month selector */}
         <section className="space-y-3 sm:space-y-4 md:space-y-6">
           <div>
             <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
-              Current Month Summary
+              Monthly Summary
+              <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({currency})</span>
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 md:mb-4">
-              Select a month to view detailed income, expenses, and spending breakdown
+              Income and expenses from your {currency} accounts
             </p>
           </div>
 
@@ -136,11 +145,9 @@ export const DashboardPageShell = ({
               {/* Month Navigation */}
               <div className="flex items-center gap-2 sm:gap-3">
                 <button
-                  onClick={() => {
-                    const newMonth = dayjs(selectedMonth, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
-                    handleMonthChange(newMonth);
-                  }}
-                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                  onClick={() => handleMonthChange(previousMonthKey)}
+                  disabled={!hasPreviousMonthData}
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Previous month"
                 >
                   <Icon name="chevronLeft" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
@@ -151,11 +158,9 @@ export const DashboardPageShell = ({
                 </h3>
 
                 <button
-                  onClick={() => {
-                    const newMonth = dayjs(selectedMonth, "YYYY-MM").add(1, "month").format("YYYY-MM");
-                    handleMonthChange(newMonth);
-                  }}
-                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                  onClick={() => handleMonthChange(dayjs(selectedMonth, "YYYY-MM").add(1, "month").format("YYYY-MM"))}
+                  disabled={isCurrentMonth}
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Next month"
                 >
                   <Icon name="chevronRight" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
@@ -163,7 +168,7 @@ export const DashboardPageShell = ({
               </div>
 
               {/* Current Month Button */}
-              {selectedMonth !== dayjs().format("YYYY-MM") && (
+              {!isCurrentMonth && (
                 <button
                   onClick={() => handleMonthChange(dayjs().format("YYYY-MM"))}
                   className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto"
@@ -176,20 +181,14 @@ export const DashboardPageShell = ({
           </div>
 
           {selectedMonthData ? (
-            <div className="space-y-3 sm:space-y-4 md:space-y-6">
-              <MonthlySummary
-                income={selectedMonthData.income}
-                expenses={selectedMonthData.expenses}
-                net={selectedMonthData.net}
-              />
-
-              {/* Category Breakdown */}
-              {selectedMonthData.categoryBreakdown.length > 0 && (
-                <TopSpendingCategories
-                  categories={selectedMonthData.categoryBreakdown}
-                />
-              )}
-            </div>
+            <MonthlySummary
+              income={selectedMonthData.income}
+              expenses={selectedMonthData.expenses}
+              net={selectedMonthData.net}
+              currency={currency}
+              previousExpenses={previousMonthData?.expenses}
+              previousLabel={dayjs(previousMonthKey, "YYYY-MM").format("MMM")}
+            />
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
               <p className="text-gray-500 text-sm">
@@ -198,6 +197,39 @@ export const DashboardPageShell = ({
             </div>
           )}
         </section>
+
+        {/* Section 3: Where the money went this month */}
+        {selectedMonthData && selectedMonthData.categoryBreakdown.length > 0 && (
+          <section>
+            <TopSpendingCategories
+              categories={selectedMonthData.categoryBreakdown}
+              currency={currency}
+            />
+          </section>
+        )}
+
+        {/* Section 4: Accounts, grouped by currency */}
+        <section>
+          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">
+            Accounts
+          </h2>
+          <AccountsOverview accountBalances={accountBalances} />
+        </section>
+
+        {/* Section 5: Financial Trends */}
+        {sixMonthHistory && sixMonthHistory.length > 0 && (
+          <section>
+            <div className="mb-2 sm:mb-3 md:mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+                Financial Trends (Last 6 Months)
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Compare your income and expenses over time to identify spending patterns
+              </p>
+            </div>
+            <SixMonthBarChart data={sixMonthHistory} currency={currency} />
+          </section>
+        )}
       </div>
     </PageShell>
 

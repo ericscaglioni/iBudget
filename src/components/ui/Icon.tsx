@@ -3,8 +3,10 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon,
   ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
   ArrowUpIcon,
   CheckIcon,
+  Cog6ToothIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -13,6 +15,7 @@ import {
   TrashIcon,
   Bars3Icon,
   XMarkIcon,
+  PlusIcon,
 } from '@heroicons/react/20/solid';
 
 const iconMap = {
@@ -30,6 +33,9 @@ const iconMap = {
   edit: PencilSquareIcon,
   menu: Bars3Icon,
   close: XMarkIcon,
+  plus: PlusIcon,
+  settings: Cog6ToothIcon,
+  signOut: ArrowRightOnRectangleIcon,
 };
 
 export type IconType = keyof typeof iconMap;

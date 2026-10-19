@@ -1,7 +1,17 @@
 import { IconType } from "@/components/ui";
 import { AccountType } from "@prisma/client";
 
-export const accountCurrencies = ["USD", "EUR", "BRL"];
+// Currencies a user can hold accounts in (and pick as their base currency).
+// All of them are covered by the exchange-rate provider used for conversion.
+export const accountCurrencies = [
+  "USD", "EUR", "BRL", "GBP", "CAD", "AUD", "NZD", "CHF",
+  "MXN", "COP", "ARS", "CLP", "PEN", "UYU",
+  "THB", "IDR", "VND", "PHP", "MYR", "SGD", "JPY", "KRW", "INR", "CNY",
+  "TRY", "AED", "ZAR", "MAD",
+  "PLN", "CZK", "HUF", "RON", "SEK", "NOK", "DKK",
+];
+
+export const DEFAULT_BASE_CURRENCY = "USD";
 
 export type AccountCurrency = (typeof accountCurrencies)[keyof typeof accountCurrencies];
 

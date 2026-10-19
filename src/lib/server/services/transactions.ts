@@ -184,12 +184,14 @@ interface TransferTransactionProps {
   fromAccountId: string;
   toAccountId: string;
   amount: number;
+  /** Amount received, in the destination account's currency. Required when the currencies differ. */
+  toAmount?: number;
   description?: string;
   date: string;
 };
 
 export const createTransferTransaction = async (userId: string, props: TransferTransactionProps) => {
-  const { fromAccountId, toAccountId, amount, description, date } = props;
+  const { fromAccountId, toAccountId, amount, toAmount, description, date } = props;
 
   const transferCategory = await prisma.category.findFirst({
     where: { userId: null, name: "Transfer" },
@@ -201,6 +203,27 @@ export const createTransferTransaction = async (userId: string, props: TransferT
 
   if (!fromAccountId || !toAccountId || !amount) {
     throw new ValidationError("Missing transfer data");
+  }
+
+  const accounts = await prisma.account.findMany({
+    where: { userId, id: { in: [fromAccountId, toAccountId] } },
+    select: { id: true, currency: true },
+  });
+  const fromAccount = accounts.find((account) => account.id === fromAccountId);
+  const toAccount = accounts.find((account) => account.id === toAccountId);
+
+  if (!fromAccount || !toAccount) {
+    throw new NotFoundError('Account');
+  }
+
+  // Same currency: both sides carry the same amount. Different currencies: the destination gets what actually arrived.
+  let incomingAmount = Math.abs(amount);
+  if (fromAccount.currency !== toAccount.currency) {
+    const received = Math.abs(Number(toAmount));
+    if (!toAmount || !Number.isFinite(received) || received <= 0) {
+      throw new ValidationError(`Enter the amount received in ${toAccount.currency}`);
+    }
+    incomingAmount = received;
   }
 
   const transferId = uuid(); // Shared between both transactions
@@ -223,7 +246,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
         transferId,
         accountId: toAccountId,
         categoryId: transferCategory.id,
-        amount: Math.abs(amount), // incoming
+        amount: incomingAmount, // incoming
         description: description ?? "Transfer from another account",
         date: new Date(date),
       },

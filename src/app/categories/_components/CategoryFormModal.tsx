@@ -23,15 +23,18 @@ type Props = {
   open: boolean;
   onClose: () => void;
   category?: Category;
+  defaultName?: string;
+  defaultType?: CategoryFormInput["type"];
+  onCreate?: (category: { id: string; name: string; type: Category["type"] }) => void;
 };
 
-export const CategoryFormModal = ({ open, onClose, category }: Props) => {
+export const CategoryFormModal = ({ open, onClose, category, defaultName, defaultType, onCreate }: Props) => {
   const form = useForm<CategoryFormInput>({
     resolver: zodResolver(CategoryFormSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
-  const { reset } = form;
+  const { reset, setValue } = form;
 
   useEffect(() => {
     if (category) {
@@ -41,9 +44,13 @@ export const CategoryFormModal = ({ open, onClose, category }: Props) => {
         type: category.type,
       });
     } else {
-      reset(DEFAULT_VALUES);
+      reset({ ...DEFAULT_VALUES, type: defaultType ?? DEFAULT_VALUES.type });
+      // Set after reset so the prefilled name counts as a change (Save is disabled until the form is dirty)
+      if (defaultName) {
+        setValue("name", defaultName, { shouldDirty: true });
+      }
     }
-  }, [category, reset]);
+  }, [category, defaultName, defaultType, open, reset, setValue]);
 
   const onCloseModal = () => {
     reset();
@@ -55,7 +62,8 @@ export const CategoryFormModal = ({ open, onClose, category }: Props) => {
     if (isEdit) {
       await categoryService.updateCategory(category!.id, data);
     } else {
-      await categoryService.createCategory(data);
+      const created = await categoryService.createCategory(data);
+      onCreate?.({ id: created.id, name: created.name, type: created.type });
     }
 
     onCloseModal();

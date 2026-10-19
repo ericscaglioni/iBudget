@@ -7,13 +7,16 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "./Icon";
+import { MobileCombobox } from "./MobileCombobox";
 
 export type ComboboxOption = {
   label: string;
   value: string;
   type?: string;
+  /** Extra info for account options: the account's currency. */
+  currency?: string;
 };
 
 type Props = {
@@ -24,10 +27,34 @@ type Props = {
   label?: string;
   allValues?: boolean;
   disabled?: boolean;
+  /** Called with the typed text when the user chooses "Create new ...". The parent owns creation and the options list. */
+  onCreateOption?: (label: string) => void;
 };
 
-export const Combobox = ({ options, value, onChange, placeholder, label, allValues = false, disabled = false }: Props) => {
+const CREATE_VALUE = "__create__";
+
+export const Combobox = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  label,
+  allValues = false,
+  disabled = false,
+  onCreateOption,
+}: Props) => {
   const [query, setQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredOptions =
     query === ""
@@ -38,48 +65,92 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
 
   const selected = options.find((opt) => opt.value === value);
 
+  const handleChange = (selectedValue: string) => {
+    if (selectedValue === CREATE_VALUE) {
+      onCreateOption?.(query.trim());
+      setQuery("");
+      return;
+    }
+    onChange(selectedValue);
+  };
+
+  const showCreate =
+    !!onCreateOption &&
+    query.trim() !== "" &&
+    !options.some((opt) => opt.label.toLowerCase() === query.trim().toLowerCase());
+
   return (
     <div className="w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
-      <HeadlessCombobox value={value ?? ""} onChange={onChange} disabled={disabled}>
-        <div className="relative">
-          <ComboboxInput
-            className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-              disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
-            }`}
-            onChange={(event) => setQuery(event.target.value)}
-            displayValue={() => selected?.label ?? ""}
-            placeholder={placeholder}
-          />
-          <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
-            <Icon name="chevronDown" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
-          </ComboboxButton>
-          <ComboboxOptions
-            anchor="bottom"
-            className="z-10 w-[var(--input-width)] bg-white border rounded shadow-md max-h-60 overflow-auto text-sm [--anchor-gap:4px] empty:invisible"
-          >
-            {allValues && (
-              <ComboboxOption
-                value=""
-                className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
-              >
-                <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
-                All
-              </ComboboxOption>
-            )}
-            {filteredOptions.map((option) => (
-              <ComboboxOption
-                key={option.value}
-                value={option.value}
-                className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
-              >
-                <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
-                {option.label}
-              </ComboboxOption>
-            ))}
-          </ComboboxOptions>
-        </div>
-      </HeadlessCombobox>
+      
+      {/* Mobile Modal Version */}
+      {isMobile ? (
+        <MobileCombobox
+          options={options}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          label={label}
+          allValues={allValues}
+          disabled={disabled}
+          onCreateOption={onCreateOption}
+        />
+      ) : (
+        /* Desktop Version */
+        <HeadlessCombobox value={value ?? ""} onChange={handleChange} disabled={disabled}>
+          <div className="relative">
+            <ComboboxInput
+              className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+              }`}
+              onChange={(event) => setQuery(event.target.value)}
+              displayValue={() => selected?.label ?? query}
+              placeholder={placeholder}
+            />
+            <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
+              <Icon name="chevronDown" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
+            </ComboboxButton>
+            <ComboboxOptions
+              anchor="bottom"
+              className="z-10 w-[var(--input-width)] bg-white border rounded shadow-md max-h-60 overflow-auto text-sm [--anchor-gap:4px] empty:invisible"
+            >
+              {allValues && (
+                <ComboboxOption
+                  value=""
+                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                >
+                  <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
+                  All
+                </ComboboxOption>
+              )}
+              {filteredOptions.map((option) => (
+                <ComboboxOption
+                  key={option.value}
+                  value={option.value}
+                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                >
+                  <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
+                  {option.label}
+                </ComboboxOption>
+              ))}
+              {showCreate && (
+                <ComboboxOption
+                  value={CREATE_VALUE}
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white data-[focus]:bg-blue-100"
+                >
+                  <Icon name="plus" className="size-5" />
+                  Create new “{query.trim()}”
+                </ComboboxOption>
+              )}
+              {filteredOptions.length === 0 && !showCreate && query && (
+                <div className="px-3 py-2 text-gray-500 text-center text-sm">
+                  No options found
+                </div>
+              )}
+            </ComboboxOptions>
+          </div>
+        </HeadlessCombobox>
+      )}
     </div>
   );
 };
