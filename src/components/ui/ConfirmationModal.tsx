@@ -1,4 +1,4 @@
-import { Button } from "./Button";
+import { Button, ButtonProps } from "./Button";
 import { Modal } from "./Modal";
 
 interface Props {
@@ -7,6 +7,8 @@ interface Props {
   onConfirm: () => void;
   title: string;
   description: string;
+  confirmLabel?: string;
+  confirmVariant?: ButtonProps["variant"];
 }
 
 export const ConfirmationModal = ({
@@ -15,6 +17,8 @@ export const ConfirmationModal = ({
   onConfirm,
   title,
   description,
+  confirmLabel = "Confirm",
+  confirmVariant = "primary",
 }: Props) => {
   return (
     <Modal
@@ -25,20 +29,20 @@ export const ConfirmationModal = ({
     >
       <div className="flex justify-end mt-4">
         <Button
-          variant="danger"
+          variant="outline"
           onClick={onClose}
           className="mr-2"
         >
           Cancel
         </Button>
         <Button
-          variant="primary"
+          variant={confirmVariant}
           onClick={() => {
             onConfirm();
             onClose();
           }}
         >
-          Confirm
+          {confirmLabel}
         </Button>
       </div>
     </Modal>

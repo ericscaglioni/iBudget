@@ -28,6 +28,8 @@ export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelNam
       onClose={onClose}
       onConfirm={handleDelete}
       title={`Delete ${modelName}`}
+      confirmLabel="Delete"
+      confirmVariant="danger"
       description={`Are you sure you want to delete this ${modelName.toLowerCase()}: ${itemDescription}? This action cannot be undone.`}
     />
   );  
