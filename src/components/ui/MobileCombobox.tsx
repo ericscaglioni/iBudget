@@ -14,6 +14,7 @@ type Props = {
   label?: string;
   allValues?: boolean;
   disabled?: boolean;
+  onCreateOption?: (label: string) => void;
 };
 
 export const MobileCombobox = ({ 
@@ -23,7 +24,8 @@ export const MobileCombobox = ({
   placeholder, 
   label, 
   allValues = false, 
-  disabled = false 
+  disabled = false,
+  onCreateOption,
 }: Props) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
@@ -55,6 +57,7 @@ export const MobileCombobox = ({
         onChange={onChange}
         allValues={allValues}
         searchPlaceholder="Search options..."
+        onCreateOption={onCreateOption}
       />
     </div>
   );

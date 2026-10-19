@@ -25,9 +25,22 @@ type Props = {
   label?: string;
   allValues?: boolean;
   disabled?: boolean;
+  /** Called with the typed text when the user chooses "Create new ...". The parent owns creation and the options list. */
+  onCreateOption?: (label: string) => void;
 };
 
-export const Combobox = ({ options, value, onChange, placeholder, label, allValues = false, disabled = false }: Props) => {
+const CREATE_VALUE = "__create__";
+
+export const Combobox = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  label,
+  allValues = false,
+  disabled = false,
+  onCreateOption,
+}: Props) => {
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
@@ -50,6 +63,20 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
 
   const selected = options.find((opt) => opt.value === value);
 
+  const handleChange = (selectedValue: string) => {
+    if (selectedValue === CREATE_VALUE) {
+      onCreateOption?.(query.trim());
+      setQuery("");
+      return;
+    }
+    onChange(selectedValue);
+  };
+
+  const showCreate =
+    !!onCreateOption &&
+    query.trim() !== "" &&
+    !options.some((opt) => opt.label.toLowerCase() === query.trim().toLowerCase());
+
   return (
     <div className="w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
@@ -64,10 +91,11 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
           label={label}
           allValues={allValues}
           disabled={disabled}
+          onCreateOption={onCreateOption}
         />
       ) : (
         /* Desktop Version */
-        <HeadlessCombobox value={value ?? ""} onChange={onChange} disabled={disabled}>
+        <HeadlessCombobox value={value ?? ""} onChange={handleChange} disabled={disabled}>
           <div className="relative">
             <ComboboxInput
               className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 ${
@@ -93,21 +121,29 @@ export const Combobox = ({ options, value, onChange, placeholder, label, allValu
                   All
                 </ComboboxOption>
               )}
-              {filteredOptions.length === 0 && query ? (
+              {filteredOptions.map((option) => (
+                <ComboboxOption
+                  key={option.value}
+                  value={option.value}
+                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                >
+                  <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
+                  {option.label}
+                </ComboboxOption>
+              ))}
+              {showCreate && (
+                <ComboboxOption
+                  value={CREATE_VALUE}
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white data-[focus]:bg-blue-100"
+                >
+                  <Icon name="plus" className="size-5" />
+                  Create new “{query.trim()}”
+                </ComboboxOption>
+              )}
+              {filteredOptions.length === 0 && !showCreate && query && (
                 <div className="px-3 py-2 text-gray-500 text-center text-sm">
                   No options found
                 </div>
-              ) : (
-                filteredOptions.map((option) => (
-                  <ComboboxOption
-                    key={option.value}
-                    value={option.value}
-                    className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
-                  >
-                    <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
-                    {option.label}
-                  </ComboboxOption>
-                ))
               )}
             </ComboboxOptions>
           </div>

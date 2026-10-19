@@ -15,6 +15,7 @@ interface SelectModalProps {
   onChange: (value: string) => void;
   allValues?: boolean;
   searchPlaceholder?: string;
+  onCreateOption?: (label: string) => void;
 }
 
 export const SelectModal = ({
@@ -26,6 +27,7 @@ export const SelectModal = ({
   onChange,
   allValues = false,
   searchPlaceholder = "Search options...",
+  onCreateOption,
 }: SelectModalProps) => {
   const [query, setQuery] = useState("");
 
@@ -42,6 +44,18 @@ export const SelectModal = ({
     onChange(optionValue);
     onClose();
     setQuery("");
+  };
+
+  const trimmedQuery = query.trim();
+  const showCreate =
+    !!onCreateOption &&
+    trimmedQuery !== "" &&
+    !options.some((opt) => opt.label.toLowerCase() === trimmedQuery.toLowerCase());
+
+  const handleCreate = () => {
+    onClose();
+    setQuery("");
+    onCreateOption?.(trimmedQuery);
   };
 
   if (!isOpen) return null;
@@ -94,7 +108,18 @@ export const SelectModal = ({
               {option.label}
             </Button>
           ))}
-          {filteredOptions.length === 0 && query && (
+          {showCreate && (
+            <Button
+              onClick={handleCreate}
+              variant="ghost"
+              size="lg"
+              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none"
+            >
+              <Icon name="plus" className="size-5" />
+              Create new “{trimmedQuery}”
+            </Button>
+          )}
+          {filteredOptions.length === 0 && query && !showCreate && (
             <div className="px-4 py-4 text-gray-500 text-center">
               No options found
             </div>
