@@ -3,8 +3,10 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon,
   ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
   ArrowUpIcon,
   CheckIcon,
+  Cog6ToothIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -32,6 +34,8 @@ const iconMap = {
   menu: Bars3Icon,
   close: XMarkIcon,
   plus: PlusIcon,
+  settings: Cog6ToothIcon,
+  signOut: ArrowRightOnRectangleIcon,
 };
 
 export type IconType = keyof typeof iconMap;

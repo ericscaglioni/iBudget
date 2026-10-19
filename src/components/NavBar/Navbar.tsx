@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { navItems } from "./constants";
@@ -9,6 +10,7 @@ import { Icon } from "@/components/ui";
 
 export const Navbar = () => {
   const { signOut } = useClerk();
+  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname.startsWith("/login");
@@ -53,13 +55,51 @@ export const Navbar = () => {
 
         {/* RIGHT SIDE: Sign out (desktop) + Burger (mobile) */}
         <div className="flex items-center gap-4">
-          {/* DESKTOP: Sign out button (hidden on mobile) */}
-          <button
-            onClick={handleSignOut}
-            className="hidden sm:block text-sm text-grayNeutral hover:text-primary transition-colors"
-          >
-            Sign out
-          </button>
+          {/* DESKTOP: Profile menu with Settings and Sign out (hidden on mobile) */}
+          <Menu as="div" className="relative hidden sm:block">
+            <MenuButton
+              className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Open profile menu"
+            >
+              {user?.imageUrl ? (
+                // Clerk serves the avatar from its own CDN, so a plain img avoids extra next/image config
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.imageUrl}
+                  alt={user.fullName ?? "Profile"}
+                  className="size-9 rounded-full object-cover border border-gray-200"
+                />
+              ) : (
+                <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {(user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+            </MenuButton>
+
+            <MenuItems
+              anchor="bottom end"
+              className="z-50 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg [--anchor-gap:4px] focus:outline-none"
+            >
+              <MenuItem>
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100"
+                >
+                  <Icon name="settings" className="size-4 text-gray-500" />
+                  Settings
+                </Link>
+              </MenuItem>
+              <MenuItem>
+                <button
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100"
+                >
+                  <Icon name="signOut" className="size-4 text-gray-500" />
+                  Sign out
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
 
           {/* MOBILE: Burger menu button (visible on mobile only) */}
           <button
@@ -90,6 +130,17 @@ export const Navbar = () => {
                 {item.title}
               </Link>
             ))}
+
+            {/* Settings */}
+            <Link
+              href="/settings"
+              onClick={closeMobileMenu}
+              className={`py-3 text-sm text-grayNeutral hover:text-primary transition-colors border-b border-gray-100 ${
+                pathname === "/settings" ? "text-primary font-semibold" : ""
+              }`}
+            >
+              Settings
+            </Link>
 
             {/* Sign out button */}
             <button
