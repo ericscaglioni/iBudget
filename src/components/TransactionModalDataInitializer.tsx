@@ -29,6 +29,7 @@ export const TransactionModalDataInitializer = () => {
         const accountOptions = accounts.map((account) => ({
           label: account.name,
           value: account.id,
+          currency: account.currency,
         }));
 
         setAccountOptions(accountOptions);

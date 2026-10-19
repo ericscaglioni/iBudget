@@ -33,6 +33,7 @@ const getDefaultValues = (type: TransactionTypeEnum) => ({
   date: dayjs().format("YYYY-MM-DD"),
   fromAccountId: "",
   toAccountId: "",
+  toAmount: "",
   isRecurring: false,
   frequency: undefined,
   endsAt: undefined,
@@ -97,6 +98,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       type: TransactionTypeEnum.transfer,
       fromAccountId: transaction.accountId,
       toAccountId: transferTransaction.accountId,
+      toAmount: String(transferTransaction.amount),
       categoryId: transferCategoryId,
     });
   }, [form, transferCategoryId]);
@@ -151,6 +153,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     const payload = {
       ...data,
       amount: parseFloat(data.amount),
+      toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
       date: dayjs(data.date).toDate(),
       type: mode,
       endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
@@ -165,6 +168,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     const payload = {
       ...data,
       amount: parseFloat(data.amount),
+      toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
       date: dayjs(data.date).toDate(),
       type: mode,
       endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
@@ -228,8 +232,8 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     setOpenAccountModal(true);
   };
 
-  const handleAccountCreated = (account: { id: string; name: string }) => {
-    setCreatedAccountOptions((prev) => [...prev, { label: account.name, value: account.id }]);
+  const handleAccountCreated = (account: { id: string; name: string; currency: string }) => {
+    setCreatedAccountOptions((prev) => [...prev, { label: account.name, value: account.id, currency: account.currency }]);
     setValue(accountFieldToFill, account.id, { shouldValidate: true, shouldDirty: true });
   };
 

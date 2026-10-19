@@ -13,6 +13,7 @@ type TransactionPayload = Omit<
   accountId?: string;
   fromAccountId?: string;
   toAccountId?: string;
+  toAmount?: number; // Amount received, for transfers between currencies
   categoryId?: string;
   transferId?: string;
   isRecurring?: boolean;

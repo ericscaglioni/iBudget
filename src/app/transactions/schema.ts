@@ -1,7 +1,7 @@
 import { TransactionTypeEnum } from "@/lib/constants";
 import { z } from "zod";
 
-export const createTransactionFormSchema = (accountOptions: { value: string }[], categoryOptions: { id: string }[]) => z
+export const createTransactionFormSchema = (accountOptions: { value: string; currency?: string }[], categoryOptions: { id: string }[]) => z
   .object({
     type: z.nativeEnum(TransactionTypeEnum),
     amount: z.string().min(1, "Amount is required"),
@@ -13,6 +13,8 @@ export const createTransactionFormSchema = (accountOptions: { value: string }[],
 
     fromAccountId: z.string().optional(),
     toAccountId: z.string().optional(),
+    // Amount that arrives in the destination account, for transfers between different currencies
+    toAmount: z.string().optional(),
 
     // Recurring transaction fields
     isRecurring: z.boolean().optional(),
@@ -79,6 +81,20 @@ export const createTransactionFormSchema = (accountOptions: { value: string }[],
           code: z.ZodIssueCode.custom,
           message: "Please select a valid to account",
         });
+      }
+
+      // Transfers between currencies need to know how much arrived
+      const fromCurrency = accountOptions.find(option => option.value === data.fromAccountId)?.currency;
+      const toCurrency = accountOptions.find(option => option.value === data.toAccountId)?.currency;
+      if (fromCurrency && toCurrency && fromCurrency !== toCurrency) {
+        const received = Number(data.toAmount);
+        if (!data.toAmount || !Number.isFinite(received) || received <= 0) {
+          ctx.addIssue({
+            path: ["toAmount"],
+            code: z.ZodIssueCode.custom,
+            message: `Enter the amount received in ${toCurrency}`,
+          });
+        }
       }
 
       if (data.fromAccountId && data.fromAccountId === data.toAccountId) {

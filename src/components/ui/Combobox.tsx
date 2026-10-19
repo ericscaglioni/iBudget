@@ -15,6 +15,8 @@ export type ComboboxOption = {
   label: string;
   value: string;
   type?: string;
+  /** Extra info for account options: the account's currency. */
+  currency?: string;
 };
 
 type Props = {

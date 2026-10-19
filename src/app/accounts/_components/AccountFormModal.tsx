@@ -25,7 +25,7 @@ type Props = {
   onClose: () => void;
   account?: SerializedAccount;
   defaultName?: string;
-  onCreate?: (account: { id: string; name: string }) => void;
+  onCreate?: (account: { id: string; name: string; currency: string }) => void;
 };
 
 export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate }: Props) => {
@@ -75,7 +75,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate
       await accountService.updateAccount(account!.id, payload);
     } else {
       const createdAccount = await accountService.createAccount(payload);
-      onCreate?.({ id: createdAccount.id, name: createdAccount.name });
+      onCreate?.({ id: createdAccount.id, name: createdAccount.name, currency: createdAccount.currency });
     }
 
     onCloseModal();
