@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ClerkEvent } from "./types";
+import { ClerkEvent, EventType } from "./types";
 import { Webhook } from "svix";
-import { userService } from "@/lib/client/services";
+import { deleteUserCategories, initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
 
 const getValidationHeaders = (headers: Headers) => {
   const svix_id = headers.get("svix-id") ?? "";
@@ -35,19 +35,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json("Bad Request", { status: 400 });
   }
 
-  switch (event.type) {
-    case "user.created":
-      const response =await userService.initUser(event.data.id)
-      return NextResponse.json(response);
-    case "user.deleted":
-      const deleteResponse = await userService.deleteUser(event.data.id)
-      return NextResponse.json(deleteResponse);
-    default:
-      console.log("Unhandled event type:", event.type);
-      // Handle other event types if needed
-      break;
+  // The signature above proves the event comes from Clerk, so it is safe to act on the user id.
+  // These run server-side directly: there is intentionally no public HTTP endpoint for this.
+  try {
+    switch (event.type) {
+      case EventType.USER_CREATED:
+        await initializeUserDefaults(event.data.id);
+        return NextResponse.json({ data: { message: "User initialized successfully" } });
+      case EventType.USER_DELETED:
+        await deleteUserCategories(event.data.id);
+        return NextResponse.json({ data: { message: "User deleted successfully" } });
+      default:
+        console.log("Unhandled event type:", event.type);
+        // Acknowledge events we don't handle so Clerk doesn't keep retrying them
+        return NextResponse.json({ data: { message: "Event ignored" } });
+    }
+  } catch (err) {
+    console.error(`Error handling Clerk event ${event.type}:`, err);
+    // A non-2xx status makes Clerk retry the delivery
+    return NextResponse.json("Internal Server Error", { status: 500 });
   }
-
-  // if we get here, we don't have the event handled
-  return NextResponse.json({ status: 500 });
 }

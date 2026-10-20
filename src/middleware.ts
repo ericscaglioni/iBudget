@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/login(/.*)?",
-  "/api/clerk(/.*)?",
-  "/api/users(/.*)?",
+  "/api/clerk(/.*)?", // Clerk webhooks: authenticated by their svix signature in the route itself
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
