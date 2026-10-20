@@ -27,7 +27,30 @@ export const initializeUserDefaults = async (userId: string) => {
   );
 };
 
-export const deleteUserCategories = async (userId: string) => {
-  // Delete all user-specific categories
-  await prisma.category.deleteMany({ where: { userId } });
-}
+/**
+ * Permanently deletes everything that belongs to a user (used when their Clerk account is deleted).
+ *
+ * Order matters: transactions reference accounts and categories, so they go first.
+ * Everything runs in one DB transaction so a failure can't leave half-deleted data.
+ * Shared data (system categories with userId = null, exchange rates) is never touched.
+ */
+export const deleteUserData = async (userId: string) => {
+  // Guard: an empty/undefined id must never turn into an unfiltered deleteMany
+  if (typeof userId !== "string" || userId.trim() === "") {
+    throw new Error("deleteUserData requires a non-empty userId");
+  }
+
+  const [transactions, accounts, categories, settings] = await prisma.$transaction([
+    prisma.transaction.deleteMany({ where: { userId } }),
+    prisma.account.deleteMany({ where: { userId } }),
+    prisma.category.deleteMany({ where: { userId } }),
+    prisma.userSettings.deleteMany({ where: { userId } }),
+  ]);
+
+  return {
+    transactions: transactions.count,
+    accounts: accounts.count,
+    categories: categories.count,
+    settings: settings.count,
+  };
+};

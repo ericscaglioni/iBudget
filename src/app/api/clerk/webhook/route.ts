@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ClerkEvent, EventType } from "./types";
 import { Webhook } from "svix";
-import { deleteUserCategories, initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
+import { deleteUserData, initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
 
 const getValidationHeaders = (headers: Headers) => {
   const svix_id = headers.get("svix-id") ?? "";
@@ -42,9 +42,11 @@ export async function POST(req: NextRequest) {
       case EventType.USER_CREATED:
         await initializeUserDefaults(event.data.id);
         return NextResponse.json({ data: { message: "User initialized successfully" } });
-      case EventType.USER_DELETED:
-        await deleteUserCategories(event.data.id);
-        return NextResponse.json({ data: { message: "User deleted successfully" } });
+      case EventType.USER_DELETED: {
+        const deleted = await deleteUserData(event.data.id);
+        console.log(`Deleted data for user ${event.data.id}:`, deleted);
+        return NextResponse.json({ data: { message: "User deleted successfully", deleted } });
+      }
       default:
         console.log("Unhandled event type:", event.type);
         // Acknowledge events we don't handle so Clerk doesn't keep retrying them
