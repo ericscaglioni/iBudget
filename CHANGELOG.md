@@ -15,11 +15,14 @@ Guidance for new users, so the app tells you what to do next.
 - **Guided first account.** With no accounts, the dashboard shows only the checklist, and the
   floating **+** button and **+ New Transaction** send you to create an account first. After saving
   your first account you go straight into adding a transaction.
-- **Empty states** on the Accounts and Transactions pages that explain what the page is for and offer
-  the next step.
+- **Empty states** on the Accounts, Transactions and Categories pages that explain what the page is
+  for and offer the next step.
 - **Multiple currencies tip:** when you have accounts in more than one currency and haven't chosen a
   default, the dashboard explains how to switch currency and links to Settings. It goes away once you
   save a default currency, or when you dismiss it.
+- **Settings explains the default currency** when you only have one currency: it says what the
+  dashboard is showing and that you can choose a default once you add an account in another currency,
+  with a link to add one. It used to show a one-item dropdown with a disabled Save button.
 - Short help text under the account form fields (type, currency, initial balance).
 - A permanent **Create new account…** / **Create new category…** row at the bottom of those
   dropdowns in the transaction form (desktop and mobile). Before, it only appeared after typing a name.
