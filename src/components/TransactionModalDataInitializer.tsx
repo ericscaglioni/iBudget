@@ -1,13 +1,15 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
-import { accountService, categoryService } from "@/lib/client/services";
 
 export const TransactionModalDataInitializer = () => {
   const { isLoaded, isSignedIn } = useAuth();
-  const { setAccountOptions, setCategoryOptions, setTransferCategoryId, setIsLoading } = useTransactionModal();
+  const pathname = usePathname();
+  const { refreshOptions, setIsLoading } = useTransactionModal();
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     // The root layout also renders on /login, where the API routes redirect to HTML.
@@ -15,35 +17,19 @@ export const TransactionModalDataInitializer = () => {
     if (!isLoaded || !isSignedIn) return;
 
     const initializeData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch accounts and categories
-        const [accounts, categories, transferCategory] = await Promise.all([
-          accountService.getAccounts(),
-          categoryService.getCategories(),
-          categoryService.getSystemTransferCategory(),
-        ]);
+      // Navigating (e.g. from /accounts after creating one) quietly refreshes the lists.
+      // Only the first load shows the spinner and reports errors.
+      const isFirstLoad = !hasLoadedOnce.current;
+      if (isFirstLoad) setIsLoading(true);
 
-        // Transform data for the modal
-        const accountOptions = accounts.map((account) => ({
-          label: account.name,
-          value: account.id,
-          currency: account.currency,
-        }));
+      await refreshOptions({ silent: !isFirstLoad });
 
-        setAccountOptions(accountOptions);
-        setCategoryOptions(categories);
-        setTransferCategoryId(transferCategory.id);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Failed to initialize transaction modal data:", error);
-        setIsLoading(false);
-      }
+      hasLoadedOnce.current = true;
+      setIsLoading(false);
     };
 
     initializeData();
-  }, [isLoaded, isSignedIn, setAccountOptions, setCategoryOptions, setTransferCategoryId, setIsLoading]);
+  }, [isLoaded, isSignedIn, pathname, refreshOptions, setIsLoading]);
 
   return null;
 };
