@@ -10,7 +10,10 @@ import { NetWorthHero } from "./NetWorthHero";
 import { TopSpendingCategories } from "./TopSpendingCategories";
 import { Icon } from "@/components/ui";
 import { SixMonthBarChart } from "./SixMonthBarChart";
+import { GettingStarted } from "@/components/guide/GettingStarted";
+import { MultiCurrencyHint } from "@/components/guide/MultiCurrencyHint";
 import type { CurrencyBalance, NetWorth } from "@/lib/server/services/dashboard";
+import type { Guide } from "@/lib/server/services/guide";
 import { TransactionFormModal } from "../../transactions/_components";
 import { ComboboxOption } from "@/components/ui";
 import { Category } from "@prisma/client";
@@ -55,6 +58,7 @@ interface Props {
   accountOptions: ComboboxOption[];
   categoryOptions: CategoryOption[];
   transferCategoryId: string;
+  guide: Guide;
 }
 
 export const DashboardPageShell = ({
@@ -67,6 +71,7 @@ export const DashboardPageShell = ({
   accountOptions,
   categoryOptions,
   transferCategoryId,
+  guide,
 }: Props) => {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
@@ -108,14 +113,25 @@ export const DashboardPageShell = ({
       <PageShell
       title="Dashboard"
       subtitle="Overview of your financial accounts and monthly totals"
-      actionButton={{
+      // Without an account there is nothing to record a transaction against, so don't offer it yet
+      actionButton={guide.hasAccounts ? {
         text: "+ New Transaction",
         variant: "primary",
         size: "lg",
         onClick: handleOpenTransactionModal,
-      }}
+      } : undefined}
     >
+      {!guide.hasAccounts ? (
+        // Brand-new user: show only the way forward instead of a dashboard full of empty cards
+        guide.checklist && <GettingStarted steps={guide.checklist.steps} canDismiss={false} />
+      ) : (
       <div className="space-y-4 sm:space-y-6">
+        {guide.checklist && <GettingStarted steps={guide.checklist.steps} canDismiss />}
+
+        {guide.showMultiCurrencyHint && (
+          <MultiCurrencyHint currency={currency} currencies={currencyBalances.map((c) => c.currency)} />
+        )}
+
         {/* Section 1: Net worth in the base currency, with the per-currency breakdown */}
         <section>
           <NetWorthHero
@@ -231,6 +247,7 @@ export const DashboardPageShell = ({
           </section>
         )}
       </div>
+      )}
     </PageShell>
 
       <TransactionFormModal

@@ -29,6 +29,8 @@ type Props = {
   disabled?: boolean;
   /** Called with the typed text when the user chooses "Create new ...". The parent owns creation and the options list. */
   onCreateOption?: (label: string) => void;
+  /** What gets created, e.g. "account". Used for the always-visible "Create new account…" row. */
+  createLabel?: string;
 };
 
 const CREATE_VALUE = "__create__";
@@ -42,6 +44,7 @@ export const Combobox = ({
   allValues = false,
   disabled = false,
   onCreateOption,
+  createLabel,
 }: Props) => {
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -87,6 +90,8 @@ export const Combobox = ({
     !!onCreateOption &&
     query.trim() !== "" &&
     !options.some((opt) => opt.label.toLowerCase() === query.trim().toLowerCase());
+  // Nothing typed yet: still show the row, so users can tell they are able to add a new one
+  const showCreatePrompt = !!onCreateOption && !showCreate;
 
   return (
     <div className="w-full sm:w-auto">
@@ -103,6 +108,7 @@ export const Combobox = ({
           allValues={allValues}
           disabled={disabled}
           onCreateOption={onCreateOption}
+          createLabel={createLabel}
         />
       ) : (
         /* Desktop Version */
@@ -142,13 +148,13 @@ export const Combobox = ({
                   {option.label}
                 </ComboboxOption>
               ))}
-              {showCreate && (
+              {(showCreate || showCreatePrompt) && (
                 <ComboboxOption
                   value={CREATE_VALUE}
-                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white data-[focus]:bg-blue-100"
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white text-blue-600 data-[focus]:bg-blue-100 border-t border-gray-100"
                 >
                   <Icon name="plus" className="size-5" />
-                  Create new “{query.trim()}”
+                  {showCreate ? <>Create new “{query.trim()}”</> : <>Create new {createLabel ?? "option"}…</>}
                 </ComboboxOption>
               )}
               {filteredOptions.length === 0 && !showCreate && query && (

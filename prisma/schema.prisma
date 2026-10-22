@@ -95,6 +95,16 @@ model UserSettings {
   @@map("user_settings")
 }
 
+// Onboarding guide: remembers which tips the user has dismissed (e.g. "checklist", "multi-currency")
+model UserGuide {
+  userId    String   @id
+  dismissed Json     // string[] of dismissed tip ids
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_guide")
+}
+
 // Daily exchange rates, all expressed as "units of <currency> per 1 USD".
 // Any pair can be derived: amount / ratePerUsd[from] * ratePerUsd[to].
 model ExchangeRate {

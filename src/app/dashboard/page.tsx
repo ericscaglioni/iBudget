@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { accountService, categoryService, dashboardService } from "@/lib/server/services";
+import { accountService, categoryService, dashboardService, guideService } from "@/lib/server/services";
 import { DashboardPageShell } from "./_components";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 import { accountCurrencies } from "@/lib/constants";
@@ -33,6 +33,7 @@ const DashboardPage = async ({ searchParams }: Props) => {
     const userAccounts = await accountService.getUserAccounts(userId);
     const userCategories = await categoryService.getUserCategories(userId);
     const transferCategory = await categoryService.getSystemTransferCategory();
+    const guide = await guideService.getGuide(userId);
 
     const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id, currency: a.currency }));
 
@@ -47,6 +48,7 @@ const DashboardPage = async ({ searchParams }: Props) => {
         accountOptions={accountOptions}
         categoryOptions={userCategories}
         transferCategoryId={transferCategory.id}
+        guide={guide}
       />
     );
   } catch (error) {

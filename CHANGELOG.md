@@ -4,6 +4,38 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [0.3.0] - 2026-10-22
+
+Guidance for new users, so the app tells you what to do next.
+
+### Added
+- **Getting started checklist** on the dashboard: create an account, then add your first
+  transaction. Steps tick themselves off, the next step has a button, and the checklist hides when
+  done (or with **Hide** once you have an account).
+- **Guided first account.** With no accounts, the dashboard shows only the checklist, and the
+  floating **+** button and **+ New Transaction** send you to create an account first. After saving
+  your first account you go straight into adding a transaction.
+- **Empty states** on the Accounts, Transactions and Categories pages that explain what the page is
+  for and offer the next step.
+- **Multiple currencies tip:** when you have accounts in more than one currency and haven't chosen a
+  default, the dashboard explains how to switch currency and links to Settings. It goes away once you
+  save a default currency, or when you dismiss it.
+- **Settings explains the default currency** when you only have one currency: it says what the
+  dashboard is showing and that you can choose a default once you add an account in another currency,
+  with a link to add one. It used to show a one-item dropdown with a disabled Save button.
+- Short help text under the account form fields (type, currency, initial balance).
+- A permanent **Create new account…** / **Create new category…** row at the bottom of those
+  dropdowns in the transaction form (desktop and mobile). Before, it only appeared after typing a name.
+- A tip with a **Choose default** button appears right after saving an account in a currency you
+  didn't have before, wherever you add it, instead of only on the dashboard.
+- Which tips you dismissed is stored per user and removed with the rest of your data on account
+  deletion (new `user_guide` table).
+
+### Security
+- Rotated the QA and Prod database passwords after Railway's security incident of 2026-10-21, and
+  added `scripts/rotate-db-password.sh` to rotate a MySQL password and close open connections without
+  needing a redeploy on Railway.
+
 ## [0.2.1] - 2026-10-22
 
 Bug fixes, security hardening and the first separate QA and Prod environments.
@@ -54,6 +86,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/ericscaglioni/iBudget/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/ericscaglioni/iBudget/releases/tag/0.1.0

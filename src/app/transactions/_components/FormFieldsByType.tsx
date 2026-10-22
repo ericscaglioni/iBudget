@@ -48,6 +48,7 @@ export function FormFieldsByType({
         onChange={(val) => setValue("accountId", val)}
         options={accountOptions}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("accountId", name))}
+        createLabel="account"
       />
       <FormCombobox
         form={form}
@@ -57,6 +58,7 @@ export function FormFieldsByType({
         onChange={(val) => setValue("categoryId", val)}
         options={categoryOptions}
         onCreateOption={onCreateCategory}
+        createLabel="category"
       />
     </>
   );

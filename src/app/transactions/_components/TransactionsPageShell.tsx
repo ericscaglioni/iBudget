@@ -1,8 +1,9 @@
 "use client";
 
 import { PageShell } from "@/components";
-import { ComboboxOption, DeleteModal } from "@/components/ui";
+import { ComboboxOption, DeleteModal, EmptyState } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
+import { hasActiveFilters } from "@/lib/utils/has-active-filters";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { CategoryOption, TransactionWithDetails } from "../types";
@@ -39,6 +40,8 @@ export const TransactionsPageShell = ({
   const [openRecurringDeleteModal, setOpenRecurringDeleteModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithDetails | null>(null);
 
+  const hasNoTransactionsYet = totalCount === 0 && !hasActiveFilters(searchParams);
+
   const handleClose = () => {
     setOpenTransactionModal(false);
     setOpenDeleteModal(false);
@@ -47,6 +50,12 @@ export const TransactionsPageShell = ({
   };
 
   const handleCreate = () => {
+    // A transaction needs an account: send new users to create one first
+    if (accountOptions.length === 0) {
+      router.push("/accounts?new=1");
+      return;
+    }
+
     setSelectedTransaction(null);
     setOpenTransactionModal(true);
   };
@@ -101,24 +110,41 @@ const handleEdit = (transaction: TransactionWithDetails) => {
         onClick: handleCreate,
       }}
     >
-      <TransactionFilters
-        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
-        accountOptions={accountOptions}
-        searchParams={searchParams}
-        basePath="/transactions"
-        startTransition={startTransition}
-      />
+      {hasNoTransactionsYet ? (
+        <EmptyState
+          title="No transactions yet"
+          description={
+            accountOptions.length === 0
+              ? "Transactions are recorded against an account, so create your first account to get started."
+              : "Record your first expense, income or transfer. You can also use the + button at the bottom right, from any page."
+          }
+          action={{
+            label: accountOptions.length === 0 ? "Create your first account" : "Add your first transaction",
+            onClick: handleCreate,
+          }}
+        />
+      ) : (
+        <>
+          <TransactionFilters
+            categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
+            accountOptions={accountOptions}
+            searchParams={searchParams}
+            basePath="/transactions"
+            startTransition={startTransition}
+          />
 
-      <TransactionsTable
-        data={transactions}
-        totalCount={totalCount}
-        page={page}
-        pageSize={pageSize}
-        accountOptions={accountOptions}
-        categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+          <TransactionsTable
+            data={transactions}
+            totalCount={totalCount}
+            page={page}
+            pageSize={pageSize}
+            accountOptions={accountOptions}
+            categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </>
+      )}
 
       <TransactionFormModal
         open={openTransactionModal}

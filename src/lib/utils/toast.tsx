@@ -20,3 +20,14 @@ export const showError = (message: string) =>
       color: "#fff",
     },
   });
+
+export const showInfo = (message: string, action?: { label: string; onClick: () => void }) =>
+  toast(message, {
+    duration: 10000,
+    action,
+    style: {
+      backgroundColor: "#eff6ff", // Tailwind's blue-50
+      color: "#1e3a8a", // Tailwind's blue-900
+      border: "1px solid #bfdbfe", // Tailwind's blue-200
+    },
+  });

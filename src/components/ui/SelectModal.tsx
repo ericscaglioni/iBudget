@@ -17,6 +17,7 @@ interface SelectModalProps {
   allValues?: boolean;
   searchPlaceholder?: string;
   onCreateOption?: (label: string) => void;
+  createLabel?: string;
 }
 
 export const SelectModal = ({
@@ -29,6 +30,7 @@ export const SelectModal = ({
   allValues = false,
   searchPlaceholder = "Search options...",
   onCreateOption,
+  createLabel,
 }: SelectModalProps) => {
   const [query, setQuery] = useState("");
 
@@ -60,6 +62,8 @@ export const SelectModal = ({
     !!onCreateOption &&
     trimmedQuery !== "" &&
     !options.some((opt) => opt.label.toLowerCase() === trimmedQuery.toLowerCase());
+  // Nothing typed yet: still show the row, so users can tell they are able to add a new one
+  const showCreatePrompt = !!onCreateOption && !showCreate;
 
   const handleCreate = () => {
     onClose();
@@ -117,15 +121,15 @@ export const SelectModal = ({
               {option.label}
             </Button>
           ))}
-          {showCreate && (
+          {(showCreate || showCreatePrompt) && (
             <Button
               onClick={handleCreate}
               variant="ghost"
               size="lg"
-              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none"
+              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none text-blue-600 hover:text-blue-700"
             >
               <Icon name="plus" className="size-5" />
-              Create new “{trimmedQuery}”
+              {showCreate ? <>Create new “{trimmedQuery}”</> : <>Create new {createLabel ?? "option"}…</>}
             </Button>
           )}
           {filteredOptions.length === 0 && query && !showCreate && (

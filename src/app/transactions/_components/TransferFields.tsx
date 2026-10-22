@@ -29,6 +29,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         onChange={(val) => form.setValue("fromAccountId", val)}
         options={accountOptions}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("fromAccountId", name))}
+        createLabel="account"
       />
 
       <FormCombobox
@@ -40,6 +41,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         disabled={!fromAccountId}
         options={accountOptions.filter((option) => option.value !== fromAccountId)}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("toAccountId", name))}
+        createLabel="account"
       />
 
       {/* Moving money between currencies: the amount that arrives is not the amount that left */}

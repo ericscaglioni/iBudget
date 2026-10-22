@@ -6,6 +6,7 @@ export * from './Combobox';
 export * from './MobileCombobox';
 export * from './ConfirmationModal';
 export * from './DeleteModal';
+export * from './EmptyState';
 export * from './FormCombobox';
 export * from './FormModal';
 export * from './FormRadioGroup';
