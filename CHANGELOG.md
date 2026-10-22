@@ -21,6 +21,10 @@ Guidance for new users, so the app tells you what to do next.
   default, the dashboard explains how to switch currency and links to Settings. It goes away once you
   save a default currency, or when you dismiss it.
 - Short help text under the account form fields (type, currency, initial balance).
+- A permanent **Create new account…** / **Create new category…** row at the bottom of those
+  dropdowns in the transaction form (desktop and mobile). Before, it only appeared after typing a name.
+- A tip with a **Choose default** button appears right after saving an account in a currency you
+  didn't have before, wherever you add it, instead of only on the dashboard.
 - Which tips you dismissed is stored per user and removed with the rest of your data on account
   deletion (new `user_guide` table).
 

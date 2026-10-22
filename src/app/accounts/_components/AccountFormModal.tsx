@@ -2,6 +2,9 @@
 
 import { FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { accountService } from "@/lib/client/services";
+import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
+import { showInfo } from "@/lib/utils/toast";
+import { useRouter } from "next/navigation";
 import {
   accountCurrencies,
   accountTypes,
@@ -31,6 +34,8 @@ type Props = {
 };
 
 export const AccountFormModal = ({ open, onClose, account, defaultName, description, onCreate }: Props) => {
+  const router = useRouter();
+  const { refreshOptions } = useTransactionModal();
   const form = useForm<AccountFormInput>({
     resolver: zodResolver(AccountFormSchema),
     defaultValues: DEFAULT_VALUES,
@@ -64,6 +69,25 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
     onClose();
   };
 
+  // The dashboard shows one currency at a time, so when a user adds a currency they didn't have
+  // before, tell them right away that they can switch it and pick a default (not only on the dashboard).
+  const tellAboutNewCurrency = async (currency: string) => {
+    try {
+      const accounts = await accountService.getAccounts();
+      const isNewCurrency = accounts.filter((a) => a.currency === currency).length === 1;
+      const hasSeveralCurrencies = new Set(accounts.map((a) => a.currency)).size > 1;
+
+      if (isNewCurrency && hasSeveralCurrencies) {
+        showInfo(
+          `You now have accounts in more than one currency. The dashboard shows one currency at a time: switch between them there, or choose which one it opens in.`,
+          { label: "Choose default", onClick: () => router.push("/settings") }
+        );
+      }
+    } catch {
+      // Only a tip: never let it get in the way of saving the account
+    }
+  };
+
   const onSubmit = async (data: AccountFormInput) => {
     const payload = {
       name: data.name,
@@ -78,6 +102,9 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
     } else {
       const createdAccount = await accountService.createAccount(payload);
       onCreate?.({ id: createdAccount.id, name: createdAccount.name, currency: createdAccount.currency });
+      // Keep the + button's account list current, and explain the new currency if it is one
+      void refreshOptions({ silent: true });
+      void tellAboutNewCurrency(createdAccount.currency);
     }
 
     onCloseModal();
