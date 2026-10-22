@@ -46,6 +46,15 @@ export const Combobox = ({
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
+  // The input falls back to the typed text when nothing is selected. If the value changes from
+  // outside (selecting an option, or a form reset such as "Save & add another"), drop that text.
+  // Otherwise a cleared field keeps showing the old text and looks selected when it isn't.
+  const [lastValue, setLastValue] = useState(value);
+  if (lastValue !== value) {
+    setLastValue(value);
+    setQuery("");
+  }
+
   // Detect mobile screen size
   useEffect(() => {
     const checkMobile = () => {

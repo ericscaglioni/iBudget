@@ -207,8 +207,8 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     onCloseModal();
   };
 
-  // Save and keep the modal open for the next entry. Type, date and account(s) carry over since
-  // batches of entries usually share them; everything else is cleared so nothing is saved twice by accident.
+  // Save and keep the modal open for the next entry. Type, date, account(s) and category carry over
+  // since batches of entries usually share them; only the amount, description and the like are cleared.
   const onSubmitAndAddAnother = async (data: TransactionFormInput) => {
     await handleCreate(data);
     router.refresh();
@@ -219,7 +219,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       date: data.date,
       ...(mode === TransactionTypeEnum.transfer
         ? { fromAccountId: data.fromAccountId, toAccountId: data.toAccountId }
-        : { accountId: data.accountId }),
+        : { accountId: data.accountId, categoryId: data.categoryId }),
     });
     form.setFocus("amount");
   };
