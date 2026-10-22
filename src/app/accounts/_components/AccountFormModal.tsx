@@ -25,10 +25,12 @@ type Props = {
   onClose: () => void;
   account?: SerializedAccount;
   defaultName?: string;
+  /** Overrides the default intro text under the title (used for the guided first account) */
+  description?: string;
   onCreate?: (account: { id: string; name: string; currency: string }) => void;
 };
 
-export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate }: Props) => {
+export const AccountFormModal = ({ open, onClose, account, defaultName, description, onCreate }: Props) => {
   const form = useForm<AccountFormInput>({
     resolver: zodResolver(AccountFormSchema),
     defaultValues: DEFAULT_VALUES,
@@ -88,7 +90,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate
       onSubmit={onSubmit}
       onClose={onCloseModal}
       title={!!account ? "Edit Account" : "Create New Account"}
-      description="Fill in the details to create a new account."
+      description={description ?? (account ? "Update the details of this account." : "Fill in the details to create a new account.")}
       toastSuccessMessage="Account saved successfully"
       toastErrorMessage="Failed to save account"
     >
@@ -102,6 +104,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate
         form={form}
         label="Type"
         name="type"
+        hint="Just a label to help you tell your accounts apart."
         options={accountTypes.map((type) => ({
           value: type,
           label: type.charAt(0).toUpperCase() + type.slice(1),
@@ -114,6 +117,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate
         form={form}
         label="Currency"
         name="currency"
+        hint="The currency this account is held in. Accounts in different currencies are shown separately on the dashboard."
         options={accountCurrencies.map((currency) => ({
           value: currency,
           label: currency,
@@ -126,6 +130,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, onCreate
         label="Initial Balance"
         name="initialBalance"
         form={form}
+        hint="How much is in the account right now. Transactions you add are applied on top of it."
         inputProps={{ type: 'number', step: '0.01' }}
         />
     </FormModal>

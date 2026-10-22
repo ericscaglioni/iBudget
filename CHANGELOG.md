@@ -4,6 +4,26 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [Unreleased]
+
+Guidance for new users, so the app tells you what to do next.
+
+### Added
+- **Getting started checklist** on the dashboard: create an account, then add your first
+  transaction. Steps tick themselves off, the next step has a button, and the checklist hides when
+  done (or with **Hide** once you have an account).
+- **Guided first account.** With no accounts, the dashboard shows only the checklist, and the
+  floating **+** button and **+ New Transaction** send you to create an account first. After saving
+  your first account you go straight into adding a transaction.
+- **Empty states** on the Accounts and Transactions pages that explain what the page is for and offer
+  the next step.
+- **Multiple currencies tip:** when you have accounts in more than one currency and haven't chosen a
+  default, the dashboard explains how to switch currency and links to Settings. It goes away once you
+  save a default currency, or when you dismiss it.
+- Short help text under the account form fields (type, currency, initial balance).
+- Which tips you dismissed is stored per user and removed with the rest of your data on account
+  deletion (new `user_guide` table).
+
 ## [0.2.1] - 2026-10-22
 
 Bug fixes, security hardening and the first separate QA and Prod environments.
@@ -54,6 +74,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[Unreleased]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...HEAD
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/ericscaglioni/iBudget/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/ericscaglioni/iBudget/releases/tag/0.1.0

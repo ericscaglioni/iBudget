@@ -40,11 +40,12 @@ export const deleteUserData = async (userId: string) => {
     throw new Error("deleteUserData requires a non-empty userId");
   }
 
-  const [transactions, accounts, categories, settings] = await prisma.$transaction([
+  const [transactions, accounts, categories, settings, guide] = await prisma.$transaction([
     prisma.transaction.deleteMany({ where: { userId } }),
     prisma.account.deleteMany({ where: { userId } }),
     prisma.category.deleteMany({ where: { userId } }),
     prisma.userSettings.deleteMany({ where: { userId } }),
+    prisma.userGuide.deleteMany({ where: { userId } }),
   ]);
 
   return {
@@ -52,5 +53,6 @@ export const deleteUserData = async (userId: string) => {
     accounts: accounts.count,
     categories: categories.count,
     settings: settings.count,
+    guide: guide.count,
   };
 };
