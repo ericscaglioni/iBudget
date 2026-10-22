@@ -4,7 +4,7 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
-## [Unreleased]
+## [0.3.0] - 2026-10-22
 
 Guidance for new users, so the app tells you what to do next.
 
@@ -30,6 +30,11 @@ Guidance for new users, so the app tells you what to do next.
   didn't have before, wherever you add it, instead of only on the dashboard.
 - Which tips you dismissed is stored per user and removed with the rest of your data on account
   deletion (new `user_guide` table).
+
+### Security
+- Rotated the QA and Prod database passwords after Railway's security incident of 2026-10-21, and
+  added `scripts/rotate-db-password.sh` to rotate a MySQL password and close open connections without
+  needing a redeploy on Railway.
 
 ## [0.2.1] - 2026-10-22
 
@@ -81,7 +86,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
-[Unreleased]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...HEAD
+[0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/ericscaglioni/iBudget/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/ericscaglioni/iBudget/releases/tag/0.1.0
