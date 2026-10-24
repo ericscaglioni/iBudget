@@ -14,6 +14,10 @@ All notable changes to iBudget are documented here. The format follows
 - Save stayed disabled when the only change was picking a different account, category, frequency
   (transactions and transfers) or an account's type or currency. Choosing from a dropdown now counts
   as a change, and clears the field's error once you pick a valid option.
+- Save did nothing when editing a one-time transaction. It failed validation on the hidden
+  recurring fields (frequency and end date, empty in the database), so the error had no field to show
+  on. Those values are now loaded correctly, and any form that fails validation now shows a message
+  instead of staying silent.
 
 ## [0.3.0] - 2026-10-22
 

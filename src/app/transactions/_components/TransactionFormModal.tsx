@@ -111,10 +111,12 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       date: dayjs(transaction.date).format("YYYY-MM-DD"),
       description: transaction.description,
       accountId: transaction.accountId,
-      categoryId: transaction.categoryId!,
+      // Database NULLs arrive as null, which the form schema rejects (and for recurring-only fields
+      // the error would sit on a field that isn't on screen, making Save look broken)
+      categoryId: transaction.categoryId ?? "",
       type: mode,
       isRecurring: transaction.isRecurring || false,
-      frequency: transaction.frequency as "daily" | "weekly" | "monthly" | "yearly",
+      frequency: (transaction.frequency ?? undefined) as "daily" | "weekly" | "monthly" | "yearly" | undefined,
       endsAt: transaction.endsAt ? dayjs(transaction.endsAt).format("YYYY-MM-DD") : undefined,
     });
   }, [form]);

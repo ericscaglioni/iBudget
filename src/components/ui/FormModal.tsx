@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
-import { FieldValues, UseFormReturn } from 'react-hook-form';
+import { FieldErrors, FieldValues, UseFormReturn } from 'react-hook-form';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { showError, showSuccess } from '@/lib/utils/toast';
@@ -77,6 +77,14 @@ export const FormModal = <TData extends FieldValues,>({
     if (!isSubmitting) onClose();
   };
 
+  // handleSubmit does nothing visible when validation fails, so a problem in a field that isn't on
+  // screen would make Save look broken. Always say something.
+  const onInvalid = (errors: FieldErrors<TData>) => {
+    const first = Object.values(errors).find((error) => typeof error?.message === 'string');
+    const reason = first?.message as string | undefined;
+    showError(reason ? `Please check the form: ${reason}` : 'Please check the form and try again.');
+  };
+
   const onFormSubmit = (data: TData) => {
     setActiveAction('primary');
     return runSubmit(onSubmit)(data);
@@ -89,7 +97,7 @@ export const FormModal = <TData extends FieldValues,>({
 
   return (
     <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth}>
-      <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onFormSubmit, onInvalid)} className="space-y-4">
         {children}
 
         <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
@@ -108,7 +116,7 @@ export const FormModal = <TData extends FieldValues,>({
               type='button'
               variant='outline'
               size='md'
-              onClick={form.handleSubmit(onSecondarySubmit)}
+              onClick={form.handleSubmit(onSecondarySubmit, onInvalid)}
               isLoading={isSubmitting && activeAction === 'secondary'}
               disabled={!isDirty || isSubmitting}
               className="w-full sm:w-auto order-2"
