@@ -362,7 +362,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
                   label="Frequency"
                   options={frequencyOptions}
                   value={selectedFrequency || ""}
-                  onChange={(val) => setValue("frequency", val as "daily" | "weekly" | "monthly" | "yearly")}
+                  onChange={(val) => setValue("frequency", val as "daily" | "weekly" | "monthly" | "yearly", { shouldDirty: true, shouldValidate: true })}
                 />
 
                 {/* End date input */}

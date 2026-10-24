@@ -50,3 +50,6 @@ export const TRANSACTION_TYPE_CONFIG: TransactionConfigType = {
     icon: "arrowLoop",
   },
 };
+
+// Matches the database column (VARCHAR(191)); longer text would be rejected by MySQL
+export const DESCRIPTION_MAX_LENGTH = 191;
