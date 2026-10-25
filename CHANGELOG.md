@@ -4,7 +4,9 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
-## [Unreleased]
+## [0.3.1] - 2026-10-25
+
+Bug fixes for creating and editing transactions.
 
 ### Fixed
 - Creating a transaction removed characters from its description: `(`, `)`, `&`, `/`, `#`, `%`,
@@ -101,6 +103,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/ericscaglioni/iBudget/compare/0.1.0...0.2.0
