@@ -137,7 +137,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
           label: type.charAt(0).toUpperCase() + type.slice(1),
         }))}
         value={selectedType}
-        onChange={(val) => setValue('type', val)}
+        onChange={(val) => setValue('type', val, { shouldDirty: true, shouldValidate: true })}
       />
 
       <FormCombobox
@@ -150,7 +150,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
           label: currency,
         }))} 
         value={selectedCurrency}
-        onChange={(val) => setValue('currency', val)}
+        onChange={(val) => setValue('currency', val, { shouldDirty: true, shouldValidate: true })}
       />
 
       <FormTextInput

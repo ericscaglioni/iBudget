@@ -1,6 +1,6 @@
 import { TransactionTypeEnum } from "@/lib/constants";
 import { transactionService } from "@/lib/server/services";
-import { sanitizeFilterInput } from "@/lib/utils/sanitize";
+import { normalizeDescription } from "@/lib/utils/sanitize";
 import { createSuccessResponse, createErrorResponse } from "@/lib/utils/api-response";
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       endsAt,
     } = body;
 
-    const sanitizedDescription = sanitizeFilterInput(description);
+    const sanitizedDescription = normalizeDescription(description);
 
     let result;
 

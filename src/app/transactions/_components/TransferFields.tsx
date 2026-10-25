@@ -26,7 +26,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         name="fromAccountId"
         label="From Account"
         value={fromAccountId ?? ""}
-        onChange={(val) => form.setValue("fromAccountId", val)}
+        onChange={(val) => form.setValue("fromAccountId", val, { shouldDirty: true, shouldValidate: true })}
         options={accountOptions}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("fromAccountId", name))}
         createLabel="account"
@@ -37,7 +37,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         name="toAccountId"
         label="To Account"
         value={form.watch("toAccountId") ?? ""}
-        onChange={(val) => form.setValue("toAccountId", val)}
+        onChange={(val) => form.setValue("toAccountId", val, { shouldDirty: true, shouldValidate: true })}
         disabled={!fromAccountId}
         options={accountOptions.filter((option) => option.value !== fromAccountId)}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("toAccountId", name))}

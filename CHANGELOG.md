@@ -4,6 +4,23 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [0.3.1] - 2026-10-25
+
+Bug fixes for creating and editing transactions.
+
+### Fixed
+- Creating a transaction removed characters from its description: `(`, `)`, `&`, `/`, `#`, `%`,
+  `$` and accented letters such as é, ã or ñ were silently deleted, and the text was cut at 100
+  characters. The description is now saved exactly as typed (up to 191 characters, the database
+  limit, with a clear error beyond that). Descriptions saved before this fix stay as they were stored.
+- Save stayed disabled when the only change was picking a different account, category, frequency
+  (transactions and transfers) or an account's type or currency. Choosing from a dropdown now counts
+  as a change, and clears the field's error once you pick a valid option.
+- Save did nothing when editing a one-time transaction. It failed validation on the hidden
+  recurring fields (frequency and end date, empty in the database), so the error had no field to show
+  on. Those values are now loaded correctly, and any form that fails validation now shows a message
+  instead of staying silent.
+
 ## [0.3.0] - 2026-10-22
 
 Guidance for new users, so the app tells you what to do next.
@@ -86,6 +103,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/ericscaglioni/iBudget/compare/0.1.0...0.2.0

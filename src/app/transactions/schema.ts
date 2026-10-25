@@ -1,4 +1,4 @@
-import { TransactionTypeEnum } from "@/lib/constants";
+import { DESCRIPTION_MAX_LENGTH, TransactionTypeEnum } from "@/lib/constants";
 import { z } from "zod";
 
 export const createTransactionFormSchema = (accountOptions: { value: string; currency?: string }[], categoryOptions: { id: string }[]) => z
@@ -6,7 +6,10 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
     type: z.nativeEnum(TransactionTypeEnum),
     amount: z.string().min(1, "Amount is required"),
     date: z.string().min(1, "Date is required"),
-    description: z.string().min(3, "Description has to be at least 3 characters long"),
+    description: z
+      .string()
+      .min(3, "Description has to be at least 3 characters long")
+      .max(DESCRIPTION_MAX_LENGTH, `Description can be at most ${DESCRIPTION_MAX_LENGTH} characters long`),
 
     accountId: z.string().optional(),
     categoryId: z.string().optional(),

@@ -45,7 +45,7 @@ export function FormFieldsByType({
         name="accountId"
         label="Account"
         value={watch("accountId") ?? ""}
-        onChange={(val) => setValue("accountId", val)}
+        onChange={(val) => setValue("accountId", val, { shouldDirty: true, shouldValidate: true })}
         options={accountOptions}
         onCreateOption={onCreateAccount && ((name) => onCreateAccount("accountId", name))}
         createLabel="account"
@@ -55,7 +55,7 @@ export function FormFieldsByType({
         name="categoryId"
         label="Category"
         value={watch("categoryId") ?? ""}
-        onChange={(val) => setValue("categoryId", val)}
+        onChange={(val) => setValue("categoryId", val, { shouldDirty: true, shouldValidate: true })}
         options={categoryOptions}
         onCreateOption={onCreateCategory}
         createLabel="category"
