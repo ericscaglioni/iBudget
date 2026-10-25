@@ -13,6 +13,10 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
     description,
     date,
     updateScope,
+    transferId,
+    fromAccountId,
+    toAccountId,
+    toAmount,
   } = body;
 
   // Validate updateScope parameter if provided
@@ -24,6 +28,20 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
   }
 
   try {
+    // A transfer is two linked transactions (money out, money in) that have to be updated together
+    if (transferId) {
+      const result = await transactionService.updateTransferTransaction(userId, {
+        id,
+        fromAccountId,
+        toAccountId,
+        amount,
+        toAmount,
+        description,
+        date,
+      });
+      return NextResponse.json({ data: result }, { status: 200 });
+    }
+
     const result = await transactionService.updateTransaction(
       userId,
       {

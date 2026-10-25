@@ -190,19 +190,28 @@ interface TransferTransactionProps {
   date: string;
 };
 
-export const createTransferTransaction = async (userId: string, props: TransferTransactionProps) => {
-  const { fromAccountId, toAccountId, amount, toAmount, description, date } = props;
+interface ResolveTransferAmountsProps {
+  userId: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+  toAmount?: number;
+}
 
-  const transferCategory = await prisma.category.findFirst({
-    where: { userId: null, name: "Transfer" },
-  });
-
-  if (!transferCategory) {
-    throw new Error("Transfer category not found");
-  }
+/**
+ * Works out what leaves the source account and what arrives in the destination account.
+ * Same currency: both sides carry the same amount. Different currencies: the destination
+ * gets what actually arrived, which the user has to tell us.
+ */
+const resolveTransferAmounts = async (props: ResolveTransferAmountsProps) => {
+  const { userId, fromAccountId, toAccountId, amount, toAmount } = props;
 
   if (!fromAccountId || !toAccountId || !amount) {
     throw new ValidationError("Missing transfer data");
+  }
+
+  if (fromAccountId === toAccountId) {
+    throw new ValidationError("Cannot transfer to the same account");
   }
 
   const accounts = await prisma.account.findMany({
@@ -216,8 +225,8 @@ export const createTransferTransaction = async (userId: string, props: TransferT
     throw new NotFoundError('Account');
   }
 
-  // Same currency: both sides carry the same amount. Different currencies: the destination gets what actually arrived.
-  let incomingAmount = Math.abs(amount);
+  const outgoingAmount = Math.abs(amount);
+  let incomingAmount = outgoingAmount;
   if (fromAccount.currency !== toAccount.currency) {
     const received = Math.abs(Number(toAmount));
     if (!toAmount || !Number.isFinite(received) || received <= 0) {
@@ -225,6 +234,28 @@ export const createTransferTransaction = async (userId: string, props: TransferT
     }
     incomingAmount = received;
   }
+
+  return { outgoingAmount, incomingAmount };
+};
+
+export const createTransferTransaction = async (userId: string, props: TransferTransactionProps) => {
+  const { fromAccountId, toAccountId, amount, toAmount, description, date } = props;
+
+  const transferCategory = await prisma.category.findFirst({
+    where: { userId: null, name: "Transfer" },
+  });
+
+  if (!transferCategory) {
+    throw new Error("Transfer category not found");
+  }
+
+  const { outgoingAmount, incomingAmount } = await resolveTransferAmounts({
+    userId,
+    fromAccountId,
+    toAccountId,
+    amount,
+    toAmount,
+  });
 
   const transferId = uuid(); // Shared between both transactions
 
@@ -236,7 +267,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
         transferId,
         accountId: fromAccountId,
         categoryId: transferCategory.id,
-        amount: Math.abs(amount), // outgoing
+        amount: outgoingAmount,
         description: description ?? "Transfer to another account",
         date: new Date(date),
       },
@@ -246,7 +277,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
         transferId,
         accountId: toAccountId,
         categoryId: transferCategory.id,
-        amount: incomingAmount, // incoming
+        amount: incomingAmount,
         description: description ?? "Transfer from another account",
         date: new Date(date),
       },
@@ -484,15 +515,31 @@ export const updateTransaction = async (
   };
 };
 
-type UpdateTransferTransactionProps = UpdateTransactionProps & { transferId: string };
+interface UpdateTransferTransactionProps {
+  /** Id of either side of the transfer */
+  id: string;
+  fromAccountId: string;
+  toAccountId: string;
+  amount: number;
+  /** Amount received, in the destination account's currency. Required when the currencies differ. */
+  toAmount?: number;
+  description: string;
+  date: Date | string;
+}
 
 export const updateTransferTransaction = async (userId: string, props: UpdateTransferTransactionProps) => {
-  const { transferId, amount, description, date } = props;
+  const { id, fromAccountId, toAccountId, amount, toAmount, description, date } = props;
+
+  // The transfer is identified from the database, never from what the client says it is
+  const clicked = await prisma.transaction.findUnique({ where: { id, userId } });
+  if (!clicked?.transferId) {
+    throw new NotFoundError('Transfer transaction');
+  }
 
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
-      transferId,
+      transferId: clicked.transferId,
     },
   });
 
@@ -507,23 +554,31 @@ export const updateTransferTransaction = async (userId: string, props: UpdateTra
     throw new ValidationError('Invalid transfer transaction data');
   }
 
+  const { outgoingAmount, incomingAmount } = await resolveTransferAmounts({
+    userId,
+    fromAccountId,
+    toAccountId,
+    amount,
+    toAmount,
+  });
+
   await prisma.$transaction([
     prisma.transaction.update({
       where: { id: expenseTx.id },
       data: {
-        amount: Math.abs(amount),
-        accountId: expenseTx.accountId,
+        amount: outgoingAmount,
+        accountId: fromAccountId,
         description,
-        date,
+        date: new Date(date),
       },
     }),
     prisma.transaction.update({
       where: { id: incomeTx.id },
       data: {
-        amount: Math.abs(amount),
-        accountId: incomeTx.accountId,
+        amount: incomingAmount,
+        accountId: toAccountId,
         description,
-        date,
+        date: new Date(date),
       },
     }),
   ]);
