@@ -4,6 +4,15 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [0.3.2] - 2026-10-25
+
+Bug fix for editing transfers between accounts.
+
+### Fixed
+- Editing a transfer did not save the amount received when the accounts use different currencies,
+  and it only updated one side of the transfer. Edits to the amounts, accounts, description and date
+  now update both sides together, so account balances stay in sync.
+
 ## [0.3.1] - 2026-10-25
 
 Bug fixes for creating and editing transactions.
@@ -103,6 +112,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.3.2]: https://github.com/ericscaglioni/iBudget/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/ericscaglioni/iBudget/compare/0.2.0...0.2.1
