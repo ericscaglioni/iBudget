@@ -36,6 +36,8 @@ interface MonthlyTotal {
   month: string;
   income: number;
   expenses: number;
+  incomeFromExchange: number;
+  expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
 }
@@ -200,6 +202,8 @@ export const DashboardPageShell = ({
             <MonthlySummary
               income={selectedMonthData.income}
               expenses={selectedMonthData.expenses}
+              incomeFromExchange={selectedMonthData.incomeFromExchange}
+              expensesFromExchange={selectedMonthData.expensesFromExchange}
               net={selectedMonthData.net}
               currency={currency}
               previousExpenses={previousMonthData?.expenses}

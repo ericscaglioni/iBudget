@@ -4,6 +4,21 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [Unreleased]
+
+### Fixed
+- The dashboard ignored transfers between accounts in different currencies. Since each currency is
+  shown on its own, the money received now counts as income in the destination currency, and the
+  money sent counts as an expense in the source currency, so each currency's income and expenses
+  add up to its balance change. Transfers between accounts in the same currency are still left
+  out, because it's the same money moving around. The "Transfer" category does not appear in the
+  spending categories.
+
+### Added
+- The Income and Expenses cards on the dashboard say how much of the amount came from a currency
+  exchange (for example "Includes R$520.00 received from currency exchange"), so it's clear it
+  isn't earnings or spending.
+
 ## [0.3.2] - 2026-10-25
 
 Bug fix for editing transfers between accounts.

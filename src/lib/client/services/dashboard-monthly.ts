@@ -12,6 +12,8 @@ interface CategoryBreakdown {
 export interface MonthlySummaryData {
   income: number;
   expenses: number;
+  incomeFromExchange: number;
+  expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
 }

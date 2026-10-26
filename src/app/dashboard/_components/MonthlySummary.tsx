@@ -4,6 +4,10 @@ interface Props {
   income: number;
   expenses: number;
   net: number;
+  /** Part of income that arrived from another currency (a currency exchange), not earned. */
+  incomeFromExchange?: number;
+  /** Part of expenses that was sent to another currency (a currency exchange), not spent. */
+  expensesFromExchange?: number;
   currency?: string;
   /** Expenses of the month before, to show how spending moved. */
   previousExpenses?: number;
@@ -14,6 +18,8 @@ export const MonthlySummary = ({
   income,
   expenses,
   net,
+  incomeFromExchange = 0,
+  expensesFromExchange = 0,
   currency = "USD",
   previousExpenses,
   previousLabel = "last month",
@@ -43,6 +49,11 @@ export const MonthlySummary = ({
         <p className="text-2xl sm:text-3xl font-bold text-green-900">
           {formatAmount(income)}
         </p>
+        {incomeFromExchange > 0 && (
+          <p className="mt-1 text-xs sm:text-sm text-green-700">
+            Includes {formatAmount(incomeFromExchange)} received from currency exchange
+          </p>
+        )}
       </div>
 
       {/* Expenses Card */}
@@ -53,6 +64,11 @@ export const MonthlySummary = ({
         <p className="text-2xl sm:text-3xl font-bold text-red-900">
           {formatAmount(expenses)}
         </p>
+        {expensesFromExchange > 0 && (
+          <p className="mt-1 text-xs sm:text-sm text-red-700">
+            Includes {formatAmount(expensesFromExchange)} sent in currency exchange
+          </p>
+        )}
         {expenseChange !== null && (
           <p className={`mt-1 text-xs sm:text-sm font-medium ${expenseChange > 0 ? "text-red-700" : "text-green-700"}`}>
             {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}

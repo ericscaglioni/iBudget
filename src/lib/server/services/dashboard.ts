@@ -27,6 +27,10 @@ export interface MonthlyTotal {
   month: string; // YYYY-MM format
   income: number;
   expenses: number;
+  /** Part of `income` that is money received from another currency (a transfer between currencies). */
+  incomeFromExchange: number;
+  /** Part of `expenses` that is money sent to another currency (a transfer between currencies). */
+  expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
 }
@@ -123,8 +127,14 @@ const lastMonths = (count: number) =>
 
 /**
  * Income / expense totals and category breakdown for each given month, only counting accounts in
- * `currency`. Transfers are excluded entirely: they are just movements between accounts and
- * shouldn't affect income/expense totals.
+ * `currency`.
+ *
+ * Transfers:
+ * - Between accounts in the same currency: excluded. It's the same money moving around.
+ * - Between accounts in different currencies: the money received counts as income in the
+ *   destination currency and the money sent counts as expense in the source currency, since each
+ *   currency's dashboard is looked at on its own. They are left out of the category breakdown
+ *   (the "Transfer" category isn't spending).
  */
 const calculateMonthlyTotals = async (
   userId: string,
@@ -139,33 +149,61 @@ const calculateMonthlyTotals = async (
     where: {
       userId,
       date: { gte: startDate, lte: endDate },
-      transferId: null,
-      account: { currency },
+      OR: [
+        { transferId: null, account: { currency } },
+        // Transfer sides in any currency: we need both to tell whether the currencies differ
+        { transferId: { not: null } },
+      ],
     },
     select: {
       type: true,
       amount: true,
       date: true,
+      transferId: true,
+      account: { select: { currency: true } },
       category: { select: { id: true, name: true, color: true } },
     },
   });
 
-  const byMonth = new Map<string, { income: number; expenses: number; categories: Map<string, CategoryBreakdown> }>();
-  months.forEach((month) => byMonth.set(month, { income: 0, expenses: 0, categories: new Map() }));
+  // Currencies involved in each transfer (both sides share the same date, so both are in range)
+  const transferCurrencies = new Map<string, Set<string>>();
+  transactions.forEach((tx) => {
+    if (!tx.transferId) return;
+    const currencies = transferCurrencies.get(tx.transferId) ?? new Set<string>();
+    currencies.add(tx.account.currency);
+    transferCurrencies.set(tx.transferId, currencies);
+  });
+
+  const byMonth = new Map<
+    string,
+    { income: number; expenses: number; incomeFromExchange: number; expensesFromExchange: number; categories: Map<string, CategoryBreakdown> }
+  >();
+  months.forEach((month) =>
+    byMonth.set(month, { income: 0, expenses: 0, incomeFromExchange: 0, expensesFromExchange: 0, categories: new Map() })
+  );
 
   transactions.forEach((tx) => {
     const entry = byMonth.get(dayjs(tx.date).format("YYYY-MM"));
     if (!entry) return;
 
+    // Only the side of a currency exchange that is in the shown currency counts
+    const isTransfer = !!tx.transferId;
+    if (isTransfer) {
+      const isCurrencyExchange = (transferCurrencies.get(tx.transferId!)?.size ?? 0) > 1;
+      if (!isCurrencyExchange || tx.account.currency !== currency) return;
+    }
+
     const amount = toNumber(tx.amount);
 
     if (tx.type === TransactionType.income) {
       entry.income += amount;
+      if (isTransfer) entry.incomeFromExchange += amount;
       return;
     }
 
     entry.expenses += amount;
-    if (tx.category) {
+    if (isTransfer) entry.expensesFromExchange += amount;
+    if (tx.category && !isTransfer) {
       const existing = entry.categories.get(tx.category.id);
       if (existing) {
         existing.amount += amount;
@@ -181,11 +219,13 @@ const calculateMonthlyTotals = async (
   });
 
   return months.map((month) => {
-    const { income, expenses, categories } = byMonth.get(month)!;
+    const { income, expenses, incomeFromExchange, expensesFromExchange, categories } = byMonth.get(month)!;
     return {
       month,
       income,
       expenses,
+      incomeFromExchange,
+      expensesFromExchange,
       net: income - expenses,
       categoryBreakdown: Array.from(categories.values()).sort((a, b) => b.amount - a.amount),
     };
@@ -206,6 +246,8 @@ export const getMonthlySummary = async (userId: string, month?: string, requeste
     currency,
     income: monthlyData.income,
     expenses: monthlyData.expenses,
+    incomeFromExchange: monthlyData.incomeFromExchange,
+    expensesFromExchange: monthlyData.expensesFromExchange,
     net: monthlyData.net,
     categoryBreakdown: monthlyData.categoryBreakdown,
   };
