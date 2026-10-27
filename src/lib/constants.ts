@@ -1,8 +1,7 @@
 import { IconType } from "@/components/ui";
 import { AccountType } from "@prisma/client";
 
-// Currencies a user can hold accounts in (and pick as their base currency).
-// All of them are covered by the exchange-rate provider used for conversion.
+// Currencies a user can hold accounts in (and pick as their default).
 export const accountCurrencies = [
   "USD", "EUR", "BRL", "GBP", "CAD", "AUD", "NZD", "CHF",
   "MXN", "COP", "ARS", "CLP", "PEN", "UYU",
