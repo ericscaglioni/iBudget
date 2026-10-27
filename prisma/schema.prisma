@@ -106,15 +106,3 @@ model UserGuide {
 
   @@map("user_guide")
 }
-
-// Daily exchange rates, all expressed as "units of <currency> per 1 USD".
-// Any pair can be derived: amount / ratePerUsd[from] * ratePerUsd[to].
-model ExchangeRate {
-  date       DateTime @db.Date
-  currency   String   @db.VarChar(8)
-  ratePerUsd Decimal  @db.Decimal(24, 10)
-  createdAt  DateTime @default(now())
-
-  @@id([date, currency])
-  @@map("exchange_rates")
-}

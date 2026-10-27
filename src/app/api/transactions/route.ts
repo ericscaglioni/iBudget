@@ -1,17 +1,11 @@
 import { TransactionTypeEnum } from "@/lib/constants";
 import { transactionService } from "@/lib/server/services";
+import { authHandler } from "@/lib/middlewares";
 import { normalizeDescription } from "@/lib/utils/sanitize";
 import { createSuccessResponse, createErrorResponse } from "@/lib/utils/api-response";
-import { NextRequest } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 
-export async function POST(request: NextRequest) {
+export const POST = authHandler(async ({ userId, request }) => {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return createErrorResponse(new Error("Unauthorized"));
-    }
-
     const body = await request.json();
 
     const {
@@ -71,4 +65,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error);
   }
-}
+});

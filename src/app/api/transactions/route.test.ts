@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ValidationError } from "@/lib/errors/AppError";
-import { makeRequest, readJson } from "@/test/http";
+import { makeRequest, readJson, routeContext } from "@/test/http";
 
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/server/services", () => ({
@@ -16,7 +16,7 @@ import { transactionService } from "@/lib/server/services";
 import { POST } from "./route";
 
 const mockAuth = vi.mocked(auth) as unknown as ReturnType<typeof vi.fn>;
-const post = (body: unknown) => POST(makeRequest("/api/transactions", { method: "POST", body }));
+const post = (body: unknown) => POST(makeRequest("/api/transactions", { method: "POST", body }), routeContext());
 
 const expense = { type: "expense", amount: 25, accountId: "a1", categoryId: "c1", description: "  Lunch  ", date: "2026-10-20" };
 
@@ -99,11 +99,9 @@ describe("POST /api/transactions", () => {
     expect(body).toMatchObject({ error: { message: "Missing required transaction data" } });
   });
 
-  it("creates nothing when nobody is signed in", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  it("creates nothing and answers 401 when nobody is signed in", async () => {
     mockAuth.mockResolvedValue({ userId: null });
-    const { status } = await readJson(await post(expense));
-    expect(status).toBeGreaterThanOrEqual(400);
+    expect((await post(expense)).status).toBe(401);
     expect(transactionService.createTransaction).not.toHaveBeenCalled();
   });
 });

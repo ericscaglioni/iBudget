@@ -1,0 +1,8 @@
+---
+description: UI must match iBudget's theme. Follow docs/ui.md instead of inventing styles.
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+When adding or changing UI, follow `docs/ui.md`. That file is the source of truth
+for components, palette and layout. Do not duplicate it here.

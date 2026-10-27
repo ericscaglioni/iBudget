@@ -1,38 +1,27 @@
-import { prisma } from "@/lib/prisma";
 import { authHandler } from "@/lib/middlewares";
-import { NextResponse } from "next/server";
+import { categoryService } from "@/lib/server/services";
+import { createErrorResponse, createSuccessResponse } from "@/lib/utils/api-response";
 
 export const PATCH = authHandler(async ({ userId, request, params }) => {
-  const { id } = await params ?? {};
-  const body = await request.json();
-  const { name, color, type } = body;
+  try {
+    const { id } = await params;
+    const { name, color, type } = await request.json();
 
-  const updated = await prisma.category.update({
-    where: {
-      id: id as string,
-      userId,
-    },
-    data: {
-      name,
-      color,
-      type,
-    },
-  });
-
-  return NextResponse.json(updated);
+    const updated = await categoryService.updateCategory(userId, id, { name, color, type });
+    return createSuccessResponse(updated);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
 });
 
+// The service refuses to delete a category that still has transactions
 export const DELETE = authHandler(async ({ userId, params }) => {
-  const { id } = await params ?? {};
+  try {
+    const { id } = await params;
 
-  // TODO check for related transactions
-
-  await prisma.category.delete({
-    where: {
-      id: id as string,
-      userId,
-    },
-  });
-
-  return NextResponse.json({ success: true });
+    const result = await categoryService.deleteCategory(userId, id);
+    return createSuccessResponse(result);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
 });

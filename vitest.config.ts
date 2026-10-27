@@ -27,8 +27,6 @@ export default defineConfig({
         // Only re-exports, and the Prisma client singleton: no logic to test
         "src/**/index.ts",
         "src/lib/prisma.ts",
-        // Not used by anything since the dashboard moved to showing one currency at a time
-        "src/lib/server/services/exchange-rates.ts",
       ],
       thresholds: { statements: 85, branches: 85, functions: 85, lines: 85 },
     },

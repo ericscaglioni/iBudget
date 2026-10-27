@@ -1,0 +1,8 @@
+---
+description: Start at docs/index.md. That page is the map of iBudget for every agent.
+alwaysApply: true
+---
+
+Read `docs/index.md` before doing any work. Follow the files it links to for
+product rules, how to develop, architecture, UI, and templates. Do not copy
+that content into Cursor rules.

@@ -1,41 +1,27 @@
-import { prisma } from "@/lib/prisma";
 import { authHandler } from "@/lib/middlewares";
-import { NextResponse } from "next/server";
+import { accountService } from "@/lib/server/services";
+import { createErrorResponse, createSuccessResponse } from "@/lib/utils/api-response";
 
 export const PATCH = authHandler(async ({ userId, request, params }) => {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
-  const body = await request.json();
-  const { name, type, currency, initialBalance } = body;
+  try {
+    const { id } = await params;
+    const { name, type, currency, initialBalance } = await request.json();
 
-  const updated = await prisma.account.update({
-    where: {
-      id: id as string,
-      userId,
-    },
-    data: {
-      name,
-      type,
-      currency,
-      initialBalance,
-    },
-  });
-
-  return NextResponse.json(updated);
+    const updated = await accountService.updateAccount(userId, id, { name, type, currency, initialBalance });
+    return createSuccessResponse(updated);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
 });
 
+// The service refuses to delete an account that still has transactions
 export const DELETE = authHandler(async ({ userId, params }) => {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+  try {
+    const { id } = await params;
 
-  // Later: check for related transactions
-
-  await prisma.account.delete({
-    where: {
-      id: id as string,
-      userId,
-    },
-  });
-
-  return NextResponse.json({ success: true });
+    const result = await accountService.deleteAccount(userId, id);
+    return createSuccessResponse(result);
+  } catch (error) {
+    return createErrorResponse(error);
+  }
 });

@@ -32,7 +32,7 @@ export const initializeUserDefaults = async (userId: string) => {
  *
  * Order matters: transactions reference accounts and categories, so they go first.
  * Everything runs in one DB transaction so a failure can't leave half-deleted data.
- * Shared data (system categories with userId = null, exchange rates) is never touched.
+ * Shared data (system categories with userId = null) is never touched.
  */
 export const deleteUserData = async (userId: string) => {
   // Guard: an empty/undefined id must never turn into an unfiltered deleteMany
