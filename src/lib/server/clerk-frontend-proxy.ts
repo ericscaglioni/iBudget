@@ -1,8 +1,9 @@
-const CLERK_FRONTEND_API_ORIGIN = "https://frontend-api.clerk.services";
+const CLERK_FRONTEND_API_ORIGIN = "https://frontend-api.clerk.dev";
 const PROXY_PREFIX = "/__clerk";
 
 const HOP_BY_HOP = new Set([
   "connection",
+  "content-encoding",
   "content-length",
   "host",
   "keep-alive",
@@ -13,6 +14,15 @@ const HOP_BY_HOP = new Set([
   "transfer-encoding",
   "upgrade",
 ]);
+
+const clientIp = (request: Request): string | null => {
+  const vercel = request.headers.get("x-vercel-forwarded-for") ?? request.headers.get("x-real-ip");
+  if (vercel) {
+    return vercel.split(",")[0]?.trim() || null;
+  }
+  const forwarded = request.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0]?.trim() || null;
+};
 
 /**
  * Forwards Clerk Frontend API calls that the browser makes to `/__clerk`, so production
@@ -34,26 +44,39 @@ export async function proxyClerkFrontendApi(request: Request): Promise<Response>
   const headers = new Headers();
   request.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
-    if (HOP_BY_HOP.has(lower) || lower === "clerk-secret-key") {
+    if (HOP_BY_HOP.has(lower) || lower === "clerk-secret-key" || lower.startsWith("x-forwarded-")) {
       return;
     }
     headers.set(key, value);
   });
   headers.set("Clerk-Proxy-Url", proxyUrl);
   headers.set("Clerk-Secret-Key", secretKey);
+  const ip = clientIp(request);
+  if (ip) {
+    headers.set("X-Forwarded-For", ip);
+  }
 
   const method = request.method.toUpperCase();
   const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
 
-  const upstream = await fetch(dest, {
-    method,
-    headers,
-    body,
-    redirect: "manual",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(dest, {
+      method,
+      headers,
+      body,
+      redirect: "follow",
+    });
+  } catch {
+    return new Response("Clerk proxy upstream failed", { status: 502 });
+  }
 
-  const responseHeaders = new Headers(upstream.headers);
-  responseHeaders.delete("transfer-encoding");
+  const responseHeaders = new Headers();
+  upstream.headers.forEach((value, key) => {
+    if (!HOP_BY_HOP.has(key.toLowerCase())) {
+      responseHeaders.set(key, value);
+    }
+  });
   return new Response(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,

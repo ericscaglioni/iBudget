@@ -52,7 +52,7 @@ describe("proxyClerkFrontendApi", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
 
     const [dest, init] = fetchMock.mock.calls[0];
-    expect(dest).toBe("https://frontend-api.clerk.services/v1/client?_clerk_js_version=5");
+    expect(dest).toBe("https://frontend-api.clerk.dev/v1/client?_clerk_js_version=5");
     const headers = new Headers(init?.headers);
     expect(headers.get("Clerk-Proxy-Url")).toBe("https://app.test/__clerk");
     expect(headers.get("Clerk-Secret-Key")).toBe("sk_test_proxy");
@@ -73,5 +73,16 @@ describe("proxyClerkFrontendApi", () => {
     const init = fetchMock.mock.calls[0][1];
     expect(init?.method).toBe("GET");
     expect(init?.body).toBeUndefined();
+  });
+
+  it("answers 502 when Clerk cannot be reached", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PROXY_URL", "https://app.test/__clerk");
+    vi.stubEnv("CLERK_SECRET_KEY", "sk_test_proxy");
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    }));
+
+    const response = await proxyClerkFrontendApi(new Request("https://app.test/__clerk/v1/client"));
+    expect(response.status).toBe(502);
   });
 });
