@@ -6,6 +6,10 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-27
+
+Currency exchanges on the dashboard, and easier lists and editing.
+
 ### Fixed
 - The dashboard ignored transfers between accounts in different currencies. Since each currency is
   shown on its own, the money received now counts as income in the destination currency, and the
@@ -32,6 +36,8 @@ All notable changes to iBudget are documented here. The format follows
 - Editing a transfer shows a loading state while the received side is fetched, instead of an
   incomplete form. If it can't be loaded the modal closes with an error, rather than letting you save
   an incomplete transfer.
+- Automated unit tests (`npm test`, with `npm run test:coverage`) for the services, API routes,
+  validation and helpers.
 
 ### Changed
 - The transaction window says "Edit Transaction" when you are editing one, instead of "New Transaction".
@@ -148,6 +154,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.4.0]: https://github.com/ericscaglioni/iBudget/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/ericscaglioni/iBudget/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0
