@@ -73,6 +73,19 @@ export const patch = async <TData extends object, TResult = unknown>(
   }
 };
 
+export const put = async <TData extends object, TResult = unknown>(
+  url: string,
+  data: TData
+): Promise<TResult> => {
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  return handleResponse<TResult>(res);
+};
+
 export const del = async <TResult = void>(url: string): Promise<TResult> => {
   try {
     const res = await fetch(url, { method: "DELETE" });

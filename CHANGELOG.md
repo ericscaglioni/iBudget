@@ -4,6 +4,48 @@ All notable changes to iBudget are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/). Git tags have no `v` prefix (e.g. `0.2.1`).
 
+## [Unreleased]
+
+## [0.4.0] - 2026-10-27
+
+Currency exchanges on the dashboard, and easier lists and editing.
+
+### Fixed
+- The dashboard ignored transfers between accounts in different currencies. Since each currency is
+  shown on its own, the money received now counts as income in the destination currency, and the
+  money sent counts as an expense in the source currency, so each currency's income and expenses
+  add up to its balance change. Transfers between accounts in the same currency are still left
+  out, because it's the same money moving around. The "Transfer" category does not appear in the
+  spending categories.
+
+### Added
+- The Income and Expenses cards on the dashboard say how much of the amount came from a currency
+  exchange (for example "Includes R$520.00 received from currency exchange"), so it's clear it
+  isn't earnings or spending.
+- Lists (transactions, accounts, categories) have a "Rows per page" selector with 10, 20, 50 and
+  100 rows. The choice is kept in the URL (`?pageSize=`), so it survives a refresh and can be shared,
+  and it works together with the filters and sorting.
+- The dashboard no longer shows every account at once. It shows one row (5 accounts on large
+  screens, 3 on medium screens and on mobile) with a "Show all" button for the rest. "Show all" is
+  only for the current visit and doesn't stick. The currency subtotal still counts every account.
+- "Reorder" on the dashboard opens a window to put the accounts in the order you want, by dragging
+  or with the arrows. The first accounts in your order are the ones shown. Accounts created later go
+  to the end. This adds a `sortOrder` column to accounts (database migration).
+- Collapsing and expanding on the dashboard (a currency's accounts, "Show all") is now animated
+  smoothly instead of jumping.
+- Editing a transfer shows a loading state while the received side is fetched, instead of an
+  incomplete form. If it can't be loaded the modal closes with an error, rather than letting you save
+  an incomplete transfer.
+- Automated unit tests (`npm test`, with `npm run test:coverage`) for the services, API routes,
+  validation and helpers.
+
+### Changed
+- The transaction window says "Edit Transaction" when you are editing one, instead of "New Transaction".
+- Lists show 20 rows per page by default (it was 15). Only 10, 20, 50 and 100 are accepted in the
+  URL; any other value falls back to 20.
+- Changing a filter or the sorting goes back to the first page, instead of staying on a page that
+  may no longer exist.
+
 ## [0.3.2] - 2026-10-25
 
 Bug fix for editing transfers between accounts.
@@ -112,6 +154,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.4.0]: https://github.com/ericscaglioni/iBudget/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/ericscaglioni/iBudget/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ericscaglioni/iBudget/compare/0.2.1...0.3.0

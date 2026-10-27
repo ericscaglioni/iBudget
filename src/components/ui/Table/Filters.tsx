@@ -39,6 +39,8 @@ export const Filters = ({ filtersConfig, basePath, searchParams, startTransition
     } else {
       params.delete(name);
     }
+    // A different set of results: start from the first page instead of landing on an empty one
+    params.delete("page");
 
     // Clear dependent filters when their parent filter changes
     if (name === "type") {

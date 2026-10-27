@@ -8,8 +8,9 @@ import { AccountsOverview } from "./AccountsOverview";
 import { MonthlySummary } from "./MonthlySummary";
 import { NetWorthHero } from "./NetWorthHero";
 import { TopSpendingCategories } from "./TopSpendingCategories";
-import { Icon } from "@/components/ui";
+import { Button, Icon } from "@/components/ui";
 import { SixMonthBarChart } from "./SixMonthBarChart";
+import { ReorderAccountsModal } from "./ReorderAccountsModal";
 import { GettingStarted } from "@/components/guide/GettingStarted";
 import { MultiCurrencyHint } from "@/components/guide/MultiCurrencyHint";
 import type { CurrencyBalance, NetWorth } from "@/lib/server/services/dashboard";
@@ -36,6 +37,8 @@ interface MonthlyTotal {
   month: string;
   income: number;
   expenses: number;
+  incomeFromExchange: number;
+  expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
 }
@@ -76,6 +79,7 @@ export const DashboardPageShell = ({
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
+  const [openReorderModal, setOpenReorderModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // The shown currency lives in the URL so the page is server-rendered with the right data
@@ -200,6 +204,8 @@ export const DashboardPageShell = ({
             <MonthlySummary
               income={selectedMonthData.income}
               expenses={selectedMonthData.expenses}
+              incomeFromExchange={selectedMonthData.incomeFromExchange}
+              expensesFromExchange={selectedMonthData.expensesFromExchange}
               net={selectedMonthData.net}
               currency={currency}
               previousExpenses={previousMonthData?.expenses}
@@ -226,9 +232,18 @@ export const DashboardPageShell = ({
 
         {/* Section 4: Accounts, grouped by currency */}
         <section>
-          <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 md:mb-4">
-            Accounts
-          </h2>
+          <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3 md:mb-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+              Accounts
+            </h2>
+            {/* With a single account there is nothing to put in order */}
+            {accountBalances.length > 1 && (
+              <Button variant="outline" size="sm" onClick={() => setOpenReorderModal(true)}>
+                <Icon name="reorder" className="mr-1.5 size-4" />
+                Reorder
+              </Button>
+            )}
+          </div>
           <AccountsOverview accountBalances={accountBalances} />
         </section>
 
@@ -249,6 +264,13 @@ export const DashboardPageShell = ({
       </div>
       )}
     </PageShell>
+
+      <ReorderAccountsModal
+        open={openReorderModal}
+        onClose={() => setOpenReorderModal(false)}
+        accounts={accountBalances}
+        currency={currency}
+      />
 
       <TransactionFormModal
         open={openTransactionModal}

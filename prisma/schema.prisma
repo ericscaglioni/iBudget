@@ -30,6 +30,8 @@ model Account {
   type           AccountType
   currency       String
   initialBalance Decimal     @db.Decimal(10, 2)
+  /// Position in the user's own order (dashboard). NULL = never ordered: shown after the ordered ones, by name.
+  sortOrder      Int?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
