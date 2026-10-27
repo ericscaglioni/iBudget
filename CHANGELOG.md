@@ -6,6 +6,14 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-27
+
+The production sign-in form loads.
+
+### Fixed
+- Signing in on production. The Clerk proxy was talking to a host that does not accept TLS, so the
+  sign-in form never appeared.
+
 ## [0.4.2] - 2026-10-27
 
 Production sign-in works again, and known dependency vulnerabilities are gone.
@@ -186,6 +194,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.4.3]: https://github.com/ericscaglioni/iBudget/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/ericscaglioni/iBudget/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/ericscaglioni/iBudget/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/ericscaglioni/iBudget/compare/0.3.2...0.4.0
