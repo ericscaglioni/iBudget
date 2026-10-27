@@ -3,6 +3,7 @@ import { TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { dayjs } from "@/lib/utils/dayjs.js";
 import { resolveCurrency } from "./settings";
+import { sortAccountsByUserOrder } from "@/lib/utils/sort-accounts";
 
 // Helper function to convert Decimal to number
 const toNumber = (value: Decimal | number): number => {
@@ -318,11 +319,12 @@ export const getDashboardData = async (
 
   const { currency, available } = await resolveCurrency(userId, requestedCurrency);
 
-  const allAccounts = await prisma.account.findMany({
-    where: { userId },
-    select: { id: true, name: true, currency: true, initialBalance: true },
-    orderBy: { name: "asc" },
-  });
+  const allAccounts = sortAccountsByUserOrder(
+    await prisma.account.findMany({
+      where: { userId },
+      select: { id: true, name: true, currency: true, initialBalance: true, sortOrder: true },
+    })
+  );
 
   const balances = await calculateBalances(allAccounts);
 

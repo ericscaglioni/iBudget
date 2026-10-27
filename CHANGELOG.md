@@ -21,6 +21,14 @@ All notable changes to iBudget are documented here. The format follows
 - Lists (transactions, accounts, categories) have a "Rows per page" selector with 10, 20, 50 and
   100 rows. The choice is kept in the URL (`?pageSize=`), so it survives a refresh and can be shared,
   and it works together with the filters and sorting.
+- The dashboard no longer shows every account at once. It shows one row (5 accounts on large
+  screens, 3 on medium screens and on mobile) with a "Show all" button for the rest. "Show all" is
+  only for the current visit and doesn't stick. The currency subtotal still counts every account.
+- "Reorder" on the dashboard opens a window to put the accounts in the order you want, by dragging
+  or with the arrows. The first accounts in your order are the ones shown. Accounts created later go
+  to the end. This adds a `sortOrder` column to accounts (database migration).
+- Collapsing and expanding on the dashboard (a currency's accounts, "Show all") is now animated
+  smoothly instead of jumping.
 - Editing a transfer shows a loading state while the received side is fetched, instead of an
   incomplete form. If it can't be loaded the modal closes with an error, rather than letting you save
   an incomplete transfer.

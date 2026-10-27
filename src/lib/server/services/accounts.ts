@@ -144,6 +144,45 @@ export const getAccountsByUser = async (userId: string, props: QueryParams) => {
   return { accounts: serializedAccounts, total };
 };
 
+const MAX_ACCOUNTS_TO_ORDER = 500;
+
+/**
+ * Saves the order the user chose: the first id gets position 0, and so on. Only accounts of the
+ * same currency are ordered together, since the dashboard shows one currency at a time.
+ */
+export const reorderAccounts = async (userId: string, accountIds: unknown) => {
+  if (
+    !Array.isArray(accountIds) ||
+    accountIds.length === 0 ||
+    accountIds.length > MAX_ACCOUNTS_TO_ORDER ||
+    accountIds.some((id) => typeof id !== "string")
+  ) {
+    throw new ValidationError("Send the accounts to order as a list of ids");
+  }
+  const ids = accountIds as string[];
+  if (new Set(ids).size !== ids.length) {
+    throw new ValidationError("An account can only appear once in the order");
+  }
+
+  // Only the user's own accounts can be ordered
+  const accounts = await prisma.account.findMany({
+    where: { userId, id: { in: ids } },
+    select: { id: true, currency: true },
+  });
+  if (accounts.length !== ids.length) {
+    throw new NotFoundError("Account");
+  }
+  if (new Set(accounts.map((account) => account.currency)).size > 1) {
+    throw new ValidationError("Accounts in different currencies are ordered separately");
+  }
+
+  await prisma.$transaction(
+    ids.map((id, index) => prisma.account.update({ where: { id, userId }, data: { sortOrder: index } }))
+  );
+
+  return { message: "Accounts reordered successfully" };
+};
+
 export const getUserAccounts = async (userId: string) => {
   const accounts = await prisma.account.findMany({
     where: { userId },
