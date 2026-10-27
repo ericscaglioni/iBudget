@@ -6,6 +6,19 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-27
+
+Production sign-in works again, and known dependency vulnerabilities are gone.
+
+### Security
+- Dependencies with known vulnerabilities were updated (Next.js, Zod, Vitest and their nested packages). `npm audit` is clean.
+
+### Added
+- Tests for the shared UI (buttons, dialogs, empty states, pagination, the getting-started guide).
+
+### Fixed
+- Signing in on production. Clerk serves its API through the app at `/__clerk` on `prod-ibudget.vercel.app`; those requests were being sent to the login page, so the sign-in form never loaded.
+
 ## [0.4.1] - 2026-10-27
 
 Clearer errors, and the unused exchange-rate cache is gone.
@@ -173,6 +186,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.4.2]: https://github.com/ericscaglioni/iBudget/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/ericscaglioni/iBudget/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/ericscaglioni/iBudget/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/ericscaglioni/iBudget/compare/0.3.1...0.3.2

@@ -21,7 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      {...(process.env.NEXT_PUBLIC_CLERK_PROXY_URL
+        ? { proxyUrl: process.env.NEXT_PUBLIC_CLERK_PROXY_URL }
+        : {})}
+    >
       <html lang="en" suppressHydrationWarning>
         <body className="font-sans bg-background text-slateDark" suppressHydrationWarning>
           <QueryProvider>
