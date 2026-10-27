@@ -40,8 +40,12 @@ transactions", …) are skipped — do not do that.
 
 ## Auth
 
-- `src/middleware.ts` sends unsigned visitors to `/login`, except `/login` and
-  `/api/clerk/*`.
+- `src/middleware.ts` sends unsigned visitors to `/login`, except `/login`,
+  `/api/clerk/*` and `/__clerk/*`.
+- Production Clerk uses a same-origin Frontend API proxy at `/__clerk` (the
+  production domain is a `vercel.app` host, so a `clerk.` CNAME cannot be
+  set). `NEXT_PUBLIC_CLERK_PROXY_URL` is set only on the Prod Vercel project.
+  Local and QA use Clerk development and do not set that variable.
 - Session routes wrap the handler in `authHandler`. A missing user is **401**,
   not a thrown `Error` that becomes 500.
 - `/api/clerk/webhook` verifies the Svix signature with

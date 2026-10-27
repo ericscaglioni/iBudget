@@ -37,9 +37,10 @@ The decisions that most often go wrong if you skip them:
   failure (`createSuccessResponse` / `createErrorResponse`).
 - **Lists** keep `page`, `pageSize` (10 / 20 / 50 / 100, default 20), sort and
   filters in the URL.
-- **Tests** (Vitest) cover `src/lib`, `src/app/api` and Zod schemas, with an
-  85% coverage gate. Mock Prisma; do not hit a database. UI is not in that
-  percentage yet.
+- **Tests** (Vitest) cover `src/lib`, `src/app/api`, Zod schemas and the
+  shared UI kit, with an 85% coverage gate. Mock Prisma; do not hit a
+  database. Component tests live next to the file (`Foo.test.tsx`) and run
+  in jsdom.
 
 Folder map, request flow, deploys and the database: [architecture](architecture.md).
 

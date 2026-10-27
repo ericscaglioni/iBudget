@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const createTransactionFormSchema = (accountOptions: { value: string; currency?: string }[], categoryOptions: { id: string }[]) => z
   .object({
-    type: z.nativeEnum(TransactionTypeEnum),
+    type: z.enum(TransactionTypeEnum),
     amount: z.string().min(1, "Amount is required"),
     date: z.string().min(1, "Date is required"),
     description: z
@@ -30,13 +30,13 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (!data.accountId) {
         ctx.addIssue({
           path: ["accountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Account is required",
         });
       } else if (!accountOptions.some(option => option.value === data.accountId)) {
         ctx.addIssue({
           path: ["accountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Please select a valid account",
         });
       }
@@ -44,13 +44,13 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (!data.categoryId) {
         ctx.addIssue({
           path: ["categoryId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Category is required",
         });
       } else if (!categoryOptions.some(option => option.id === data.categoryId)) {
         ctx.addIssue({
           path: ["categoryId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Please select a valid category",
         });
       }
@@ -61,13 +61,13 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (!data.fromAccountId) {
         ctx.addIssue({
           path: ["fromAccountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "From account is required",
         });
       } else if (!accountOptions.some(option => option.value === data.fromAccountId)) {
         ctx.addIssue({
           path: ["fromAccountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Please select a valid from account",
         });
       }
@@ -75,13 +75,13 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (!data.toAccountId) {
         ctx.addIssue({
           path: ["toAccountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "To account is required",
         });
       } else if (!accountOptions.some(option => option.value === data.toAccountId)) {
         ctx.addIssue({
           path: ["toAccountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Please select a valid to account",
         });
       }
@@ -94,7 +94,7 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
         if (!data.toAmount || !Number.isFinite(received) || received <= 0) {
           ctx.addIssue({
             path: ["toAmount"],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: `Enter the amount received in ${toCurrency}`,
           });
         }
@@ -103,7 +103,7 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (data.fromAccountId && data.fromAccountId === data.toAccountId) {
         ctx.addIssue({
           path: ["toAccountId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Cannot transfer to the same account",
         });
       }
@@ -114,7 +114,7 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (!data.frequency) {
         ctx.addIssue({
           path: ["frequency"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Frequency is required for recurring transactions",
         });
       }
@@ -128,7 +128,7 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       if (endsAtDate <= transactionDate) {
         ctx.addIssue({
           path: ["endsAt"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "End date must be after transaction date",
         });
       }

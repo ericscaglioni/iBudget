@@ -31,8 +31,9 @@
 
 - Files sit next to the code: `foo.test.ts` beside `foo.ts`.
 - Prisma is mocked (`src/test/mock-prisma.ts`). Tests must not need a database.
-- Coverage is measured on `src/lib`, `src/app/api` and Zod `schema.ts` files.
-  React pages, hooks and providers are not in the 85% gate.
+- Coverage is measured on `src/lib`, `src/app/api`, Zod `schema.ts` files and
+  the shared UI kit (`src/components/ui`, the getting-started guide, PageShell).
+  Pages, providers and the large table/combobox widgets are not in the 85% gate.
 - After changing logic or an API route, run `npm test`. Before a release, also
   `npm run tsc`, `npm run lint` and `npm run test:coverage`.
 
