@@ -6,6 +6,25 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-27
+
+Clearer errors, and the unused exchange-rate cache is gone.
+
+### Fixed
+- Deleting an account or category that still has transactions is refused with a clear error, instead
+  of failing at the database.
+- Requests to create or list accounts, categories or transactions without being signed in now answer
+  401, instead of 500.
+- Editing a transaction now returns the same error shape as the rest of the API, so a real reason
+  (for example a missing amount received on a currency transfer) is shown instead of a generic failure.
+
+### Changed
+- Editing a transaction trims and validates the description the same way creating one does.
+
+### Removed
+- The unused exchange-rate cache (the dashboard shows one currency at a time, so nothing was reading
+  or writing it). This drops the `exchange_rates` table.
+
 ## [0.4.0] - 2026-10-27
 
 Currency exchanges on the dashboard, and easier lists and editing.
@@ -154,6 +173,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[0.4.1]: https://github.com/ericscaglioni/iBudget/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/ericscaglioni/iBudget/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/ericscaglioni/iBudget/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/ericscaglioni/iBudget/compare/0.3.0...0.3.1
