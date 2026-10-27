@@ -5,6 +5,7 @@ import { ReactNode, useState } from 'react';
 import { FieldErrors, FieldValues, UseFormReturn } from 'react-hook-form';
 import { Button } from './Button';
 import { Modal } from './Modal';
+import { Spinner } from './Spinner';
 import { showError, showSuccess } from '@/lib/utils/toast';
 import { AppError } from '@/lib/errors/AppError';
 
@@ -28,6 +29,8 @@ type Props<TData extends FieldValues> = {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Optional second submit button next to Save (e.g. "Save & add another"). Runs its own handler. */
   secondaryAction?: SecondaryAction<TData>;
+  /** The data for the form is still being fetched: show a spinner over the fields and keep Save disabled. */
+  isLoading?: boolean;
 };
 
 export const FormModal = <TData extends FieldValues,>({
@@ -44,6 +47,7 @@ export const FormModal = <TData extends FieldValues,>({
   toastErrorMessage = 'Operation failed',
   maxWidth = 'md',
   secondaryAction,
+  isLoading = false,
 }: Props<TData>) => {
   const router = useRouter();
 
@@ -98,7 +102,21 @@ export const FormModal = <TData extends FieldValues,>({
   return (
     <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth}>
       <form onSubmit={form.handleSubmit(onFormSubmit, onInvalid)} className="space-y-4">
-        {children}
+        {/* Disabled while loading so nothing can be typed into (or submitted from) a half-filled form */}
+        <div className="relative" aria-busy={isLoading}>
+          <fieldset disabled={isLoading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            {children}
+          </fieldset>
+          {isLoading && (
+            <div
+              role="status"
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-md bg-white/80"
+            >
+              <Spinner />
+              <span className="text-sm text-gray-500">Loading...</span>
+            </div>
+          )}
+        </div>
 
         <div className="pt-4 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
           <Button
@@ -118,7 +136,7 @@ export const FormModal = <TData extends FieldValues,>({
               size='md'
               onClick={form.handleSubmit(onSecondarySubmit, onInvalid)}
               isLoading={isSubmitting && activeAction === 'secondary'}
-              disabled={!isDirty || isSubmitting}
+              disabled={!isDirty || isSubmitting || isLoading}
               className="w-full sm:w-auto order-2"
             >
               {isSubmitting && activeAction === 'secondary' ? 'Saving...' : secondaryAction.label}
@@ -129,7 +147,7 @@ export const FormModal = <TData extends FieldValues,>({
             variant='primary'
             size='md'
             isLoading={isSubmitting && activeAction === 'primary'}
-            disabled={!isDirty || isSubmitting}
+            disabled={!isDirty || isSubmitting || isLoading}
             className="w-full sm:w-auto order-1 sm:order-3"
           >
             {isSubmitting && activeAction === 'primary' ? 'Saving...' : 'Save'}

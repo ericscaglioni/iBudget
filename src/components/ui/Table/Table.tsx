@@ -10,6 +10,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filters, TableFilter } from "./Filters";
 import { Pagination } from "./Pagination";
+import { DEFAULT_PAGE_SIZE } from "@/lib/pagination";
 import { useTransition } from "react";
 import clsx from "clsx";
 
@@ -30,7 +31,7 @@ export function Table<TData>({
   columns,
   totalCount = 0,
   page = 1,
-  pageSize = 10,
+  pageSize = DEFAULT_PAGE_SIZE,
   basePath = "",
   enablePagination = false,
   enableSorting = false,
@@ -61,6 +62,7 @@ export function Table<TData>({
 
     params.set("sortField", columnId);
     params.set("sortOrder", nextOrder);
+    params.delete("page"); // a new order, so start from the first page
 
     startTransition(() => {
       router.push(`${basePath}?${params.toString()}`);
@@ -148,6 +150,7 @@ export function Table<TData>({
           <Pagination
             page={page}
             pageCount={pageCount}
+            pageSize={pageSize}
             searchParams={searchParams}
             basePath={basePath}
           />

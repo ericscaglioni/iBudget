@@ -1,3 +1,5 @@
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from "@/lib/pagination";
+
 type SortOrder = "asc" | "desc";
 
 export type QueryParams = {
@@ -8,8 +10,6 @@ export type QueryParams = {
   filters: Record<string, string | undefined>;
 };
 
-export const DEFAULT_PAGE_SIZE = 15;
-
 export const parseQueryParams = async (searchParams: Record<string, string | string[] | undefined>): Promise<QueryParams> => {
   const {
     page: pageParam,
@@ -19,8 +19,14 @@ export const parseQueryParams = async (searchParams: Record<string, string | str
     ...params
   } = await searchParams;
 
-  const page = parseInt(pageParam as string || "1", 10);
-  const pageSize = parseInt(pageSizeParam as string || `${DEFAULT_PAGE_SIZE}`, 10);
+  // Anything that isn't a positive page number or one of the allowed page sizes falls back to the
+  // default, so a hand-edited URL can't ask for page 0, "abc" or 100000 rows
+  const requestedPage = typeof pageParam === "string" ? parseInt(pageParam, 10) : NaN;
+  const page = Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
+  const requestedPageSize = typeof pageSizeParam === "string" ? parseInt(pageSizeParam, 10) : NaN;
+  const pageSize = (PAGE_SIZE_OPTIONS as readonly number[]).includes(requestedPageSize)
+    ? requestedPageSize
+    : DEFAULT_PAGE_SIZE;
   const sortField = (sortFieldParam as string) || "createdAt";
   const sortOrder = sortOrderParam === "asc" ? "asc" : "desc";
 

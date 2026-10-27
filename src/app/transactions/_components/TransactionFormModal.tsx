@@ -4,11 +4,11 @@ import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/compon
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
 import { dayjs } from "@/lib/utils/dayjs.js";
-import { showSuccess } from "@/lib/utils/toast";
+import { showError, showSuccess } from "@/lib/utils/toast";
 import { Radio, RadioGroup } from "@headlessui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, createTransactionFormSchema } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
@@ -57,6 +57,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   const [newAccountName, setNewAccountName] = useState("");
   const [accountFieldToFill, setAccountFieldToFill] = useState<AccountField>("accountId");
   const [createdAccountOptions, setCreatedAccountOptions] = useState<ComboboxOption[]>([]);
+  // Editing a transfer needs the receiving side, which isn't in the list row and has to be fetched
+  const [isLoadingTransaction, setIsLoadingTransaction] = useState(false);
+  // onClose changes on every render of the page; reading it through a ref keeps the load effect from re-running
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [createdCategoryOptions, setCreatedCategoryOptions] = useState<CategoryOption[]>([]);
@@ -88,19 +95,38 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   const isRecurring = watch("isRecurring");
   const selectedFrequency = watch("frequency");
   
-  const loadTransferTransaction = useCallback(async (transaction: TransactionWithDetails) => {
-    const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
-    setMode(TransactionTypeEnum.transfer);
-    form.reset({
+  const loadTransferTransaction = useCallback(async (transaction: TransactionWithDetails, isStale: () => boolean) => {
+    const baseValues = {
       amount: String(transaction.amount),
       date: dayjs(transaction.date).format("YYYY-MM-DD"),
       description: transaction.description,
       type: TransactionTypeEnum.transfer,
       fromAccountId: transaction.accountId,
-      toAccountId: transferTransaction.accountId,
-      toAmount: String(transferTransaction.amount),
       categoryId: transferCategoryId,
-    });
+    };
+
+    // Show what the row already knows right away; only the receiving side needs a request
+    setMode(TransactionTypeEnum.transfer);
+    form.reset({ ...baseValues, toAccountId: "", toAmount: "" });
+    setIsLoadingTransaction(true);
+
+    try {
+      const transferTransaction = await transactionService.getTransferTransactionByTransferId(transaction.transferId!);
+      if (isStale()) return; // the modal was closed or moved on to another transaction meanwhile
+
+      form.reset({
+        ...baseValues,
+        toAccountId: transferTransaction.accountId,
+        toAmount: String(transferTransaction.amount),
+      });
+      setIsLoadingTransaction(false);
+    } catch {
+      if (isStale()) return;
+      // A form without the receiving side would be misleading (and saving it would overwrite the transfer)
+      setIsLoadingTransaction(false);
+      showError("Could not load the transfer. Please try again.");
+      onCloseRef.current();
+    }
   }, [form, transferCategoryId]);
 
   const loadRegularTransaction = useCallback(async (transaction: TransactionWithDetails) => {
@@ -127,16 +153,25 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   }, [form]);
 
   useEffect(() => {
+    // Set when this effect is replaced, so a slow response can't fill a modal that has moved on
+    let stale = false;
+
     if (!transaction) {
+      setIsLoadingTransaction(false);
       resetFormToDefault();
       return;
     }
-  
+
     if (transaction.transferId) {
-      loadTransferTransaction(transaction);
+      loadTransferTransaction(transaction, () => stale);
     } else {
+      setIsLoadingTransaction(false);
       loadRegularTransaction(transaction);
     }
+
+    return () => {
+      stale = true;
+    };
   }, [transaction, reset, loadRegularTransaction, loadTransferTransaction, resetFormToDefault]);
 
   const onCloseModal = () => {
@@ -278,8 +313,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
         onClose={onCloseModal}
         form={form}
         onSubmit={onSubmit}
-        title="New Transaction"
-        description="Log an expense, income, or transfer between accounts."
+        isLoading={isLoadingTransaction}
+        title={transaction ? "Edit Transaction" : "New Transaction"}
+        description={
+          transaction
+            ? "Change the details of this transaction."
+            : "Log an expense, income, or transfer between accounts."
+        }
         showToast={false}
         refreshOnSubmit={false}
         toastErrorMessage="Failed to save transaction"

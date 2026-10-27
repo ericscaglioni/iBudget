@@ -18,6 +18,19 @@ All notable changes to iBudget are documented here. The format follows
 - The Income and Expenses cards on the dashboard say how much of the amount came from a currency
   exchange (for example "Includes R$520.00 received from currency exchange"), so it's clear it
   isn't earnings or spending.
+- Lists (transactions, accounts, categories) have a "Rows per page" selector with 10, 20, 50 and
+  100 rows. The choice is kept in the URL (`?pageSize=`), so it survives a refresh and can be shared,
+  and it works together with the filters and sorting.
+- Editing a transfer shows a loading state while the received side is fetched, instead of an
+  incomplete form. If it can't be loaded the modal closes with an error, rather than letting you save
+  an incomplete transfer.
+
+### Changed
+- The transaction window says "Edit Transaction" when you are editing one, instead of "New Transaction".
+- Lists show 20 rows per page by default (it was 15). Only 10, 20, 50 and 100 are accepted in the
+  URL; any other value falls back to 20.
+- Changing a filter or the sorting goes back to the first page, instead of staying on a page that
+  may no longer exist.
 
 ## [0.3.2] - 2026-10-25
 
