@@ -6,6 +6,10 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-28
+
+A users table behind the scenes, dates that stay on the day you picked, and clearer navigation and lists.
+
 ### Added
 - A `users` table that stores each person's Clerk id, name and email, so accounts and
   transactions can be joined back to someone in the database. It is not shown in the app.
@@ -18,6 +22,12 @@ All notable changes to iBudget are documented here. The format follows
 - The dashboard monthly summary and the 6-month chart can step into later months when a
   transaction is already booked there, so planned income and expenses are visible. Account
   balances still ignore future dates. Months with nothing booked yet stay out of the way.
+- The navigation bar stays at the top while you scroll, so it is harder to lose your place.
+- The button to add a transaction is labeled, and a short hint appears until you use it, so it is
+  obvious from every page.
+- Sortable table headers show they can be clicked. A third click on the same header clears the sort.
+- Deleting a row keeps the confirmation open with a loading state until it finishes.
+- On a phone, list pagination fits on one line: rows per page on the left, page arrows on the right.
 
 ### Fixed
 - Saving a first account (or category, transaction, or setting) no longer fails when Clerk has not
@@ -224,6 +234,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0
 [0.4.3]: https://github.com/ericscaglioni/iBudget/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/ericscaglioni/iBudget/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/ericscaglioni/iBudget/compare/0.4.0...0.4.1
