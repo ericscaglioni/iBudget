@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { ensureUserRow } from "./users";
 
 export const initializeUserDefaults = async (userId: string) => {
+  await ensureUserRow(userId);
+
   // Skip if user already has categories
   const existing = await prisma.category.findFirst({
     where: { userId },
@@ -40,12 +43,13 @@ export const deleteUserData = async (userId: string) => {
     throw new Error("deleteUserData requires a non-empty userId");
   }
 
-  const [transactions, accounts, categories, settings, guide] = await prisma.$transaction([
+  const [transactions, accounts, categories, settings, guide, users] = await prisma.$transaction([
     prisma.transaction.deleteMany({ where: { userId } }),
     prisma.account.deleteMany({ where: { userId } }),
     prisma.category.deleteMany({ where: { userId } }),
     prisma.userSettings.deleteMany({ where: { userId } }),
     prisma.userGuide.deleteMany({ where: { userId } }),
+    prisma.user.deleteMany({ where: { id: userId } }),
   ]);
 
   return {
@@ -54,5 +58,6 @@ export const deleteUserData = async (userId: string) => {
     categories: categories.count,
     settings: settings.count,
     guide: guide.count,
+    users: users.count,
   };
 };

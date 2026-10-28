@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { verify } = vi.hoisted(() => ({ verify: vi.fn() }));
+const { verify, upsertUserProfile } = vi.hoisted(() => ({
+  verify: vi.fn(),
+  upsertUserProfile: vi.fn(),
+}));
 
 vi.mock("svix", () => ({
   Webhook: class {
@@ -12,6 +15,10 @@ vi.mock("@/lib/server/utils/initializeUserDefaults", () => ({
   initializeUserDefaults: vi.fn(),
   deleteUserData: vi.fn(),
 }));
+vi.mock("@/lib/server/utils/users", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/server/utils/users")>();
+  return { ...actual, upsertUserProfile };
+});
 
 import { deleteUserData, initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
 import { POST } from "./route";
@@ -63,22 +70,63 @@ describe("POST /api/clerk/webhook", () => {
   });
 
   it("sets up the default categories when a user signs up", async () => {
-    verify.mockReturnValue({ type: "user.created", data: { id: "u1" } });
+    verify.mockReturnValue({
+      type: "user.created",
+      data: {
+        id: "u1",
+        first_name: "Ada",
+        last_name: "Lovelace",
+        email_addresses: [{ email_address: "ada@example.com" }],
+      },
+    });
     const response = await webhook();
     expect(response.status).toBe(200);
+    expect(upsertUserProfile).toHaveBeenCalledWith({
+      id: "u1",
+      email: "ada@example.com",
+      name: "Ada Lovelace",
+    });
     expect(initializeUserDefaults).toHaveBeenCalledWith("u1");
+  });
+
+  it("updates the stored name and email when Clerk does", async () => {
+    verify.mockReturnValue({
+      type: "user.updated",
+      data: {
+        id: "u1",
+        first_name: "Ada",
+        last_name: null,
+        email_addresses: [{ email_address: "ada@example.com" }],
+      },
+    });
+    const response = await webhook();
+    expect(response.status).toBe(200);
+    expect(upsertUserProfile).toHaveBeenCalledWith({
+      id: "u1",
+      email: "ada@example.com",
+      name: "Ada",
+    });
+    expect(initializeUserDefaults).not.toHaveBeenCalled();
+    expect(deleteUserData).not.toHaveBeenCalled();
   });
 
   it("deletes the user's data when the user is deleted", async () => {
     verify.mockReturnValue({ type: "user.deleted", data: { id: "u1" } });
-    vi.mocked(deleteUserData).mockResolvedValue({ transactions: 3, accounts: 1, categories: 10, settings: 0, guide: 0 });
+    vi.mocked(deleteUserData).mockResolvedValue({
+      transactions: 3,
+      accounts: 1,
+      categories: 10,
+      settings: 0,
+      guide: 0,
+      users: 1,
+    });
 
     const response = await webhook();
 
     expect(response.status).toBe(200);
     expect(deleteUserData).toHaveBeenCalledWith("u1");
     expect(await response.json()).toEqual({
-      data: { message: "User deleted successfully", deleted: { transactions: 3, accounts: 1, categories: 10, settings: 0, guide: 0 } },
+      data: { message: "User deleted successfully", deleted: { transactions: 3, accounts: 1, categories: 10, settings: 0, guide: 0, users: 1 } },
     });
   });
 

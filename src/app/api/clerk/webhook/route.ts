@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ClerkEvent, EventType } from "./types";
 import { Webhook } from "svix";
 import { deleteUserData, initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
+import { profileFromClerkEvent, upsertUserProfile } from "@/lib/server/utils/users";
 
 const getValidationHeaders = (headers: Headers) => {
   const svix_id = headers.get("svix-id") ?? "";
@@ -40,8 +41,12 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case EventType.USER_CREATED:
+        await upsertUserProfile(profileFromClerkEvent(event.data));
         await initializeUserDefaults(event.data.id);
         return NextResponse.json({ data: { message: "User initialized successfully" } });
+      case EventType.USER_UPDATED:
+        await upsertUserProfile(profileFromClerkEvent(event.data));
+        return NextResponse.json({ data: { message: "User updated successfully" } });
       case EventType.USER_DELETED: {
         const deleted = await deleteUserData(event.data.id);
         console.log(`Deleted data for user ${event.data.id}:`, deleted);

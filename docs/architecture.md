@@ -49,8 +49,10 @@ transactions", …) are skipped — do not do that.
 - Session routes wrap the handler in `authHandler`. A missing user is **401**,
   not a thrown `Error` that becomes 500.
 - `/api/clerk/webhook` verifies the Svix signature with
-  `CLERK_WEBHOOK_SIGNING_SECRET`, then `initializeUserDefaults` or
-  `deleteUserData`. There is no public HTTP API that deletes a user's data.
+  `CLERK_WEBHOOK_SIGNING_SECRET`, then upserts `users` (name and email from
+  Clerk), `initializeUserDefaults`, or `deleteUserData`. There is no public
+  HTTP API that deletes a user's data. Clerk remains the login source of
+  truth; `users` is only a local directory for joins.
 
 ## Data that must stay consistent
 

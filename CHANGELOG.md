@@ -6,6 +6,12 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- A `users` table that stores each person's Clerk id, name and email, so accounts and
+  transactions can be joined back to someone in the database. It is not shown in the app.
+  Existing people are filled in on deploy from Clerk; new sign-ups and profile changes stay
+  in sync through the Clerk webhook. The migration runs on deploy.
+
 ## [0.4.3] - 2026-10-27
 
 The production sign-in form loads.

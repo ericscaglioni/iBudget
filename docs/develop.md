@@ -24,8 +24,9 @@
 | `npm run db:migration_apply` | `prisma migrate dev` (local) |
 | `npm run db:migration_status` | Which migrations are applied |
 | `npm run db:seed` | Seed |
+| `npm run init:users` | Upsert `users` (name/email from Clerk) and default categories for every Clerk user. Does not print emails. |
 | `npm run build` | `prisma generate && next build` (no migrate) |
-| `npm run vercel-build` | `prisma migrate deploy && prisma generate && next build` — this is what Vercel runs, so a new migration is applied on QA (branch `develop`) then Prod (branch `main`) |
+| `npm run vercel-build` | Migrate, generate, optional DB-password adopt, then `init:users`, then `next build`. Vercel runs this, so a new migration is applied on QA (`develop`) then Prod (`main`). |
 
 ## Tests
 

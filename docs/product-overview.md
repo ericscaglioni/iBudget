@@ -19,10 +19,10 @@ truth.
   `localhost:3306/ibudget`. Hosted databases are on Railway. Prisma Client is
   used from server services, not from React.
 - **Tailwind CSS** and `clsx`. Theme, components and checklist: [UI](ui.md).
-- **Clerk** for auth. The Clerk webhook (`/api/clerk/webhook`) creates default
-  categories for a new user and deletes their data when the Clerk user is
-  removed. That route is public to the network and is authenticated by the
-  Svix signature, not by a session.
+- **Clerk** for auth. The Clerk webhook (`/api/clerk/webhook`) upserts the
+  `users` row (id, name, email), creates default categories for a new user,
+  and deletes their data when the Clerk user is removed. That route is public
+  to the network and is authenticated by the Svix signature, not by a session.
 - **dayjs** for every date. Do not use `Date` math for calendars or recurrences.
 - Toasts: **Sonner**, through `showSuccess` / `showError` / `showInfo` in
   `@/lib/utils/toast`.
