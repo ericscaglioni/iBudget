@@ -23,6 +23,22 @@ enum AccountType {
   other
 }
 
+model User {
+  id        String   @id
+  email     String?
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts     Account[]
+  categories   Category[]
+  transactions Transaction[]
+  settings     UserSettings?
+  guide        UserGuide?
+
+  @@map("users")
+}
+
 model Account {
   id             String      @id @default(cuid())
   userId         String
@@ -35,6 +51,7 @@ model Account {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
+  user           User          @relation(fields: [userId], references: [id])
   transactions   Transaction[]
   @@map("accounts")
 }
@@ -53,6 +70,7 @@ model Category {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  user         User?        @relation(fields: [userId], references: [id])
   transactions Transaction[]
 
   @@map("categories")
@@ -80,6 +98,7 @@ model Transaction {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  user        User      @relation(fields: [userId], references: [id])
   account     Account   @relation(fields: [accountId], references: [id])
   category    Category? @relation(fields: [categoryId], references: [id])
 
@@ -94,6 +113,8 @@ model UserSettings {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  user         User     @relation(fields: [userId], references: [id])
+
   @@map("user_settings")
 }
 
@@ -103,6 +124,8 @@ model UserGuide {
   dismissed Json     // string[] of dismissed tip ids
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("user_guide")
 }

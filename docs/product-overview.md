@@ -2,8 +2,12 @@
 
 iBudget is a personal budget app. A signed-in user has accounts (each in one
 currency), categories, and transactions (income, expense, or a transfer between
-accounts). The dashboard shows one currency at a time: balances, the month's
-income and expenses, and a short history.
+accounts). The dashboard shows one currency at a time: balances as of today,
+the month's income and expenses (including ones booked ahead), and a short
+history. The monthly summary and the six-month chart can step into later
+months when a transaction is already there; empty future months stay out of
+the way. Percentages vs the previous month are not a target — a tooltip
+explains them.
 
 This page used to live as Cursor-only context in
 `.cursor/rules/ibudget-context.yaml`. That file is gone; this is the source of
@@ -19,10 +23,10 @@ truth.
   `localhost:3306/ibudget`. Hosted databases are on Railway. Prisma Client is
   used from server services, not from React.
 - **Tailwind CSS** and `clsx`. Theme, components and checklist: [UI](ui.md).
-- **Clerk** for auth. The Clerk webhook (`/api/clerk/webhook`) creates default
-  categories for a new user and deletes their data when the Clerk user is
-  removed. That route is public to the network and is authenticated by the
-  Svix signature, not by a session.
+- **Clerk** for auth. The Clerk webhook (`/api/clerk/webhook`) upserts the
+  `users` row (id, name, email), creates default categories for a new user,
+  and deletes their data when the Clerk user is removed. That route is public
+  to the network and is authenticated by the Svix signature, not by a session.
 - **dayjs** for every date. Do not use `Date` math for calendars or recurrences.
 - Toasts: **Sonner**, through `showSuccess` / `showError` / `showInfo` in
   `@/lib/utils/toast`.
@@ -43,6 +47,10 @@ Avoid adding libraries when Fetch, `URLSearchParams` or the existing kit will do
   other side from `GET /api/transactions/transfer/[transferId]` and saves both
   together.
 - Amounts are stored as positive decimals. The sign is the `type`.
+- A transaction date is a calendar day, not a time of day. The form sends
+  `YYYY-MM-DD`; the server stores UTC midnight for that day so "1 November"
+  stays in November in every timezone. Do not convert the browser's local
+  midnight (that shifts the 1st into the previous month for UTC+ users).
 - Recurring transactions share a `recurringId`. Updates and deletes can apply
   to one occurrence or to this one and every later one (`updateScope` /
   `scope=future`).

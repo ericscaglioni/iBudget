@@ -33,6 +33,7 @@ export const getActionColumns = <TData,>({ columns, onEdit, onDelete }: ActionCo
         )}
       </div>
     ),
+    enableSorting: false,
     meta: {
       className: "w-[100px] text-center",
     },

@@ -17,10 +17,11 @@ export const RecurringDeleteModal = ({
   open,
   itemDescription,
 }: Props) => {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingScope, setDeletingScope] = useState<'one' | 'future' | null>(null);
+  const isDeleting = deletingScope !== null;
 
   const handleDelete = async (scope: 'one' | 'future') => {
-    setIsDeleting(true);
+    setDeletingScope(scope);
     try {
       await onDelete(scope);
       showSuccess(
@@ -34,7 +35,7 @@ export const RecurringDeleteModal = ({
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete transaction. Please try again.';
       showError(errorMessage);
     } finally {
-      setIsDeleting(false);
+      setDeletingScope(null);
     }
   };
 
@@ -50,6 +51,7 @@ export const RecurringDeleteModal = ({
           variant="outline"
           onClick={() => handleDelete('one')}
           disabled={isDeleting}
+          isLoading={deletingScope === 'one'}
           className="w-full"
         >
           Only this transaction
@@ -58,6 +60,7 @@ export const RecurringDeleteModal = ({
           variant="danger"
           onClick={() => handleDelete('future')}
           disabled={isDeleting}
+          isLoading={deletingScope === 'future'}
           className="w-full"
         >
           This and future transactions

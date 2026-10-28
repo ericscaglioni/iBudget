@@ -35,7 +35,7 @@ export default function RootLayout({
                 <Toaster
                   position="top-right"
                 />
-                <main className="min-h-screen">
+                <main className="min-h-screen pb-24">
                   {children}
                 </main>
                 <FloatingTransactionButton />

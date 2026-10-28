@@ -21,6 +21,11 @@ describe("initializeUserDefaults", () => {
 
     await initializeUserDefaults("u1");
 
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.category.findMany).toHaveBeenCalledWith({ where: { userId: null, name: { not: "Transfer" } } });
     expect(db.category.create).toHaveBeenCalledTimes(2);
     expect(db.category.create).toHaveBeenCalledWith({ data: { userId: "u1", name: "Food", color: "#f00", type: "expense" } });
@@ -42,13 +47,22 @@ describe("deleteUserData", () => {
     db.category.deleteMany.mockResolvedValue({ count: 15 });
     db.userSettings.deleteMany.mockResolvedValue({ count: 1 });
     db.userGuide.deleteMany.mockResolvedValue({ count: 1 });
+    db.user.deleteMany.mockResolvedValue({ count: 1 });
 
     const result = await deleteUserData("u1");
 
-    expect(result).toEqual({ transactions: 10, accounts: 2, categories: 15, settings: 1, guide: 1 });
+    expect(result).toEqual({
+      transactions: 10,
+      accounts: 2,
+      categories: 15,
+      settings: 1,
+      guide: 1,
+      users: 1,
+    });
     for (const model of ["transaction", "account", "category", "userSettings", "userGuide"] as const) {
       expect(db[model].deleteMany).toHaveBeenCalledWith({ where: { userId: "u1" } });
     }
+    expect(db.user.deleteMany).toHaveBeenCalledWith({ where: { id: "u1" } });
   });
 
   it.each(["", "   ", undefined, null, 42])("never runs with an empty or invalid user id (%s)", async (userId) => {

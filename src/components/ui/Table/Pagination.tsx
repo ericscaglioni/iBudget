@@ -40,33 +40,35 @@ export const Pagination = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 sm:gap-4 p-4">
-      {/* Always shown, even for short lists, so it can be found (and the choice is visible) */}
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <span>Rows per page</span>
-        <div className="w-24">
+    <div className="flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+        <span className="whitespace-nowrap">Rows per page</span>
+        <div className="w-16 sm:w-24">
           <Combobox
             options={pageSizeOptions}
             value={String(pageSize)}
             onChange={(value) => value && handlePageSizeChange(Number(value))}
+            size="sm"
           />
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-center sm:justify-end gap-3 sm:gap-4 items-center">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => handlePageChange(page - 1)}
           disabled={page <= 1}
+          aria-label="Previous page"
           className={clsx(
-            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-0 py-0",
+            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-1 sm:px-0 py-0",
             page <= 1 && "cursor-not-allowed"
           )}
         >
-          <Icon name="arrowLeft" className="size-4 inline"/> Previous
+          <Icon name="arrowLeft" className="size-4 inline"/>
+          <span className="hidden sm:inline"> Previous</span>
         </Button>
-        <span className="text-sm text-gray-600">
+        <span className="whitespace-nowrap text-xs sm:text-sm text-gray-600">
           Page {page} of {Math.max(pageCount, 1)}
         </span>
         <Button
@@ -74,12 +76,14 @@ export const Pagination = ({
           size="sm"
           onClick={() => handlePageChange(page + 1)}
           disabled={page >= pageCount}
+          aria-label="Next page"
           className={clsx(
-            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-0 py-0",
+            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-1 sm:px-0 py-0",
             page >= pageCount && "cursor-not-allowed"
           )}
         >
-          Next <Icon name="arrowRight" className="size-4 inline"/>
+          <span className="hidden sm:inline">Next </span>
+          <Icon name="arrowRight" className="size-4 inline"/>
         </Button>
       </div>
     </div>

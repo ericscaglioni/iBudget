@@ -6,6 +6,46 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-28
+
+A users table behind the scenes, dates that stay on the day you picked, and clearer navigation and lists.
+
+### Added
+- A `users` table that stores each person's Clerk id, name and email, so accounts and
+  transactions can be joined back to someone in the database. It is not shown in the app.
+  Existing people are filled in on deploy from Clerk; new sign-ups and profile changes stay
+  in sync through the Clerk webhook. The migration runs on deploy.
+- A short explanation on the dashboard percentages (tap or click the info mark). They compare
+  with the previous month, and are not a target.
+
+### Changed
+- The dashboard monthly summary and the 6-month chart can step into later months when a
+  transaction is already booked there, so planned income and expenses are visible. Account
+  balances still ignore future dates. Months with nothing booked yet stay out of the way.
+- The navigation bar stays at the top while you scroll, so it is harder to lose your place.
+- The button to add a transaction is labeled, and a short hint appears until you use it, so it is
+  obvious from every page.
+- Sortable table headers show they can be clicked. A third click on the same header clears the sort.
+- Deleting a row keeps the confirmation open with a loading state until it finishes.
+- On a phone, list pagination fits on one line: rows per page on the left, page arrows on the right.
+
+### Fixed
+- Saving a first account (or category, transaction, or setting) no longer fails when Clerk has not
+  yet created the `users` row, which is normal when developing locally without the webhook. Name
+  and email are copied from Clerk at that point instead of leaving the row empty.
+- Creating a category or account from the new-transaction form no longer shows “invalid” until you
+  pick the same option again. The new one is selected and accepted right away.
+- Account and category fields on a phone showed the label twice.
+- Modals on iPhone could be dragged sideways, which cut off the form. They now stay in place, and
+  the focus ring on a field is no longer clipped.
+- Short confirmations (delete, and similar) stay a small card on a phone, instead of filling the
+  screen. Forms that need the space still do.
+- After creating a first account from the getting-started guide, the app goes back to the dashboard
+  so the next step is visible, instead of opening the transaction form immediately.
+- An expense on the 1st of a month (for example 1 November) no longer appears under the previous
+  month. Dates are calendar days, stored at UTC midnight, so they stay in the month you picked.
+  A date already saved the old way needs to be opened and saved again.
+
 ## [0.4.3] - 2026-10-27
 
 The production sign-in form loads.
@@ -194,6 +234,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0
 [0.4.3]: https://github.com/ericscaglioni/iBudget/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/ericscaglioni/iBudget/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/ericscaglioni/iBudget/compare/0.4.0...0.4.1

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DeleteModal } from "./DeleteModal";
@@ -27,18 +27,23 @@ describe("DeleteModal", () => {
     expect(showSuccess).toHaveBeenCalledWith("Account deleted successfully");
   });
 
-  it("toasts the error message when delete fails", async () => {
+  it("toasts the error message when delete fails and keeps the dialog open", async () => {
     const onDelete = vi.fn().mockRejectedValue(new Error("Cannot delete account with existing transactions"));
+    const onClose = vi.fn();
     render(
       <DeleteModal
         open
-        onClose={() => undefined}
+        onClose={onClose}
         onDelete={onDelete}
         modelName="Account"
         itemDescription="Wallet"
       />
     );
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-    expect(showError).toHaveBeenCalledWith("Cannot delete account with existing transactions");
+    await waitFor(() => {
+      expect(showError).toHaveBeenCalledWith("Cannot delete account with existing transactions");
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

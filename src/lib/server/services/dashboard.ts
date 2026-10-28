@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
+import { calendarMonthString, getMonthDateRange } from "@/lib/utils/format";
 import { dayjs } from "@/lib/utils/dayjs.js";
 import { resolveCurrency } from "./settings";
 import { sortAccountsByUserOrder } from "@/lib/utils/sort-accounts";
@@ -143,8 +144,8 @@ const calculateMonthlyTotals = async (
   currency: string
 ): Promise<MonthlyTotal[]> => {
   const sorted = [...months].sort();
-  const startDate = dayjs(sorted[0], "YYYY-MM").startOf("month").toDate();
-  const endDate = dayjs(sorted[sorted.length - 1], "YYYY-MM").endOf("month").toDate();
+  const startDate = getMonthDateRange(sorted[0])!.startDate;
+  const endDate = getMonthDateRange(sorted[sorted.length - 1])!.endDate;
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -184,7 +185,7 @@ const calculateMonthlyTotals = async (
   );
 
   transactions.forEach((tx) => {
-    const entry = byMonth.get(dayjs(tx.date).format("YYYY-MM"));
+    const entry = byMonth.get(calendarMonthString(tx.date));
     if (!entry) return;
 
     // Only the side of a currency exchange that is in the shown currency counts
@@ -350,14 +351,34 @@ export const getDashboardData = async (
   const previousMonthTotal = accounts.reduce((sum, account) => sum + balances.get(account.id)!.previousMonthEnd, 0);
   const change = total - previousMonthTotal;
 
-  // Monthly totals for the last 6 months (plus the requested one, if it is older)
+  // Months from six ago through the latest booked month (so the chart can include the future)
   const recentMonths = lastMonths(6);
-  const months = month && !recentMonths.includes(month) ? [...recentMonths, month] : recentMonths;
+  const latest = await prisma.transaction.findFirst({
+    where: { userId },
+    orderBy: { date: "desc" },
+    select: { date: true },
+  });
+  const currentMonthKey = dayjs().format("YYYY-MM");
+  const latestMonth = latest?.date ? calendarMonthString(latest.date) : currentMonthKey;
+  const endMonth = latestMonth > currentMonthKey ? latestMonth : currentMonthKey;
+  const monthsThroughLatest: string[] = [];
+  let cursor = dayjs(recentMonths[0], "YYYY-MM");
+  const end = dayjs(endMonth, "YYYY-MM");
+  while (!cursor.isAfter(end, "month")) {
+    monthsThroughLatest.push(cursor.format("YYYY-MM"));
+    cursor = cursor.add(1, "month");
+  }
+  const months =
+    month && !monthsThroughLatest.includes(month)
+      ? [...monthsThroughLatest, month].sort()
+      : monthsThroughLatest;
   const allMonthlyTotals = await calculateMonthlyTotals(userId, months, currency);
 
-  const sixMonthHistory = allMonthlyTotals
-    .filter((entry) => recentMonths.includes(entry.month))
-    .map(({ month: m, income, expenses }) => ({ month: m, income, expenses }));
+  const chartMonths = monthsThroughLatest.slice(-6);
+  const sixMonthHistory = chartMonths.map((monthKey) => {
+    const entry = allMonthlyTotals.find((item) => item.month === monthKey)!;
+    return { month: monthKey, income: entry.income, expenses: entry.expenses };
+  });
 
   const currentMonth = dayjs().format("YYYY-MM");
   const previousMonth = dayjs().subtract(1, "month").format("YYYY-MM");

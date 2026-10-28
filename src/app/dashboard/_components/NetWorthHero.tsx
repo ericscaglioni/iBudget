@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientOnlyCurrency } from "@/components/ui";
+import { ClientOnlyCurrency, Tooltip } from "@/components/ui";
 import type { CurrencyBalance, NetWorth } from "@/lib/server/services/dashboard";
 
 interface Props {
@@ -28,18 +28,20 @@ export const NetWorthHero = ({ netWorth, currency, currencyBalances, onCurrencyC
       />
 
       {/* Change since the end of last month */}
-      <p className="mt-2 text-xs sm:text-sm text-white/90">
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
-            changeIsPositive ? "bg-green-400/25" : "bg-red-400/30"
-          }`}
-        >
-          {changeIsPositive ? "▲" : "▼"}
-          <ClientOnlyCurrency value={Math.abs(change)} currency={currency} />
-          {changePercent !== null && <span>({Math.abs(changePercent).toFixed(1)}%)</span>}
-        </span>
-        <span className="ml-2 text-white/70">vs. end of last month</span>
-      </p>
+      <div className="mt-2 text-xs sm:text-sm text-white/90">
+        <Tooltip content="This compares today's balance with the end of last month. It is not a target. Green means the balance went up.">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
+              changeIsPositive ? "bg-green-400/25" : "bg-red-400/30"
+            }`}
+          >
+            {changeIsPositive ? "▲" : "▼"}
+            <ClientOnlyCurrency value={Math.abs(change)} currency={currency} />
+            {changePercent !== null && <span>({Math.abs(changePercent).toFixed(1)}%)</span>}
+          </span>
+          <span className="ml-2 text-white/70">vs. end of last month</span>
+        </Tooltip>
+      </div>
 
       {/* Only the currencies the user has accounts in. Click one to switch the whole dashboard to it. */}
       {currencyBalances.length > 1 && (

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { accountService, categoryService, dashboardService, guideService } from "@/lib/server/services";
+import { initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
 import { DashboardPageShell } from "./_components";
 import { handleServerError } from "@/lib/utils/server-error-handler";
 import { accountCurrencies } from "@/lib/constants";
@@ -21,6 +22,9 @@ const DashboardPage = async ({ searchParams }: Props) => {
 
     const { userId } = await auth();
     if (!userId) redirect("/login");
+
+    // Webhook often never reaches localhost; fill users + default categories on first visit
+    await initializeUserDefaults(userId);
 
     // Fetch dashboard data from the server
     const dashboardData = await dashboardService.getDashboardData(userId, {

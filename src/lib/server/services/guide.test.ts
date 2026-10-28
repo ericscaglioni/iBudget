@@ -87,6 +87,11 @@ describe("dismissTip", () => {
   it("remembers a dismissed tip", async () => {
     givenUser({ dismissed: ["multi-currency"] });
     await guide.dismissTip("u1", "checklist");
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.userGuide.upsert).toHaveBeenCalledWith({
       where: { userId: "u1" },
       create: { userId: "u1", dismissed: ["multi-currency", "checklist"] },

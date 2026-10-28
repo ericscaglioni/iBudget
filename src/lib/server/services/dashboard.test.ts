@@ -43,6 +43,7 @@ const givenData = ({
   balanceTx = [] as BalanceTx[],
   monthly = [] as MonthlyTx[],
   baseCurrency = undefined as string | undefined,
+  latest = undefined as Date | undefined,
 } = {}) => {
   db.account.findMany.mockImplementation(async (args: { select: Record<string, boolean> }) =>
     args.select.id ? accounts : accounts.map(({ currency }) => ({ currency }))
@@ -53,6 +54,7 @@ const givenData = ({
       ? balanceTx
       : monthly.map(({ currency, ...tx }) => ({ ...tx, account: { currency } }))
   );
+  db.transaction.findFirst.mockResolvedValue(latest ? { date: latest } : null);
 };
 
 const usd = (id: string, name: string, initialBalance: number, extra: Partial<Account> = {}): Account => ({
@@ -173,8 +175,8 @@ describe("getMonthlySummary", () => {
 
     const { where } = db.transaction.findMany.mock.calls[0][0];
     expect(where.userId).toBe("u1");
-    expect(where.date.gte).toEqual(new Date(2026, 9, 1, 0, 0, 0, 0));
-    expect(where.date.lte).toEqual(new Date(2026, 9, 31, 23, 59, 59, 999));
+    expect(where.date.gte.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+    expect(where.date.lte.toISOString()).toBe("2026-10-31T23:59:59.999Z");
     expect(where.OR[0]).toEqual({ transferId: null, account: { currency: "USD" } });
   });
 });
@@ -334,5 +336,35 @@ describe("getDashboardData", () => {
     givenData();
     const result = await dashboard.getDashboardData("u1");
     expect(result).toMatchObject({ currency: "USD", availableCurrencies: [], accountBalances: [], totalBalance: 0 });
+  });
+
+  it("lets the monthly summary reach a later month that already has a transaction", async () => {
+    givenData({
+      accounts: [usd("a1", "Main", 0)],
+      monthly: [monthlyTx({ date: new Date("2026-12-01T00:00:00.000Z"), amount: decimal(40) })],
+      latest: new Date("2026-12-01T00:00:00.000Z"),
+    });
+
+    const result = await dashboard.getDashboardData("u1", { currency: "USD" });
+
+    expect(result.monthlyTotals.map((m) => m.month)).toEqual([
+      "2026-05",
+      "2026-06",
+      "2026-07",
+      "2026-08",
+      "2026-09",
+      "2026-10",
+      "2026-11",
+      "2026-12",
+    ]);
+    expect(result.monthlyTotals[7]).toMatchObject({ month: "2026-12", expenses: 40 });
+    expect(result.sixMonthHistory.map((m) => m.month)).toEqual([
+      "2026-07",
+      "2026-08",
+      "2026-09",
+      "2026-10",
+      "2026-11",
+      "2026-12",
+    ]);
   });
 });

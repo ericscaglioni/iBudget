@@ -3,13 +3,12 @@
 import { PageShell } from "@/components";
 import { DeleteModal, EmptyState } from "@/components/ui";
 import { accountService } from "@/lib/client/services";
-import { useTransactionModal } from "@/lib/providers/TransactionModalProvider";
 import { hasActiveFilters } from "@/lib/utils/has-active-filters";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SerializedAccount } from "../types";
-import { AccountsTable } from "./";
 import { AccountFormModal } from "./AccountFormModal";
+import { AccountsTable } from "./AccountsTable";
 
 interface Props {
   accounts: SerializedAccount[];
@@ -21,12 +20,11 @@ interface Props {
 export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { openModal: openTransactionModal } = useTransactionModal();
 
   // Opened from the "create your first account" guide (/accounts?new=1)
   const [isGuidedFirstAccount, setIsGuidedFirstAccount] = useState(false);
-  // Set once the guided account is saved, so the transaction form opens after the account form closes
-  const shouldContinueToTransaction = useRef(false);
+  // After the guided account is saved, send them to the dashboard so they can read step 2
+  const shouldReturnToDashboard = useRef(false);
 
   const [openAccountModal, setOpenAccountModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -50,15 +48,14 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
     setSelectedAccount(null);
     setIsGuidedFirstAccount(false);
 
-    if (shouldContinueToTransaction.current) {
-      shouldContinueToTransaction.current = false;
-      // Straight on to the next step: the first transaction
-      openTransactionModal();
+    if (shouldReturnToDashboard.current) {
+      shouldReturnToDashboard.current = false;
+      router.push("/");
     }
   };
 
   const handleCreated = () => {
-    if (isGuidedFirstAccount) shouldContinueToTransaction.current = true;
+    if (isGuidedFirstAccount) shouldReturnToDashboard.current = true;
   };
 
   const handleCreate = () => {
@@ -117,7 +114,7 @@ export const AccountsPageShell = ({ accounts, totalCount, page, pageSize }: Prop
         account={selectedAccount ?? undefined}
         description={
           isGuidedFirstAccount
-            ? "Let's start with your first account. Next, you'll add a transaction to it."
+            ? "Let's start with your first account. When you're done, the dashboard will show you what to do next."
             : undefined
         }
         onCreate={handleCreated}

@@ -34,6 +34,16 @@ vi.mock("@/components/ui", async () => {
 import { Pagination } from "./Pagination";
 
 describe("Pagination", () => {
+  it("fits on one row, with Previous/Next words only for larger screens", () => {
+    const { container } = render(
+      <Pagination page={1} pageCount={3} pageSize={20} searchParams={new URLSearchParams("sort=date")} basePath="/transactions" />
+    );
+    expect(container.firstElementChild).toHaveClass("flex", "items-center", "justify-between");
+    expect(screen.getByText("Previous")).toHaveClass("hidden", "sm:inline");
+    expect(screen.getByText("Next")).toHaveClass("hidden", "sm:inline");
+    expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+  });
+
   it("disables Previous on the first page and advances with Next", async () => {
     render(
       <Pagination page={1} pageCount={3} pageSize={20} searchParams={new URLSearchParams("sort=date")} basePath="/transactions" />

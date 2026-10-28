@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
+import { ensureUserRow } from "@/lib/server/utils/users";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 import { Category, CategoryType } from "@prisma/client";
@@ -63,6 +64,8 @@ export const createCategory = async (userId: string, data: Omit<Category, "id" |
   if (!name || !color || !type) {
     throw new ValidationError('Missing required category data');
   }
+
+  await ensureUserRow(userId);
 
   const created = await prisma.category.create({
     data: {

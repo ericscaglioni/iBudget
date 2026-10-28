@@ -100,8 +100,8 @@ export const FormModal = <TData extends FieldValues,>({
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth}>
-      <form onSubmit={form.handleSubmit(onFormSubmit, onInvalid)} className="space-y-4">
+    <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth} fullScreenOnMobile>
+      <form onSubmit={form.handleSubmit(onFormSubmit, onInvalid)} className="min-w-0 max-w-full space-y-4">
         {/* Disabled while loading so nothing can be typed into (or submitted from) a half-filled form */}
         <div className="relative" aria-busy={isLoading}>
           <fieldset disabled={isLoading} className="m-0 min-w-0 space-y-4 border-0 p-0">

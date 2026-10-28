@@ -11,37 +11,35 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  label?: string;
   allValues?: boolean;
   disabled?: boolean;
   onCreateOption?: (label: string) => void;
   createLabel?: string;
+  size?: "sm" | "md" | "lg";
 };
 
-export const MobileCombobox = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder, 
-  label, 
-  allValues = false, 
+export const MobileCombobox = ({
+  options,
+  value,
+  onChange,
+  placeholder,
+  allValues = false,
   disabled = false,
   onCreateOption,
   createLabel,
+  size = "lg",
 }: Props) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
   const selected = options.find((opt) => opt.value === value);
 
   return (
-    <div className="w-full sm:w-auto">
-      {label && <label className="block text-sm font-medium mb-1">{label}</label>}
-      
+    <div className="w-full min-w-0 max-w-full">
       <Button
         onClick={() => !disabled && setIsMobileModalOpen(true)}
         disabled={disabled}
         variant="outline"
-        size="lg"
+        size={size}
         className="w-full justify-between text-left"
       >
         <span className={selected?.label ? "text-gray-900" : "text-gray-500"}>
@@ -49,7 +47,7 @@ export const MobileCombobox = ({
         </span>
         <Icon name="chevronDown" className="size-4 fill-black/60" />
       </Button>
-      
+
       <SelectModal
         isOpen={isMobileModalOpen}
         onClose={() => setIsMobileModalOpen(false)}

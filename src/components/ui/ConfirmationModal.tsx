@@ -1,10 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import { Button, ButtonProps } from "./Button";
 import { Modal } from "./Modal";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   description: string;
   confirmLabel?: string;
@@ -20,10 +23,24 @@ export const ConfirmationModal = ({
   confirmLabel = "Confirm",
   confirmVariant = "primary",
 }: Props) => {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const handleConfirm = async () => {
+    setIsConfirming(true);
+    try {
+      await onConfirm();
+      onClose();
+    } catch {
+      // Stay open so the error toast can be read and they can try again
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={isConfirming ? () => undefined : onClose}
       title={title}
       description={description}
     >
@@ -32,15 +49,14 @@ export const ConfirmationModal = ({
           variant="outline"
           onClick={onClose}
           className="mr-2"
+          disabled={isConfirming}
         >
           Cancel
         </Button>
         <Button
           variant={confirmVariant}
-          onClick={() => {
-            onConfirm();
-            onClose();
-          }}
+          onClick={handleConfirm}
+          isLoading={isConfirming}
         >
           {confirmLabel}
         </Button>

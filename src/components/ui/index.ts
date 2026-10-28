@@ -21,4 +21,5 @@ export * from './RadioGroup';
 export * from './SegmentedControl';
 export * from './SelectModal';
 export * from './Spinner';
+export * from './Tooltip';
 export * from './Table/Table';

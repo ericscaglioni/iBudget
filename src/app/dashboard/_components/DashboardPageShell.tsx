@@ -107,7 +107,9 @@ export const DashboardPageShell = ({
   const previousMonthKey = dayjs(selectedMonth, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
   const previousMonthData = monthlyTotals.find((m) => m.month === previousMonthKey);
   const hasPreviousMonthData = !!previousMonthData;
-  const isCurrentMonth = selectedMonth >= dayjs().format("YYYY-MM");
+  const currentMonthKey = dayjs().format("YYYY-MM");
+  const isCurrentMonth = selectedMonth === currentMonthKey;
+  const newestMonth = monthlyTotals[monthlyTotals.length - 1]?.month ?? currentMonthKey;
 
   // Format the selected month for display
   const formattedMonth = dayjs(selectedMonth, "YYYY-MM").format("MMMM YYYY");
@@ -179,7 +181,7 @@ export const DashboardPageShell = ({
 
                 <button
                   onClick={() => handleMonthChange(dayjs(selectedMonth, "YYYY-MM").add(1, "month").format("YYYY-MM"))}
-                  disabled={isCurrentMonth}
+                  disabled={selectedMonth >= newestMonth}
                   className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Next month"
                 >
@@ -209,7 +211,7 @@ export const DashboardPageShell = ({
               net={selectedMonthData.net}
               currency={currency}
               previousExpenses={previousMonthData?.expenses}
-              previousLabel={dayjs(previousMonthKey, "YYYY-MM").format("MMM")}
+              previousLabel={dayjs(previousMonthKey, "YYYY-MM").format("MMMM")}
             />
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
@@ -252,10 +254,10 @@ export const DashboardPageShell = ({
           <section>
             <div className="mb-2 sm:mb-3 md:mb-4">
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
-                Financial Trends (Last 6 Months)
+                Financial Trends
               </h2>
               <p className="text-xs sm:text-sm text-gray-600">
-                Compare your income and expenses over time to identify spending patterns
+                Income and expenses by month, including months you have already booked
               </p>
             </div>
             <SixMonthBarChart data={sixMonthHistory} currency={currency} />

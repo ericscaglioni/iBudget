@@ -87,8 +87,8 @@ describe("getTransactionsByUser", () => {
   it("filters by month, and ignores a month that makes no sense", async () => {
     await transactions.getTransactionsByUser("u1", queryParams({ filters: { month: "2026-02" } }));
     const { where } = db.transaction.findMany.mock.calls[0][0];
-    expect(where.date.gte).toEqual(new Date(2026, 1, 1, 0, 0, 0, 0));
-    expect(where.date.lte).toEqual(new Date(2026, 1, 28, 23, 59, 59, 999));
+    expect(where.date.gte.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+    expect(where.date.lte.toISOString()).toBe("2026-02-28T23:59:59.999Z");
 
     db.transaction.findMany.mockClear();
     await transactions.getTransactionsByUser("u1", queryParams({ filters: { month: "nonsense" } }));
@@ -236,10 +236,21 @@ describe("createTransaction", () => {
 
     const result = await transactions.createTransaction("u1", props);
 
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.transaction.create).toHaveBeenCalledWith({
       data: { userId: "u1", type: "expense", amount: 25, accountId: "a1", categoryId: "c1", description: "Lunch", date: props.date, isRecurring: false },
     });
     expect(result.amount).toBe(25);
+  });
+
+  it("stores 1 November at UTC midnight so it stays in November", async () => {
+    db.transaction.create.mockResolvedValue({ id: "t1", amount: decimal(25) });
+    await transactions.createTransaction("u1", { ...props, date: "2026-11-01" });
+    expect(db.transaction.create.mock.calls[0][0].data.date.toISOString()).toBe("2026-11-01T00:00:00.000Z");
   });
 
   it("passes on the recurring flag", async () => {
@@ -260,7 +271,7 @@ describe("createRecurringTransaction", () => {
     accountId: "a1",
     categoryId: "c1",
     description: "Gym",
-    date: new Date(2026, 0, 31, 12),
+    date: new Date("2026-01-31T12:00:00.000Z"),
     frequency: "monthly",
   };
 
@@ -281,18 +292,18 @@ describe("createRecurringTransaction", () => {
   it("stops at the end date", async () => {
     const result = await transactions.createRecurringTransaction("u1", {
       ...props,
-      date: new Date(2026, 0, 1, 12),
+      date: new Date("2026-01-01T12:00:00.000Z"),
       frequency: "weekly",
-      endsAt: new Date(2026, 0, 22, 12),
+      endsAt: new Date("2026-01-22T12:00:00.000Z"),
     });
     // Jan 1, 8, 15, 22
     expect(result.count).toBe(4);
   });
 
   it.each([
-    ["daily", new Date(2026, 0, 1, 12), new Date(2026, 0, 3, 12), 3],
-    ["monthly", new Date(2026, 0, 1, 12), new Date(2026, 3, 1, 12), 4],
-    ["yearly", new Date(2026, 0, 1, 12), new Date(2028, 0, 1, 12), 3],
+    ["daily", new Date("2026-01-01T12:00:00.000Z"), new Date("2026-01-03T12:00:00.000Z"), 3],
+    ["monthly", new Date("2026-01-01T12:00:00.000Z"), new Date("2026-04-01T12:00:00.000Z"), 4],
+    ["yearly", new Date("2026-01-01T12:00:00.000Z"), new Date("2028-01-01T12:00:00.000Z"), 3],
   ])("repeats %s", async (frequency, date, endsAt, expected) => {
     const result = await transactions.createRecurringTransaction("u1", { ...props, date, frequency, endsAt });
     expect(result.count).toBe(expected);
@@ -301,7 +312,7 @@ describe("createRecurringTransaction", () => {
   it("still creates the first one when the end date is before the start", async () => {
     const result = await transactions.createRecurringTransaction("u1", { ...props, endsAt: new Date(2020, 0, 1) });
     expect(result.count).toBe(1);
-    expect(rows()[0].date).toEqual(props.date);
+    expect(rows()[0].date.toISOString()).toBe("2026-01-31T00:00:00.000Z");
   });
 
   it("rejects a frequency it does not know", async () => {

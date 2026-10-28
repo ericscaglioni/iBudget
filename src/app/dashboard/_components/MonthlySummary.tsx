@@ -1,5 +1,7 @@
 "use client";
 
+import { Tooltip } from "@/components/ui";
+
 interface Props {
   income: number;
   expenses: number;
@@ -70,9 +72,14 @@ export const MonthlySummary = ({
           </p>
         )}
         {expenseChange !== null && (
-          <p className={`mt-1 text-xs sm:text-sm font-medium ${expenseChange > 0 ? "text-red-700" : "text-green-700"}`}>
-            {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}
-          </p>
+          <Tooltip
+            className="mt-1"
+            content={`This compares what is already booked this month with ${previousLabel}. It is not a target or a forecast. Green means this month is lower so far — a month that is still ahead, or only just started, often looks much lower.`}
+          >
+            <span className={`text-xs sm:text-sm font-medium ${expenseChange > 0 ? "text-red-700" : "text-green-700"}`}>
+              {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}
+            </span>
+          </Tooltip>
         )}
       </div>
 

@@ -1,12 +1,12 @@
 {
   "name": "ibudget",
-  "version": "0.4.3",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma migrate deploy && prisma generate && next build",
+    "vercel-build": "prisma migrate deploy && prisma generate && node scripts/adopt-db-password-from-env.mjs && npx tsx scripts/initialize-existing-users.ts && next build",
     "start": "next start",
     "lint": "next lint",
     "tsc": "tsc --noEmit",

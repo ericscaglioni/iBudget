@@ -8,6 +8,7 @@ import {
   ArrowUpIcon,
   CheckIcon,
   Cog6ToothIcon,
+  InformationCircleIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -37,6 +38,7 @@ const iconMap = {
   close: XMarkIcon,
   plus: PlusIcon,
   settings: Cog6ToothIcon,
+  info: InformationCircleIcon,
   signOut: ArrowRightOnRectangleIcon,
 };
 

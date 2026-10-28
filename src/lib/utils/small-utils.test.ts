@@ -4,7 +4,8 @@ import { moveItem } from "./move-item";
 import { sortAccountsByUserOrder } from "./sort-accounts";
 import { ClientDecimal, toNumber } from "./decimal";
 import { getBaseUrl } from "./url";
-import { formatCurrency, formatDate, getMonthDateRange } from "./format";
+import { formatCurrency, formatDate, getMonthDateRange, parseCalendarDate } from "./format";
+import { cycleSortParams } from "./cycle-sort";
 
 describe("moveItem", () => {
   it("moves an item forward and back", () => {
@@ -57,6 +58,28 @@ describe("sortAccountsByUserOrder", () => {
     const list = [{ name: "b", sortOrder: null }, { name: "a", sortOrder: null }];
     sortAccountsByUserOrder(list);
     expect(list.map((a) => a.name)).toEqual(["b", "a"]);
+  });
+});
+
+describe("cycleSortParams", () => {
+  it("goes ascending, then descending, then back to unsorted", () => {
+    const first = cycleSortParams(new URLSearchParams("page=2"), "date");
+    expect(first.get("sortField")).toBe("date");
+    expect(first.get("sortOrder")).toBe("asc");
+    expect(first.get("page")).toBeNull();
+
+    const second = cycleSortParams(first, "date");
+    expect(second.get("sortOrder")).toBe("desc");
+
+    const third = cycleSortParams(second, "date");
+    expect(third.get("sortField")).toBeNull();
+    expect(third.get("sortOrder")).toBeNull();
+  });
+
+  it("starts a different column at ascending", () => {
+    const next = cycleSortParams(new URLSearchParams("sortField=amount&sortOrder=desc"), "date");
+    expect(next.get("sortField")).toBe("date");
+    expect(next.get("sortOrder")).toBe("asc");
   });
 });
 
@@ -113,15 +136,24 @@ describe("format helpers", () => {
   });
 
   it("formats a date with the localized long format", () => {
-    expect(formatDate("2026-10-25T12:00:00")).toContain("2026");
-    expect(formatDate(new Date(2026, 9, 25, 12))).toMatch(/Oct/);
+    expect(formatDate("2026-10-25")).toContain("2026");
+    expect(formatDate("2026-10-25")).toMatch(/Oct/);
   });
 
-  it("gives the first and last moment of a month", () => {
+  it("gives the first and last UTC moment of a month", () => {
     const range = getMonthDateRange("2026-02")!;
-    expect(range.startDate).toEqual(new Date(2026, 1, 1, 0, 0, 0, 0));
-    expect(range.endDate).toEqual(new Date(2026, 1, 28, 23, 59, 59, 999));
-    expect(getMonthDateRange("2028-02")!.endDate.getDate()).toBe(29); // leap year
+    expect(range.startDate.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+    expect(range.endDate.toISOString()).toBe("2026-02-28T23:59:59.999Z");
+    expect(getMonthDateRange("2028-02")!.endDate.getUTCDate()).toBe(29);
+  });
+
+  it("keeps 1 November in November, even when local midnight would be October in UTC", () => {
+    const firstOfNovember = parseCalendarDate("2026-11-01");
+    const october = getMonthDateRange("2026-10")!;
+    const november = getMonthDateRange("2026-11")!;
+    expect(firstOfNovember.toISOString()).toBe("2026-11-01T00:00:00.000Z");
+    expect(firstOfNovember >= october.startDate && firstOfNovember <= october.endDate).toBe(false);
+    expect(firstOfNovember >= november.startDate && firstOfNovember <= november.endDate).toBe(true);
   });
 
   it.each(["", "2026", "2026-13", "2026-00", "abc-10", "-5-3"])("returns null for the month %j", (value) => {

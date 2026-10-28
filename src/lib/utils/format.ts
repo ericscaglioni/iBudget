@@ -7,30 +7,51 @@ export const formatCurrency = (value: number, currency: string) => {
   }).format(value);
 };
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * A transaction date is a calendar day, not a time. Stored as UTC midnight so
+ * "1 November" stays November in every timezone (the server is UTC; the browser is not).
+ */
+export const parseCalendarDate = (value: string | Date): Date => {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw new RangeError("Invalid date");
+    }
+    return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+  }
+
+  const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    throw new RangeError("Invalid date");
+  }
+
+  return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+};
+
+export const calendarDateString = (value: string | Date): string => {
+  const date = parseCalendarDate(value);
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
+};
+
+export const calendarMonthString = (value: string | Date): string => calendarDateString(value).slice(0, 7);
+
 export const formatDate = (date: string | Date) => {
-  return dayjs(date).format("LL")
+  return dayjs.utc(parseCalendarDate(date)).format("LL");
 };
 
 /**
- * Get the start and end dates for a given month in YYYY-MM format
- * @param monthString - Month string in YYYY-MM format (e.g., "2025-10")
- * @returns Object with startDate and endDate for the month, or null if invalid
+ * Get the start and end instants for a given month in YYYY-MM format, in UTC.
  */
 export const getMonthDateRange = (monthString: string): { startDate: Date; endDate: Date } | null => {
   const [year, month] = monthString.split('-').map(Number);
-  
+
   if (!year || !month || month < 1 || month > 12) {
     return null;
   }
 
-  // Create month string in YYYY-MM format for dayjs
-  const monthDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  
-  // Start of the month
-  const startDate = dayjs(monthDate).startOf('month').toDate();
-  
-  // End of the month (last millisecond)
-  const endDate = dayjs(monthDate).endOf('month').toDate();
-  
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
   return { startDate, endDate };
 };

@@ -28,9 +28,10 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="w-full bg-white shadow-sm">
+    <>
+    <nav className="fixed top-0 inset-x-0 z-40 w-full bg-white shadow-sm">
       {/* Main navbar container */}
-      <div className="flex justify-between items-center py-3 sm:py-4 px-4 sm:px-6">
+      <div className="flex h-16 sm:h-[4.25rem] justify-between items-center px-4 sm:px-6">
         {/* LEFT SIDE: Logo + Nav Links (desktop) */}
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-lg sm:text-xl font-bold text-primary">
@@ -153,5 +154,8 @@ export const Navbar = () => {
         </div>
       )}
     </nav>
+    {/* Holds the page down because the bar is taken out of flow */}
+    <div className="h-16 sm:h-[4.25rem]" aria-hidden="true" />
+    </>
   );
 };

@@ -51,3 +51,5 @@ rather than inventing a new shape:
 
 - [Changelog entry](templates/changelog.md)
 - [Design record](templates/design-record.md)
+
+Accepted design records live in [docs/design](design/).

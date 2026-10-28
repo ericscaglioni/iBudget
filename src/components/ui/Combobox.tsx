@@ -31,6 +31,8 @@ type Props = {
   onCreateOption?: (label: string) => void;
   /** What gets created, e.g. "account". Used for the always-visible "Create new account…" row. */
   createLabel?: string;
+  /** Size of the mobile trigger. Desktop keeps the same input. */
+  size?: "sm" | "md" | "lg";
 };
 
 const CREATE_VALUE = "__create__";
@@ -45,6 +47,7 @@ export const Combobox = ({
   disabled = false,
   onCreateOption,
   createLabel,
+  size = "lg",
 }: Props) => {
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -94,7 +97,7 @@ export const Combobox = ({
   const showCreatePrompt = !!onCreateOption && !showCreate;
 
   return (
-    <div className="w-full sm:w-auto">
+    <div className="w-full min-w-0 max-w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
       
       {/* Mobile Modal Version */}
@@ -104,11 +107,11 @@ export const Combobox = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          label={label}
           allValues={allValues}
           disabled={disabled}
           onCreateOption={onCreateOption}
           createLabel={createLabel}
+          size={size}
         />
       ) : (
         /* Desktop Version */
