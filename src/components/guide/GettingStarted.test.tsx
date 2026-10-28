@@ -55,6 +55,7 @@ describe("GettingStarted", () => {
         ]}
       />
     );
+    expect(screen.getByText(/New transaction at the bottom right/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Add transaction" }));
     expect(openModal).toHaveBeenCalledOnce();
   });

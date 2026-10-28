@@ -27,7 +27,7 @@ const STEP_CONTENT: Record<StepId, { title: string; description: string; actionL
   "add-transaction": {
     title: "Add your first transaction",
     description:
-      "Log an expense or income. You can also use the + button at the bottom right, from any page.",
+      "Log an expense or income. You can also use New transaction at the bottom right, from any page.",
     actionLabel: "Add transaction",
   },
 };

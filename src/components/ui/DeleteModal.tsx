@@ -1,3 +1,5 @@
+"use client";
+
 import { showSuccess, showError } from "@/lib/utils/toast";
 import { ConfirmationModal } from "./ConfirmationModal";
 
@@ -14,11 +16,11 @@ export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelNam
     try {
       await onDelete();
       showSuccess(`${modelName} deleted successfully`);
-      onClose();
     } catch (error: unknown) {
       console.error(`Error deleting ${modelName}:`, error);
       const errorMessage = error instanceof Error ? error.message : `Failed to delete ${modelName.toLowerCase()}. Please try again.`;
       showError(errorMessage);
+      throw error;
     }
   };
 
@@ -32,5 +34,5 @@ export const DeleteModal = ({ onDelete, onClose, open, itemDescription, modelNam
       confirmVariant="danger"
       description={`Are you sure you want to delete this ${modelName.toLowerCase()}: ${itemDescription}? This action cannot be undone.`}
     />
-  );  
+  );
 };

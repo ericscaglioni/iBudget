@@ -54,8 +54,13 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
 
 ## Layout
 
+- The site header (`Navbar`) is fixed to the top of the viewport (a spacer keeps
+  the page from sliding under it). Do not invent a second top bar. Do not put
+  `overflow-x-hidden` on `html`/`body` — use `overflow-x-clip` (hidden makes
+  sticky/fixed headers fail).
 - Match the spacing, radius (`rounded-md`) and shadows of the neighbouring cards and tables.
 - Stack on mobile; follow the existing `md` / `xl` breakpoints (the dashboard grid is the reference: 1 column, then 3, then 5).
+- List pagination stays on one row on a phone: rows-per-page on the left, arrows and "Page x of x" on the right (no Previous/Next words).
 - Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.
 - Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker.
 - In a modal with a long list, the list scrolls and the action footer stays visible (`ReorderAccountsModal` is the reference).

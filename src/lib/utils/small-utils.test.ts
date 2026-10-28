@@ -5,6 +5,7 @@ import { sortAccountsByUserOrder } from "./sort-accounts";
 import { ClientDecimal, toNumber } from "./decimal";
 import { getBaseUrl } from "./url";
 import { formatCurrency, formatDate, getMonthDateRange, parseCalendarDate } from "./format";
+import { cycleSortParams } from "./cycle-sort";
 
 describe("moveItem", () => {
   it("moves an item forward and back", () => {
@@ -57,6 +58,28 @@ describe("sortAccountsByUserOrder", () => {
     const list = [{ name: "b", sortOrder: null }, { name: "a", sortOrder: null }];
     sortAccountsByUserOrder(list);
     expect(list.map((a) => a.name)).toEqual(["b", "a"]);
+  });
+});
+
+describe("cycleSortParams", () => {
+  it("goes ascending, then descending, then back to unsorted", () => {
+    const first = cycleSortParams(new URLSearchParams("page=2"), "date");
+    expect(first.get("sortField")).toBe("date");
+    expect(first.get("sortOrder")).toBe("asc");
+    expect(first.get("page")).toBeNull();
+
+    const second = cycleSortParams(first, "date");
+    expect(second.get("sortOrder")).toBe("desc");
+
+    const third = cycleSortParams(second, "date");
+    expect(third.get("sortField")).toBeNull();
+    expect(third.get("sortOrder")).toBeNull();
+  });
+
+  it("starts a different column at ascending", () => {
+    const next = cycleSortParams(new URLSearchParams("sortField=amount&sortOrder=desc"), "date");
+    expect(next.get("sortField")).toBe("date");
+    expect(next.get("sortOrder")).toBe("asc");
   });
 });
 

@@ -9,5 +9,6 @@
 /* Global styling */
 html,
 body {
-  @apply font-sans bg-background text-slateDark overflow-x-hidden overscroll-x-none;
+  /* clip, not hidden: hidden makes the page a scroll container and sticky headers fail */
+  @apply font-sans bg-background text-slateDark overflow-x-clip overscroll-x-none;
 }

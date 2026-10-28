@@ -15,6 +15,7 @@ type Props = {
   disabled?: boolean;
   onCreateOption?: (label: string) => void;
   createLabel?: string;
+  size?: "sm" | "md" | "lg";
 };
 
 export const MobileCombobox = ({
@@ -26,6 +27,7 @@ export const MobileCombobox = ({
   disabled = false,
   onCreateOption,
   createLabel,
+  size = "lg",
 }: Props) => {
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
 
@@ -37,7 +39,7 @@ export const MobileCombobox = ({
         onClick={() => !disabled && setIsMobileModalOpen(true)}
         disabled={disabled}
         variant="outline"
-        size="lg"
+        size={size}
         className="w-full justify-between text-left"
       >
         <span className={selected?.label ? "text-gray-900" : "text-gray-500"}>

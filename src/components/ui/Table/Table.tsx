@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Filters, TableFilter } from "./Filters";
 import { Pagination } from "./Pagination";
 import { DEFAULT_PAGE_SIZE } from "@/lib/pagination";
+import { cycleSortParams } from "@/lib/utils/cycle-sort";
 import { useTransition } from "react";
 import clsx from "clsx";
 
@@ -53,16 +54,7 @@ export function Table<TData>({
   const pageCount = Math.ceil(totalCount / pageSize);
 
   const handleSortChange = (columnId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const currentSortField = params.get("sortField");
-    const currentSortOrder = params.get("sortOrder") || "desc";
-
-    const isSameColumn = currentSortField === columnId;
-    const nextOrder = isSameColumn && currentSortOrder === "asc" ? "desc" : "asc";
-
-    params.set("sortField", columnId);
-    params.set("sortOrder", nextOrder);
-    params.delete("page"); // a new order, so start from the first page
+    const params = cycleSortParams(searchParams, columnId);
 
     startTransition(() => {
       router.push(`${basePath}?${params.toString()}`);
@@ -91,38 +83,59 @@ export function Table<TData>({
           <thead className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header) => {
+                  const canSort = enableSorting && header.column.getCanSort();
+                  const isSorted = searchParams.get("sortField") === header.column.id;
+                  const sortOrder = searchParams.get("sortOrder");
+                  const sortIcon = !isSorted
+                    ? "reorder"
+                    : sortOrder === "asc"
+                      ? "chevronUp"
+                      : "chevronDown";
+
+                  return (
                   <th
                     key={header.id}
+                    aria-sort={
+                      canSort && isSorted
+                        ? sortOrder === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : canSort
+                          ? "none"
+                          : undefined
+                    }
                     className={clsx(
                       "px-2 sm:px-4 py-2 font-medium text-gray-700 text-xs sm:text-sm",
-                      header.column.columnDef.meta?.className,
-                      enableSorting && header.column.getCanSort() && "cursor-pointer"
+                      header.column.columnDef.meta?.className
                     )}
-                    onClick={() => enableSorting && header.column.getCanSort() && handleSortChange(header.column.id)}
                   >
-                    {header.isPlaceholder ? null : (
+                    {header.isPlaceholder ? null : canSort ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSortChange(header.column.id)}
+                        className={clsx(
+                          "inline-flex items-center gap-1 rounded-sm text-left font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                          header.column.columnDef.meta?.className?.includes("text-center") && "justify-center w-full"
+                        )}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <Icon
+                          name={sortIcon}
+                          className={clsx("w-3.5 h-3.5", isSorted ? "text-gray-700" : "text-gray-400")}
+                        />
+                      </button>
+                    ) : (
                       <div className={clsx(
                         "flex items-center gap-1",
                         header.column.columnDef.meta?.className?.includes("text-center") && "justify-center"
                       )}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {enableSorting && header.column.getCanSort() && (
-                          <>
-                            {searchParams.get("sortField") === header.column.id && (
-                              <span className="text-xs">
-                                <Icon
-                                  name={searchParams.get("sortOrder") === "asc" ? "chevronUp" : "chevronDown"}
-                                  className="w-3 h-3"
-                                />
-                              </span>
-                            )}
-                          </>
-                        )}
                       </div>
                     )}
                   </th>
-                ))}
+                  );
+                })}
               </tr>
             ))}
           </thead>
