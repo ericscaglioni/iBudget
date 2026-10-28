@@ -1,7 +1,8 @@
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
+import { ensureUserRow } from "@/lib/server/utils/users";
 import { dayjs } from "@/lib/utils/dayjs.js";
-import { getMonthDateRange } from "@/lib/utils/format";
+import { getMonthDateRange, parseCalendarDate } from "@/lib/utils/format";
 import { QueryParams } from "@/lib/utils/parse-query";
 import { sanitizeFilterInput } from "@/lib/utils/sanitize";
 import { Transaction, TransactionType } from "@prisma/client";
@@ -240,6 +241,7 @@ const resolveTransferAmounts = async (props: ResolveTransferAmountsProps) => {
 
 export const createTransferTransaction = async (userId: string, props: TransferTransactionProps) => {
   const { fromAccountId, toAccountId, amount, toAmount, description, date } = props;
+  await ensureUserRow(userId);
 
   const transferCategory = await prisma.category.findFirst({
     where: { userId: null, name: "Transfer" },
@@ -269,7 +271,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
         categoryId: transferCategory.id,
         amount: outgoingAmount,
         description: description ?? "Transfer to another account",
-        date: new Date(date),
+        date: parseCalendarDate(date),
       },
       {
         type: TransactionType.income,
@@ -279,7 +281,7 @@ export const createTransferTransaction = async (userId: string, props: TransferT
         categoryId: transferCategory.id,
         amount: incomingAmount,
         description: description ?? "Transfer from another account",
-        date: new Date(date),
+        date: parseCalendarDate(date),
       },
     ],
   });
@@ -287,8 +289,9 @@ export const createTransferTransaction = async (userId: string, props: TransferT
   return { message: "Transfer created successfully" };
 };
 
-type CreateTransactionProps = Pick<Transaction, "type" | "accountId" | "categoryId" | "description" | "date"> & {
+type CreateTransactionProps = Pick<Transaction, "type" | "accountId" | "categoryId" | "description"> & {
   amount: number;
+  date: string | Date;
   isRecurring?: boolean;
 };
 
@@ -299,6 +302,8 @@ export const createTransaction = async (userId: string, props: CreateTransaction
     throw new ValidationError('Missing required transaction data');
   }
 
+  await ensureUserRow(userId);
+
   const created = await prisma.transaction.create({
     data: {
       userId,
@@ -307,7 +312,7 @@ export const createTransaction = async (userId: string, props: CreateTransaction
       accountId,
       categoryId,
       description,
-      date,
+      date: parseCalendarDate(date),
       isRecurring: isRecurring || false,
     },
   });
@@ -325,10 +330,10 @@ interface CreateRecurringTransactionProps {
   accountId: string;
   categoryId: string;
   description: string;
-  date: Date;
+  date: string | Date;
   frequency: string;
-  endsAt?: Date;
-}
+  endsAt?: string | Date;
+};
 
 export const createRecurringTransaction = async (
   userId: string,
@@ -340,17 +345,19 @@ export const createRecurringTransaction = async (
     throw new ValidationError('Missing required transaction data');
   }
 
+  await ensureUserRow(userId);
+
   // Generate a unique recurringId for all occurrences
   const recurringId = uuid();
 
   // Generate initial transaction + future occurrences using dayjs for reliable date math
   const transactions = [];
-  const startDate = dayjs(date); // Original transaction date
+  const startDate = dayjs.utc(parseCalendarDate(date));
   let currentDate = startDate;
 
   // Determine how many occurrences to generate
   const defaultOccurrences = 12; // Default if no end date provided
-  const finalDate = endsAt ? dayjs(endsAt) : null;
+  const finalDate = endsAt ? dayjs.utc(parseCalendarDate(endsAt)) : null;
 
   // Calculate the interval unit based on frequency
   const getIntervalConfig = (freq: string): { amount: number; unit: string } => {
@@ -391,7 +398,7 @@ export const createRecurringTransaction = async (
       date: currentDate.toDate(), // Convert dayjs to native Date for Prisma
       isRecurring: true,
       frequency,
-      endsAt: endsAt || null,
+      endsAt: endsAt ? parseCalendarDate(endsAt) : null,
       recurringId,
     });
 
@@ -414,7 +421,7 @@ export const createRecurringTransaction = async (
       date: startDate.toDate(),
       isRecurring: true,
       frequency,
-      endsAt: endsAt || null,
+      endsAt: endsAt ? parseCalendarDate(endsAt) : null,
       recurringId,
     });
   }
@@ -504,7 +511,7 @@ export const updateTransaction = async (
       accountId,
       categoryId,
       description,
-      date,
+      date: parseCalendarDate(date),
     },
   });
 
@@ -569,7 +576,7 @@ export const updateTransferTransaction = async (userId: string, props: UpdateTra
         amount: outgoingAmount,
         accountId: fromAccountId,
         description,
-        date: new Date(date),
+        date: parseCalendarDate(date),
       },
     }),
     prisma.transaction.update({
@@ -578,7 +585,7 @@ export const updateTransferTransaction = async (userId: string, props: UpdateTra
         amount: incomingAmount,
         accountId: toAccountId,
         description,
-        date: new Date(date),
+        date: parseCalendarDate(date),
       },
     }),
   ]);

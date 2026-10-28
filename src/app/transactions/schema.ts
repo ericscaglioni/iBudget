@@ -1,4 +1,7 @@
 import { DESCRIPTION_MAX_LENGTH, TransactionTypeEnum } from "@/lib/constants";
+import { parseCalendarDate } from "@/lib/utils/format";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Resolver } from "react-hook-form";
 import { z } from "zod";
 
 export const createTransactionFormSchema = (accountOptions: { value: string; currency?: string }[], categoryOptions: { id: string }[]) => z
@@ -122,9 +125,9 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
 
     // Validate endsAt is after date
     if (data.endsAt && data.date) {
-      const transactionDate = new Date(data.date);
-      const endsAtDate = new Date(data.endsAt);
-      
+      const transactionDate = parseCalendarDate(data.date);
+      const endsAtDate = parseCalendarDate(data.endsAt);
+
       if (endsAtDate <= transactionDate) {
         ctx.addIssue({
           path: ["endsAt"],
@@ -139,3 +142,20 @@ export type TransactionFormInput = z.infer<ReturnType<typeof createTransactionFo
 
 // Keep the old schema for backward compatibility
 export const TransactionFormSchema = createTransactionFormSchema([], []);
+
+/**
+ * Resolver that re-reads the account and category lists on every validate.
+ * Needed when a category or account is created from inside the modal: setValue
+ * runs before the next render, so a schema closed over the old lists would
+ * reject the new id.
+ */
+export const createTransactionFormResolver = (
+  getAccountOptions: () => { value: string; currency?: string }[],
+  getCategoryOptions: () => { id: string }[],
+): Resolver<TransactionFormInput> =>
+  async (values, context, options) =>
+    zodResolver(createTransactionFormSchema(getAccountOptions(), getCategoryOptions()))(
+      values,
+      context,
+      options,
+    );

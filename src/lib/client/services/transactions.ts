@@ -6,10 +6,11 @@ const transactionsPath = "/api/transactions";
 
 type TransactionPayload = Omit<
   Transaction,
-  "id" | "userId" | "createdAt" | "updatedAt" | "type" | "accountId" | "categoryId" | "transferId" | "isRecurring" | "frequency" | "endsAt" | "recurringId" | "amount"
+  "id" | "userId" | "createdAt" | "updatedAt" | "type" | "accountId" | "categoryId" | "transferId" | "isRecurring" | "frequency" | "endsAt" | "recurringId" | "amount" | "date"
 > & {
   type: TransactionTypeEnum;
   amount: number; // Client-safe: Decimal converted to number
+  date: string | Date;
   accountId?: string;
   fromAccountId?: string;
   toAccountId?: string;

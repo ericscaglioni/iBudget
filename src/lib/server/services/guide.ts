@@ -1,5 +1,6 @@
 import { ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
+import { ensureUserRow } from "@/lib/server/utils/users";
 import { getAvailableCurrencies } from "./settings";
 
 /** Tips a user can dismiss. Add an id here to introduce a new dismissible tip. */
@@ -33,6 +34,7 @@ export const dismissTip = async (userId: string, tipId: unknown) => {
   if (dismissed.includes(tipId)) return;
 
   const next = [...dismissed, tipId];
+  await ensureUserRow(userId);
   await prisma.userGuide.upsert({
     where: { userId },
     create: { userId, dismissed: next },

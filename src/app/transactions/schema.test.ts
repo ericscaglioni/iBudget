@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { DESCRIPTION_MAX_LENGTH } from "@/lib/constants";
-import { TransactionFormSchema, createTransactionFormSchema } from "./schema";
+import type { FieldErrors } from "react-hook-form";
+import {
+  TransactionFormInput,
+  TransactionFormSchema,
+  createTransactionFormResolver,
+  createTransactionFormSchema,
+} from "./schema";
 
 const accounts = [
   { value: "usd1", currency: "USD" },
@@ -116,5 +122,33 @@ describe("createTransactionFormSchema: recurring transactions", () => {
 describe("TransactionFormSchema (no options)", () => {
   it("cannot match any account or category", () => {
     expect(TransactionFormSchema.safeParse(expense).success).toBe(false);
+  });
+});
+
+describe("createTransactionFormResolver", () => {
+  const resolverOptions = {
+    fields: {},
+    shouldUseNativeValidation: false,
+  };
+
+  it("accepts a category or account added after the resolver was created", async () => {
+    const liveAccounts = [...accounts];
+    const liveCategories = [...categories];
+    const resolver = createTransactionFormResolver(
+      () => liveAccounts,
+      () => liveCategories,
+    );
+
+    const created = { ...expense, categoryId: "new-cat", accountId: "new-acc" } as TransactionFormInput;
+    const before = await resolver(created, undefined, resolverOptions);
+    const beforeErrors = before.errors as FieldErrors<TransactionFormInput>;
+    expect(beforeErrors.categoryId?.message).toBe("Please select a valid category");
+    expect(beforeErrors.accountId?.message).toBe("Please select a valid account");
+
+    liveCategories.push({ id: "new-cat" });
+    liveAccounts.push({ value: "new-acc", currency: "USD" });
+
+    const after = await resolver(created, undefined, resolverOptions);
+    expect(after.errors).toEqual({});
   });
 });

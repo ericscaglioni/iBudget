@@ -121,7 +121,7 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
           6-Month Trend
         </h3>
         <div className="flex items-center justify-center h-64 text-gray-500">
-          <p className="text-sm">No data available for the past 6 months</p>
+          <p className="text-sm">No data available for these months</p>
         </div>
       </div>
     );

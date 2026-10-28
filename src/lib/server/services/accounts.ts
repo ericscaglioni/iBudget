@@ -3,6 +3,7 @@ import { QueryParams } from "@/lib/utils/parse-query";
 import { Account, AccountType, TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { NotFoundError, ValidationError } from "@/lib/errors/AppError";
+import { initializeUserDefaults } from "@/lib/server/utils/initializeUserDefaults";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -243,6 +244,9 @@ export const createAccount = async (userId: string, data: Omit<Account, "id" | "
   if (!name || !type || !currency) {
     throw new ValidationError('Missing required account data');
   }
+
+  // Webhook may not have run yet (typical locally). The users row must exist before the FK insert.
+  await initializeUserDefaults(userId);
 
   const created = await prisma.account.create({
     data: {

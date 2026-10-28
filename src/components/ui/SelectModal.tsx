@@ -62,7 +62,6 @@ export const SelectModal = ({
     !!onCreateOption &&
     trimmedQuery !== "" &&
     !options.some((opt) => opt.label.toLowerCase() === trimmedQuery.toLowerCase());
-  // Nothing typed yet: still show the row, so users can tell they are able to add a new one
   const showCreatePrompt = !!onCreateOption && !showCreate;
 
   const handleCreate = () => {
@@ -74,8 +73,8 @@ export const SelectModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      <div className="bg-white w-full h-full flex flex-col">
+    <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-x-hidden">
+      <div className="bg-white w-full min-w-0 h-full flex flex-col">
         <div className="p-4 border-b">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">{title}</h3>
@@ -88,7 +87,6 @@ export const SelectModal = ({
               <Icon name="close" className="size-6" />
             </Button>
           </div>
-          {/* Search input */}
           <Input
             type="text"
             placeholder={searchPlaceholder}
@@ -97,7 +95,7 @@ export const SelectModal = ({
             className="text-base"
           />
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
           {allValues && (
             <Button
               onClick={() => handleSelect("")}

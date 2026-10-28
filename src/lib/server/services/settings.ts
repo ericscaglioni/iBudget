@@ -1,6 +1,7 @@
 import { DEFAULT_BASE_CURRENCY } from "@/lib/constants";
 import { ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
+import { ensureUserRow } from "@/lib/server/utils/users";
 
 /**
  * Currencies the user actually holds accounts in, most used first.
@@ -50,6 +51,8 @@ export const updateSettings = async (userId: string, data: { defaultCurrency?: s
     if (!available.includes(defaultCurrency)) {
       throw new ValidationError("You can only pick a currency you have an account in");
     }
+
+    await ensureUserRow(userId);
 
     await prisma.userSettings.upsert({
       where: { userId },

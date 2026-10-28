@@ -74,6 +74,11 @@ describe("createCategory", () => {
   it("creates the category for the user", async () => {
     db.category.create.mockResolvedValue({ id: "c1" });
     await expect(categories.createCategory("u1", data)).resolves.toEqual({ id: "c1" });
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.category.create).toHaveBeenCalledWith({ data: { userId: "u1", name: "Food", color: "#fff", type: "expense" } });
   });
 

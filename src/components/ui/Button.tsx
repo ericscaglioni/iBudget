@@ -1,16 +1,16 @@
 'use client';
 
 import clsx from 'clsx';
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ButtonHTMLAttributes, ReactNode, forwardRef } from 'react';
 
 const base =
   'inline-flex items-center justify-center font-medium rounded-md transition focus:outline-none focus:ring-2 focus:ring-primary/50';
 
 const variants = {
-  primary: 'bg-primary text-white hover:bg-primary/90',
-  outline: 'border border-gray-300 text-gray-800 bg-white hover:bg-gray-50',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
-  ghost: 'bg-transparent text-gray-500 hover:text-gray-700',
+    primary: 'bg-primary text-white hover:bg-primary/90',
+    outline: 'border border-gray-300 text-gray-800 bg-white hover:bg-gray-50',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
+    ghost: 'bg-transparent text-gray-500 hover:text-gray-700',
 };
 
 const sizes = {
@@ -29,19 +29,23 @@ export type ButtonProps = {
   isLoading?: boolean;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
 
-export const Button = ({
-  children,
-  variant = 'primary',
-  size = 'md',
-  isLoading = false,
-  disabled,
-  className,
-  ...props
-}: ButtonProps) => {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    children,
+    variant = 'primary',
+    size = 'md',
+    isLoading = false,
+    disabled,
+    className,
+    ...props
+  },
+  ref,
+) {
   const isDisabled = isLoading || disabled;
 
   return (
     <button
+      ref={ref}
       type="button"
       disabled={isDisabled}
       className={clsx(
@@ -63,4 +67,4 @@ export const Button = ({
       {children}
     </button>
   );
-};
+});

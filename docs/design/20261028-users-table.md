@@ -36,5 +36,10 @@ joins and ops, not a second login system, and they are not shown in the app.
   on the Clerk webhook if it is not already. Existing people are filled on
   deploy from Clerk (`scripts/initialize-existing-users.ts`). Rows that exist
   only in MySQL keep a null name and email rather than blocking the migration.
+- The webhook often never reaches localhost. Inserts that reference `users.id`
+  therefore upsert a row for the signed-in Clerk id first (`ensureUserRow`).
+  If name and email are still empty, they are copied from Clerk (`current`
+  session user via `clerkClient().users.getUser`). The webhook and
+  `init:users` still refresh them when they run.
 - Do not add a second user id. Do not render this table in the UI unless a
   later decision says so.

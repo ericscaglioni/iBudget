@@ -82,6 +82,11 @@ describe("updateSettings", () => {
 
     const result = await settings.updateSettings("u1", { defaultCurrency: "EUR" });
 
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.userSettings.upsert).toHaveBeenCalledWith({
       where: { userId: "u1" },
       create: { userId: "u1", baseCurrency: "EUR" },

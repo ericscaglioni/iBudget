@@ -206,11 +206,24 @@ describe("createAccount", () => {
   const data = { name: "Main", type: "checking", currency: "USD", initialBalance: 10 } as never;
 
   it("creates the account for the user", async () => {
+    db.category.findFirst.mockResolvedValue({ id: "c1" });
     db.account.create.mockResolvedValue({ id: "a1" });
     await expect(accounts.createAccount("u1", data)).resolves.toEqual({ id: "a1" });
+    expect(db.user.upsert).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      create: { id: "u1" },
+      update: {},
+    });
     expect(db.account.create).toHaveBeenCalledWith({
       data: { userId: "u1", name: "Main", type: "checking", currency: "USD", initialBalance: 10 },
     });
+  });
+
+  it("does not insert an account until the users row exists", async () => {
+    db.category.findFirst.mockResolvedValue({ id: "c1" });
+    db.user.upsert.mockRejectedValue(new Error("users missing"));
+    await expect(accounts.createAccount("u1", data)).rejects.toThrow("users missing");
+    expect(db.account.create).not.toHaveBeenCalled();
   });
 
   it.each([{ name: "" }, { type: "" }, { currency: "" }])("needs a name, type and currency (%o)", async (override) => {

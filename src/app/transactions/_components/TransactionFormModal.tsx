@@ -3,14 +3,14 @@
 import { ComboboxOption, FormCombobox, FormModal, FormTextInput } from "@/components/ui";
 import { transactionService } from "@/lib/client/services";
 import { TransactionTypeEnum } from "@/lib/constants";
+import { calendarDateString } from "@/lib/utils/format";
 import { dayjs } from "@/lib/utils/dayjs.js";
 import { showError, showSuccess } from "@/lib/utils/toast";
 import { Radio, RadioGroup } from "@headlessui/react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { TransactionFormInput, createTransactionFormSchema } from "../schema";
+import { TransactionFormInput, createTransactionFormResolver } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
 import { EditRecurringModal } from "./EditRecurringModal";
 import { AccountField, FormFieldsByType } from "./FormFieldsByType";
@@ -86,8 +86,16 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     [baseCategoryOptions, createdCategoryOptions]
   );
   
+  const accountOptionsRef = useRef(accountOptions);
+  const categoryOptionsRef = useRef(categoryOptions);
+  accountOptionsRef.current = accountOptions;
+  categoryOptionsRef.current = categoryOptions;
+
   const form = useForm<TransactionFormInput>({
-    resolver: zodResolver(createTransactionFormSchema(accountOptions, categoryOptions)),
+    resolver: createTransactionFormResolver(
+      () => accountOptionsRef.current,
+      () => categoryOptionsRef.current,
+    ),
     defaultValues: getDefaultValues(mode),
   });
   
@@ -98,7 +106,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   const loadTransferTransaction = useCallback(async (transaction: TransactionWithDetails, isStale: () => boolean) => {
     const baseValues = {
       amount: String(transaction.amount),
-      date: dayjs(transaction.date).format("YYYY-MM-DD"),
+      date: calendarDateString(transaction.date),
       description: transaction.description,
       type: TransactionTypeEnum.transfer,
       fromAccountId: transaction.accountId,
@@ -134,7 +142,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     setMode(mode);
     form.reset({
       amount: String(transaction.amount),
-      date: dayjs(transaction.date).format("YYYY-MM-DD"),
+      date: calendarDateString(transaction.date),
       description: transaction.description,
       accountId: transaction.accountId,
       // Database NULLs arrive as null, which the form schema rejects (and for recurring-only fields
@@ -143,7 +151,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       type: mode,
       isRecurring: transaction.isRecurring || false,
       frequency: (transaction.frequency ?? undefined) as "daily" | "weekly" | "monthly" | "yearly" | undefined,
-      endsAt: transaction.endsAt ? dayjs(transaction.endsAt).format("YYYY-MM-DD") : undefined,
+      endsAt: transaction.endsAt ? calendarDateString(transaction.endsAt) : undefined,
     });
   }, [form]);
 
@@ -191,9 +199,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       ...data,
       amount: parseFloat(data.amount),
       toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
-      date: dayjs(data.date).toDate(),
+      date: data.date,
       type: mode,
-      endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
+      endsAt: data.endsAt || undefined,
     };
 
     await transactionService.createTransaction(payload);
@@ -206,9 +214,9 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
       ...data,
       amount: parseFloat(data.amount),
       toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
-      date: dayjs(data.date).toDate(),
+      date: data.date,
       type: mode,
-      endsAt: data.endsAt ? dayjs(data.endsAt).toDate() : undefined,
+      endsAt: data.endsAt || undefined,
     };
 
     await transactionService.updateTransaction(
@@ -287,7 +295,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   };
 
   const handleAccountCreated = (account: { id: string; name: string; currency: string }) => {
-    setCreatedAccountOptions((prev) => [...prev, { label: account.name, value: account.id, currency: account.currency }]);
+    const created = { label: account.name, value: account.id, currency: account.currency };
+    const nextCreated = [...createdAccountOptions, created];
+    accountOptionsRef.current = [
+      ...baseAccountOptions,
+      ...nextCreated.filter((item) => !baseAccountOptions.some((o) => o.value === item.value)),
+    ];
+    setCreatedAccountOptions(nextCreated);
     setValue(accountFieldToFill, account.id, { shouldValidate: true, shouldDirty: true });
   };
 
@@ -297,7 +311,12 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   };
 
   const handleCategoryCreated = (category: CategoryOption) => {
-    setCreatedCategoryOptions((prev) => [...prev, category]);
+    const nextCreated = [...createdCategoryOptions, category];
+    categoryOptionsRef.current = [
+      ...baseCategoryOptions,
+      ...nextCreated.filter((item) => !baseCategoryOptions.some((o) => o.id === item.id)),
+    ];
+    setCreatedCategoryOptions(nextCreated);
     // The dropdown only lists categories matching the current mode, so only select it if it matches
     if (category.type === mode) {
       setValue("categoryId", category.id, { shouldValidate: true, shouldDirty: true });
@@ -328,13 +347,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
           transaction ? undefined : { label: "Save & add another", onSubmit: onSubmitAndAddAnother }
         }
       >
-        <RadioGroup value={mode} onChange={handleModeChange} className="flex gap-4 mb-4">
+        <RadioGroup value={mode} onChange={handleModeChange} className="flex gap-2 mb-4 min-w-0">
           {["expense", "income", "transfer"].map((type) => (
             <Radio
               key={type}
               value={type}
               className={({ checked }) =>
-                `px-4 py-1.5 rounded-md text-sm font-medium cursor-pointer ${
+                `flex-1 min-w-0 text-center px-2 py-1.5 rounded-md text-sm font-medium cursor-pointer ${
                   checked ? "bg-primary text-white" : "bg-gray-100 text-gray-700"
                 }`
               }

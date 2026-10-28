@@ -53,16 +53,29 @@ transactions", …) are skipped — do not do that.
   Clerk), `initializeUserDefaults`, or `deleteUserData`. There is no public
   HTTP API that deletes a user's data. Clerk remains the login source of
   truth; `users` is only a local directory for joins.
+- Writes that insert a `userId` (accounts, categories, transactions, settings,
+  dismissed tips) call `ensureUserRow` first, so a missing webhook — typical
+  when developing locally — cannot fail the foreign key. If name and email
+  are empty, they are copied from Clerk. Creating an account, and opening the
+  dashboard, also run `initializeUserDefaults` so default categories exist.
 
 ## Data that must stay consistent
 
 - **Transfers.** Two rows, same `transferId`. Resolve the transfer from the
   database (the id of the row being edited), never from a `transferId` the
   client volunteers. Cross-currency requires a numeric `toAmount`.
+- **Calendar dates.** Parse and filter with `parseCalendarDate` /
+  `getMonthDateRange` in `src/lib/utils/format.ts`. The browser sends
+  `YYYY-MM-DD`; the database stores UTC midnight. Month filters and
+  `formatDate` use UTC so the 1st of a month cannot fall into the previous
+  one.
 - **Balances.** `initialBalance` plus income minus expense, including both
-  sides of a transfer, excluding future dates.
+  sides of a transfer, excluding future dates (`date <= now`).
 - **Dashboard month.** See [product overview](product-overview.md) — same
-  currency vs currency exchange.
+  currency vs currency exchange. Account balances are as of today. Monthly
+  totals include booked future months through the latest transaction date.
+  The six-month chart is the six months ending at the current month, or at
+  the latest booked month if that is later.
 - **Account order.** Nullable `sortOrder`. Ordered accounts first, then
   never-ordered ones by name. Reorder is per currency
   (`PUT /api/accounts/order`).

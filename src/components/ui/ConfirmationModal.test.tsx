@@ -18,6 +18,7 @@ describe("ConfirmationModal", () => {
         confirmVariant="danger"
       />
     );
+    expect(screen.getByRole("dialog").querySelector(".rounded-none")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(onConfirm).toHaveBeenCalledOnce();
     expect(onClose).toHaveBeenCalledOnce();

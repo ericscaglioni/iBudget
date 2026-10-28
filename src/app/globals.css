@@ -7,6 +7,7 @@
 @tailwind utilities;
 
 /* Global styling */
+html,
 body {
-  @apply font-sans bg-background text-slateDark;
+  @apply font-sans bg-background text-slateDark overflow-x-hidden overscroll-x-none;
 }

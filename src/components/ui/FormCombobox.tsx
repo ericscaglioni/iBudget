@@ -37,7 +37,7 @@ export const FormCombobox = <TData extends FieldValues>({
   const error = errors[name]?.message as string | undefined;
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <Combobox
         options={options}
         label={label}

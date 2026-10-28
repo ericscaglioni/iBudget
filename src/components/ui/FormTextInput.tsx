@@ -26,7 +26,7 @@ export const FormTextInput = <TData extends FieldValues,>({
   const error = errors[name]?.message as string | undefined;
   
   return (
-    <div className={className}>
+    <div className={className ? `min-w-0 max-w-full ${className}` : "min-w-0 max-w-full"}>
       <Input
         label={label}
         {...form.register(name)}

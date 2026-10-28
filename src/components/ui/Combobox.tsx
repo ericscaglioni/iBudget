@@ -94,7 +94,7 @@ export const Combobox = ({
   const showCreatePrompt = !!onCreateOption && !showCreate;
 
   return (
-    <div className="w-full sm:w-auto">
+    <div className="w-full min-w-0 max-w-full sm:w-auto">
       {label && <label className="block text-sm font-medium mb-1">{label}</label>}
       
       {/* Mobile Modal Version */}
@@ -104,7 +104,6 @@ export const Combobox = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          label={label}
           allValues={allValues}
           disabled={disabled}
           onCreateOption={onCreateOption}

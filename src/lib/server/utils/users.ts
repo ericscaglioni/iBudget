@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export type UserProfile = {
   id: string;
@@ -57,8 +58,26 @@ export const upsertUserProfile = async (profile: UserProfile) => {
   });
 };
 
+const profileFromClerkId = async (userId: string): Promise<UserProfile | null> => {
+  try {
+    if (typeof clerkClient !== "function") return null;
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    return profileFromClerkUser(user);
+  } catch {
+    // Missing keys or Clerk downtime: still create the id so FKs work
+    return null;
+  }
+};
+
 export const ensureUserRow = async (userId: string) => {
   const id = requireUserId(userId);
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (existing?.email || existing?.name) return existing;
+
+  const profile = await profileFromClerkId(id);
+  if (profile) return upsertUserProfile(profile);
+
   return prisma.user.upsert({
     where: { id },
     create: { id },

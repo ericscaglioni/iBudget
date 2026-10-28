@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import utc from "dayjs/plugin/utc";
 
-// Enable plugin
+dayjs.extend(utc);
 dayjs.extend(localizedFormat);
 
 // Optional: set locale dynamically if needed

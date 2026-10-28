@@ -22,6 +22,7 @@ extend that kit instead of styling a one-off.
 | Expand / collapse | `Collapsible` | toggling `hidden` (the content jumps) |
 | Empty list | `EmptyState` | a centred paragraph |
 | Feedback | `showSuccess` / `showError` / `showInfo` from `@/lib/utils/toast` | `alert()` or a new toast style |
+| Short explanation on a figure | `Tooltip` | a native `title` or a one-off popover |
 | Money | `ClientOnlyCurrency` | formatting currency in a way that mismatches the rest |
 
 ### `Button` variants
@@ -55,6 +56,8 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
 
 - Match the spacing, radius (`rounded-md`) and shadows of the neighbouring cards and tables.
 - Stack on mobile; follow the existing `md` / `xl` breakpoints (the dashboard grid is the reference: 1 column, then 3, then 5).
+- Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.
+- Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker.
 - In a modal with a long list, the list scrolls and the action footer stays visible (`ReorderAccountsModal` is the reference).
 - Height changes must be animated. `Collapsible` exists for that; do not snap content in and out.
 
