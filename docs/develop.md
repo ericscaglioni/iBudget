@@ -67,3 +67,42 @@ Check the other pages that share the state you touched.
   `main`.
 - Vercel: project `qa-ibudget` deploys `develop` (Preview). Project `ibudget`
   deploys `main` (Production). Each project ignores the other branch.
+
+## Recovering a Vercel-only database password
+
+After the 2026-10-21 Railway incident, QA and Prod passwords were rotated
+inside MySQL (`scripts/rotate-db-password.sh`) and saved only as Vercel
+`DATABASE_URL`. That variable is **Sensitive**: the dashboard, API and this
+agent cannot read it back. Railway still has the old `MYSQLPASSWORD` /
+`MYSQL_ROOT_PASSWORD`, so Railway's Database tab and DBeaver (if copied from
+Railway) fail with `Access denied for user 'root'`.
+
+QA was recovered on 2026-10-28. Use the same path for **Prod** when needed.
+Do not print the password, URL, or `TARGET_DB_PASSWORD`. Copy the new URL to
+the clipboard and a password manager.
+
+1. Confirm `scripts/adopt-db-password-from-env.mjs` is in the branch that
+   Vercel will build (`develop` for QA, `main` for Prod). `vercel-build`
+   runs it after `prisma migrate deploy`. It is a no-op unless
+   `TARGET_DB_PASSWORD` is set (32–64 alphanumeric chars).
+2. Set `TARGET_DB_PASSWORD` on the Vercel project as **encrypted**, not
+   Sensitive (`qa-ibudget` Preview+Production, or `ibudget` Production).
+3. Deploy. Migrate still uses the old `DATABASE_URL`; the script then
+   `ALTER USER`s `root@%` and verifies the new password.
+4. Update `DATABASE_URL` in place. Do not rename a Sensitive variable (Vercel
+   returns 400). Then clear `TARGET_DB_PASSWORD`.
+5. Redeploy so runtime picks up the new URL. The migrate step succeeding is
+   the check that it works.
+6. Put the same password on Railway (`MYSQLPASSWORD` and
+   `MYSQL_ROOT_PASSWORD`; rewrite `MYSQL_URL` / `MYSQL_PUBLIC_URL` if they
+   are literal strings). Then DBeaver and Railway's Database tab work.
+
+| | QA (done) | Prod (when asked) |
+|---|---|---|
+| Vercel project | `qa-ibudget` | `ibudget` |
+| Public host | `junction.proxy.rlwy.net:29935` | `hayabusa.proxy.rlwy.net:47965` |
+| User / database | `root` / `railway` | `root` / `railway` |
+
+DBeaver: connection **Driver properties**, not Edit Driver. Set
+`allowPublicKeyRetrieval=true` and `useSSL=true`. Paste the password from
+the URL, not from Railway, until step 6 is done.

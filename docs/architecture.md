@@ -89,3 +89,9 @@ transactions", …) are skipped — do not do that.
 A migration in a release is applied to the QA database when `develop` is
 pushed, and to Prod when `main` is updated. There is no separate migrate step.
 Do not run migrations against those databases from a laptop.
+
+QA and Prod `DATABASE_URL` values on Vercel are Sensitive and cannot be
+copied back. If Railway's Database tab or DBeaver fail with access denied
+while the app still works, recover as in
+[How to develop](develop.md#recovering-a-vercel-only-database-password).
+QA was recovered 2026-10-28; Prod has not been.
