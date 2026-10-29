@@ -2,23 +2,43 @@
 
 import { ClientOnlyCurrency, Tooltip } from "@/components/ui";
 import type { CurrencyBalance, NetWorth } from "@/lib/server/services/dashboard";
+import Link from "next/link";
 
 interface Props {
   netWorth: NetWorth;
   currency: string;
+  view: "currency" | "all";
+  homeCurrency: string;
   currencyBalances: CurrencyBalance[];
+  ratesAsOf: string | null;
+  allDisabled: boolean;
   onCurrencyChange: (currency: string) => void;
+  onViewAll: () => void;
   disabled?: boolean;
 }
 
-export const NetWorthHero = ({ netWorth, currency, currencyBalances, onCurrencyChange, disabled = false }: Props) => {
+export const NetWorthHero = ({
+  netWorth,
+  currency,
+  view,
+  homeCurrency,
+  currencyBalances,
+  ratesAsOf,
+  allDisabled,
+  onCurrencyChange,
+  onViewAll,
+  disabled = false,
+}: Props) => {
   const { change, changePercent } = netWorth;
   const changeIsPositive = change >= 0;
+  const showSwitcher = currencyBalances.length > 1;
+  const allActive = view === "all";
 
   return (
     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 sm:p-8 text-white">
       <h3 className="text-xs sm:text-sm font-medium text-white/90 mb-2 uppercase tracking-wide">
         Net worth · {currency}
+        {allActive && " · All"}
       </h3>
 
       <ClientOnlyCurrency
@@ -26,6 +46,12 @@ export const NetWorthHero = ({ netWorth, currency, currencyBalances, onCurrencyC
         currency={currency}
         className="block text-3xl sm:text-5xl font-bold"
       />
+
+      {allActive && ratesAsOf && (
+        <p className="mt-1 text-xs sm:text-sm text-white/80">
+          Converted to {homeCurrency} · rates as of {ratesAsOf}
+        </p>
+      )}
 
       {/* Change since the end of last month */}
       <div className="mt-2 text-xs sm:text-sm text-white/90">
@@ -43,11 +69,10 @@ export const NetWorthHero = ({ netWorth, currency, currencyBalances, onCurrencyC
         </Tooltip>
       </div>
 
-      {/* Only the currencies the user has accounts in. Click one to switch the whole dashboard to it. */}
-      {currencyBalances.length > 1 && (
-        <div className="mt-5 flex flex-wrap gap-2">
+      {showSwitcher && (
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           {currencyBalances.map((item) => {
-            const active = item.currency === currency;
+            const active = !allActive && item.currency === currency;
             return (
               <button
                 key={item.currency}
@@ -66,6 +91,34 @@ export const NetWorthHero = ({ netWorth, currency, currencyBalances, onCurrencyC
               </button>
             );
           })}
+          <button
+            type="button"
+            disabled={disabled || allDisabled}
+            onClick={() => !allActive && !allDisabled && onViewAll()}
+            aria-pressed={allActive}
+            title={allDisabled ? "Exchange rates are unavailable right now." : undefined}
+            className={`rounded-full px-3 py-1.5 text-xs sm:text-sm border font-semibold transition-colors disabled:opacity-60 ${
+              allActive
+                ? "bg-white text-blue-700 border-white cursor-default"
+                : "bg-white/10 text-white border-white/30 hover:bg-white/20"
+            }`}
+          >
+            All
+          </button>
+          <Tooltip
+            content={
+              <>
+                All converts every currency into {homeCurrency}, your home currency. Switch these
+                chips any time. Change the home currency or what the dashboard opens on in{" "}
+                <Link href="/settings" className="font-medium text-primary underline">
+                  Settings
+                </Link>
+                .
+              </>
+            }
+          >
+            <span className="text-xs sm:text-sm text-white/80">Home currency</span>
+          </Tooltip>
         </div>
       )}
     </div>

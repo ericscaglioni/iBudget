@@ -6,8 +6,15 @@ vi.mock("@/lib/prisma", async () => {
   return { prisma: createPrismaMock() };
 });
 
+const getRateTable = vi.fn();
+vi.mock("./exchange-rates", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./exchange-rates")>();
+  return { ...actual, getRateTable: (...args: unknown[]) => getRateTable(...args) };
+});
+
 import { prisma } from "@/lib/prisma";
 import * as dashboard from "./dashboard";
+import { RatesUnavailableError } from "./exchange-rates";
 
 const db = prisma as unknown as PrismaMock;
 const decimal = (value: number) => ({ toNumber: () => value });
@@ -69,6 +76,7 @@ const usd = (id: string, name: string, initialBalance: number, extra: Partial<Ac
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 9, 27, 12)); // 27 Oct 2026
+  getRateTable.mockReset();
 });
 
 afterEach(() => {
@@ -366,5 +374,70 @@ describe("getDashboardData", () => {
       "2026-11",
       "2026-12",
     ]);
+  });
+
+  describe("All currencies (converted into the home currency)", () => {
+    const mixed = [
+      usd("a1", "Main", 110),
+      { id: "a2", name: "Euro", currency: "EUR", initialBalance: decimal(50), sortOrder: null },
+    ];
+    const eurRates = { base: "EUR", asOf: "2026-10-29", rates: { EUR: 1, USD: 1.1 } };
+
+    it("converts balances and monthly totals, and skips transfers", async () => {
+      givenData({
+        accounts: mixed,
+        baseCurrency: "EUR",
+        monthly: [
+          monthlyTx({ amount: decimal(110), currency: "USD" }),
+          monthlyTx({ amount: decimal(10), currency: "EUR" }),
+          monthlyTx({ amount: decimal(300), transferId: "tr1", category: transferCategory, currency: "USD" }),
+          monthlyTx({
+            type: "income",
+            amount: decimal(250),
+            transferId: "tr1",
+            category: transferCategory,
+            currency: "EUR",
+          }),
+        ],
+      });
+      getRateTable.mockResolvedValue(eurRates);
+
+      const result = await dashboard.getDashboardData("u1", { view: "all" });
+
+      expect(result.view).toBe("all");
+      expect(result.currency).toBe("EUR");
+      expect(result.totalBalance).toBe(150);
+      expect(result.accountBalances.map((a) => [a.accountId, a.balance, a.convertedBalance])).toEqual([
+        ["a2", 50, 50],
+        ["a1", 110, 100],
+      ]);
+      const october = result.monthlyTotals.find((entry) => entry.month === "2026-10");
+      expect(october).toMatchObject({ expenses: 110, income: 0, incomeFromExchange: 0, expensesFromExchange: 0 });
+      expect(getRateTable).toHaveBeenCalledWith("EUR", ["EUR", "USD"]);
+    });
+
+    it("opens All from settings when no currency is asked for", async () => {
+      givenData({
+        accounts: mixed,
+        baseCurrency: "EUR",
+      });
+      db.userSettings.findUnique.mockResolvedValue({ baseCurrency: "EUR", openDashboardOn: "all" });
+      getRateTable.mockResolvedValue(eurRates);
+
+      const result = await dashboard.getDashboardData("u1");
+      expect(result.view).toBe("all");
+    });
+
+    it("falls back to the home currency and reports the error when rates fail", async () => {
+      givenData({ accounts: mixed, baseCurrency: "EUR" });
+      getRateTable.mockRejectedValue(new RatesUnavailableError("Couldn't load exchange rates. Showing your home currency instead."));
+
+      const result = await dashboard.getDashboardData("u1", { view: "all" });
+
+      expect(result.view).toBe("currency");
+      expect(result.currency).toBe("EUR");
+      expect(result.accountBalances.map((a) => a.accountId)).toEqual(["a2"]);
+      expect(result.ratesError).toMatch(/exchange rates/i);
+    });
   });
 });

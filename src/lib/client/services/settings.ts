@@ -5,12 +5,19 @@ const settingsPath = "/api/settings";
 export type Settings = {
   defaultCurrency: string;
   availableCurrencies: string[];
+  openDashboardOn: "home" | "all";
 };
 
 export const getSettings = async () => {
   return get<Settings>(settingsPath);
 };
 
-export const updateSettings = async (data: { defaultCurrency?: string }) => {
-  return patch<{ defaultCurrency?: string }, Settings>(settingsPath, data);
+export const updateSettings = async (data: {
+  defaultCurrency?: string;
+  openDashboardOn?: "home" | "all";
+}) => {
+  return patch<{ defaultCurrency?: string; openDashboardOn?: "home" | "all" }, Settings>(
+    settingsPath,
+    data
+  );
 };

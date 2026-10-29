@@ -41,11 +41,12 @@ export const MultiCurrencyHint = ({ currency, currencies }: Props) => {
       <div className="min-w-0 flex-1 text-xs sm:text-sm text-blue-900">
         <p className="font-medium">You have accounts in {currencies.join(" and ")}</p>
         <p className="mt-1 text-blue-800">
-          Your dashboard is showing {currency}. Switch currency from the net worth card, or choose which
-          one the dashboard opens in by default.
+          Your dashboard is showing {currency}. Switch currency from the net worth card, use All to
+          see every currency converted to your home currency, or choose what the dashboard opens on
+          in Settings.
         </p>
         <Button className="mt-3" variant="outline" size="sm" onClick={() => router.push("/settings")}>
-          Choose default currency
+          Open settings
         </Button>
       </div>
       <button

@@ -5,6 +5,7 @@ import { calendarMonthString, getMonthDateRange, parseYearMonth } from "@/lib/ut
 import { dayjs } from "@/lib/utils/dayjs.js";
 import { resolveCurrency } from "./settings";
 import { sortAccountsByUserOrder } from "@/lib/utils/sort-accounts";
+import { convertAmount, getRateTable, RatesUnavailableError, type RateTable } from "./exchange-rates";
 
 // Helper function to convert Decimal to number
 const toNumber = (value: Decimal | number): number => {
@@ -14,8 +15,11 @@ const toNumber = (value: Decimal | number): number => {
 export interface AccountBalance {
   accountId: string;
   name: string;
+  /** Native balance in `currency`. */
   balance: number;
   currency: string;
+  /** Present on the All view: `balance` converted into the home currency. */
+  convertedBalance?: number;
 }
 
 export interface CategoryBreakdown {
@@ -60,21 +64,34 @@ interface DashboardQuery {
   includePreviousMonth?: boolean;
   month?: string; // YYYY-MM format for filtering specific month
   currency?: string; // currency to show; falls back to the user's default
+  /** Request the converted All view (`?view=all`). Ignored with fewer than two currencies. */
+  view?: "all";
 }
 
 export interface DashboardData {
-  /** The one currency everything below is expressed in. Money is never mixed across currencies. */
+  /**
+   * The currency everything below is expressed in. On a one-currency view this is native.
+   * On All it is the home currency, after conversion.
+   */
   currency: string;
+  /** `all` only when conversion succeeded. */
+  view: "currency" | "all";
+  /** Saved home currency (All converts into this). */
+  homeCurrency: string;
   /** Currencies the user has accounts in (what they can switch between). */
   availableCurrencies: string[];
-  /** Total held in each of those currencies, for the switcher. */
+  /** Total held in each of those currencies, for the switcher (native amounts). */
   currencyBalances: CurrencyBalance[];
   totalBalance: number;
   netWorth: NetWorth;
-  /** Accounts in the shown currency. */
+  /** Accounts in the shown currency, or every account on All. */
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
   sixMonthHistory: SixMonthHistory[];
+  /** Rate date shown on All, or null on a one-currency view. */
+  ratesAsOf: string | null;
+  /** Set when All was requested but rates failed; the rest of the payload is the home-currency view. */
+  ratesError: string | null;
 }
 
 type AccountRecord = { id: string; name: string; currency: string; initialBalance: Decimal };
@@ -127,35 +144,44 @@ const calculateBalances = async (accounts: AccountRecord[]) => {
 const lastMonths = (count: number) =>
   Array.from({ length: count }, (_, i) => dayjs().subtract(count - 1 - i, "month").format("YYYY-MM"));
 
+type MonthlyMode =
+  | { kind: "currency"; currency: string }
+  | { kind: "all"; home: string; rates: RateTable };
+
 /**
- * Income / expense totals and category breakdown for each given month, only counting accounts in
- * `currency`.
+ * Income / expense totals and category breakdown for each given month.
  *
- * Transfers:
- * - Between accounts in the same currency: excluded. It's the same money moving around.
- * - Between accounts in different currencies: the money received counts as income in the
- *   destination currency and the money sent counts as expense in the source currency, since each
- *   currency's dashboard is looked at on its own. They are left out of the category breakdown
- *   (the "Transfer" category isn't spending).
+ * One-currency view:
+ * - Same-currency transfers are excluded (the same money moving around).
+ * - A currency exchange counts as expense in the source and income in the destination, and is
+ *   left out of the category chart.
+ *
+ * All view: every transfer is skipped. Remaining income and expenses are converted into the
+ * home currency at today's rates.
  */
 const calculateMonthlyTotals = async (
   userId: string,
   months: string[],
-  currency: string
+  mode: MonthlyMode
 ): Promise<MonthlyTotal[]> => {
   const sorted = [...months].sort();
   const startDate = getMonthDateRange(sorted[0])!.startDate;
   const endDate = getMonthDateRange(sorted[sorted.length - 1])!.endDate;
+  const allView = mode.kind === "all";
 
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       date: { gte: startDate, lte: endDate },
-      OR: [
-        { transferId: null, account: { currency } },
-        // Transfer sides in any currency: we need both to tell whether the currencies differ
-        { transferId: { not: null } },
-      ],
+      ...(allView
+        ? { transferId: null }
+        : {
+            OR: [
+              { transferId: null, account: { currency: mode.currency } },
+              // Transfer sides in any currency: we need both to tell whether the currencies differ
+              { transferId: { not: null } },
+            ],
+          }),
     },
     select: {
       type: true,
@@ -184,18 +210,21 @@ const calculateMonthlyTotals = async (
     byMonth.set(month, { income: 0, expenses: 0, incomeFromExchange: 0, expensesFromExchange: 0, categories: new Map() })
   );
 
+  const toDisplay = (amount: number, from: string) =>
+    allView ? convertAmount(amount, from, mode.home, mode.rates.rates, mode.rates.base) : amount;
+
   transactions.forEach((tx) => {
     const entry = byMonth.get(calendarMonthString(tx.date));
     if (!entry) return;
 
-    // Only the side of a currency exchange that is in the shown currency counts
     const isTransfer = !!tx.transferId;
     if (isTransfer) {
+      if (mode.kind === "all") return;
       const isCurrencyExchange = (transferCurrencies.get(tx.transferId!)?.size ?? 0) > 1;
-      if (!isCurrencyExchange || tx.account.currency !== currency) return;
+      if (!isCurrencyExchange || tx.account.currency !== mode.currency) return;
     }
 
-    const amount = toNumber(tx.amount);
+    const amount = toDisplay(toNumber(tx.amount), tx.account.currency);
 
     if (tx.type === TransactionType.income) {
       entry.income += amount;
@@ -242,7 +271,7 @@ export const getMonthlySummary = async (userId: string, month?: string, requeste
   const targetMonth = month || dayjs().format("YYYY-MM");
   const { currency } = await resolveCurrency(userId, requestedCurrency);
 
-  const [monthlyData] = await calculateMonthlyTotals(userId, [targetMonth], currency);
+  const [monthlyData] = await calculateMonthlyTotals(userId, [targetMonth], { kind: "currency", currency });
 
   return {
     currency,
@@ -261,7 +290,7 @@ export const getMonthlySummary = async (userId: string, month?: string, requeste
 export const getAccountOverview = async (userId: string, requestedCurrency?: string) => {
   const { currency } = await resolveCurrency(userId, requestedCurrency);
   const accountBalancesResult = await getAccountBalances(userId);
-  const monthlyTotals = await calculateMonthlyTotals(userId, lastMonths(6), currency);
+  const monthlyTotals = await calculateMonthlyTotals(userId, lastMonths(6), { kind: "currency", currency });
 
   return {
     currency,
@@ -301,57 +330,7 @@ export const getAccountBalances = async (userId: string) => {
   };
 };
 
-/**
- * Get dashboard data for a user, for one currency at a time.
- *
- * The currency shown is the requested one if the user has an account in it, otherwise their saved
- * default. Amounts from different currencies are never added together.
- */
-export const getDashboardData = async (
-  userId: string,
-  query?: DashboardQuery
-): Promise<DashboardData> => {
-  const {
-    includeCurrentMonth = true,
-    includePreviousMonth = true,
-    month,
-    currency: requestedCurrency,
-  } = query || {};
-
-  const { currency, available } = await resolveCurrency(userId, requestedCurrency);
-
-  const allAccounts = sortAccountsByUserOrder(
-    await prisma.account.findMany({
-      where: { userId },
-      select: { id: true, name: true, currency: true, initialBalance: true, sortOrder: true },
-    })
-  );
-
-  const balances = await calculateBalances(allAccounts);
-
-  // Totals per currency, for the switcher
-  const totals = new Map<string, number>();
-  allAccounts.forEach((account) => {
-    totals.set(account.currency, (totals.get(account.currency) ?? 0) + balances.get(account.id)!.current);
-  });
-  const currencyBalances: CurrencyBalance[] = available.map((code) => ({
-    currency: code,
-    balance: totals.get(code) ?? 0,
-  }));
-
-  const accounts = allAccounts.filter((account) => account.currency === currency);
-  const accountBalances: AccountBalance[] = accounts.map((account) => ({
-    accountId: account.id,
-    name: account.name,
-    currency: account.currency,
-    balance: balances.get(account.id)!.current,
-  }));
-
-  const total = accounts.reduce((sum, account) => sum + balances.get(account.id)!.current, 0);
-  const previousMonthTotal = accounts.reduce((sum, account) => sum + balances.get(account.id)!.previousMonthEnd, 0);
-  const change = total - previousMonthTotal;
-
-  // Months from six ago through the latest booked month (so the chart can include the future)
+const monthsForDashboard = async (userId: string, month?: string) => {
   const recentMonths = lastMonths(6);
   const latest = await prisma.transaction.findFirst({
     where: { userId },
@@ -372,17 +351,22 @@ export const getDashboardData = async (
     month && !monthsThroughLatest.includes(month)
       ? [...monthsThroughLatest, month].sort()
       : monthsThroughLatest;
-  const allMonthlyTotals = await calculateMonthlyTotals(userId, months, currency);
+  return { months, monthsThroughLatest };
+};
 
+const pickMonthlySlice = (
+  allMonthlyTotals: MonthlyTotal[],
+  monthsThroughLatest: string[],
+  query: Pick<DashboardQuery, "includeCurrentMonth" | "includePreviousMonth" | "month">
+) => {
+  const { includeCurrentMonth = true, includePreviousMonth = true, month } = query;
   const chartMonths = monthsThroughLatest.slice(-6);
   const sixMonthHistory = chartMonths.map((monthKey) => {
     const entry = allMonthlyTotals.find((item) => item.month === monthKey)!;
     return { month: monthKey, income: entry.income, expenses: entry.expenses };
   });
-
   const currentMonth = dayjs().format("YYYY-MM");
   const previousMonth = dayjs().subtract(1, "month").format("YYYY-MM");
-
   const monthlyTotals = month
     ? allMonthlyTotals.filter((entry) => entry.month === month)
     : allMonthlyTotals.filter(
@@ -390,20 +374,155 @@ export const getDashboardData = async (
           (includeCurrentMonth || entry.month !== currentMonth) &&
           (includePreviousMonth || entry.month !== previousMonth)
       );
+  return { monthlyTotals, sixMonthHistory };
+};
+
+const netWorthFrom = (total: number, previousMonthTotal: number): NetWorth => {
+  const change = total - previousMonthTotal;
+  return {
+    total,
+    previousMonthTotal,
+    change,
+    changePercent: previousMonthTotal !== 0 ? (change / Math.abs(previousMonthTotal)) * 100 : null,
+  };
+};
+
+/**
+ * Dashboard for one currency, or All (every account converted into the home currency).
+ *
+ * All is never mixed without converting. One-currency views stay native. Transfers are skipped
+ * entirely on All; on a one-currency view they follow the usual exchange rules.
+ */
+export const getDashboardData = async (
+  userId: string,
+  query?: DashboardQuery
+): Promise<DashboardData> => {
+  const {
+    includeCurrentMonth = true,
+    includePreviousMonth = true,
+    month,
+    currency: requestedCurrency,
+    view: requestedView,
+  } = query || {};
+
+  const { currency: resolved, available } = await resolveCurrency(
+    userId,
+    requestedView === "all" ? undefined : requestedCurrency
+  );
+  const settings = await prisma.userSettings.findUnique({ where: { userId } });
+  const homeCurrency = available.includes(settings?.baseCurrency ?? "")
+    ? settings!.baseCurrency
+    : resolved;
+  const canAll = available.length > 1;
+  const landOnAll = canAll && settings?.openDashboardOn === "all";
+  const wantAll = canAll && (requestedView === "all" || (!requestedCurrency && landOnAll));
+
+  const allAccounts = sortAccountsByUserOrder(
+    await prisma.account.findMany({
+      where: { userId },
+      select: { id: true, name: true, currency: true, initialBalance: true, sortOrder: true },
+    })
+  );
+
+  const balances = await calculateBalances(allAccounts);
+
+  const totals = new Map<string, number>();
+  allAccounts.forEach((account) => {
+    totals.set(account.currency, (totals.get(account.currency) ?? 0) + balances.get(account.id)!.current);
+  });
+  const currencyBalances: CurrencyBalance[] = available.map((code) => ({
+    currency: code,
+    balance: totals.get(code) ?? 0,
+  }));
+
+  const { months, monthsThroughLatest } = await monthsForDashboard(userId, month);
+  const sliceQuery = { includeCurrentMonth, includePreviousMonth, month };
+
+  let ratesError: string | null = null;
+  let rates: RateTable | null = null;
+  if (wantAll) {
+    try {
+      rates = await getRateTable(homeCurrency, available);
+    } catch (error) {
+      ratesError =
+        error instanceof RatesUnavailableError
+          ? error.message
+          : "Couldn't load exchange rates. Showing your home currency instead.";
+    }
+  }
+
+  if (wantAll && rates) {
+    const accountBalances: AccountBalance[] = allAccounts.map((account) => {
+      const native = balances.get(account.id)!.current;
+      return {
+        accountId: account.id,
+        name: account.name,
+        currency: account.currency,
+        balance: native,
+        convertedBalance: convertAmount(native, account.currency, homeCurrency, rates.rates, rates.base),
+      };
+    });
+    const total = accountBalances.reduce((sum, account) => sum + (account.convertedBalance ?? 0), 0);
+    const previousMonthTotal = allAccounts.reduce(
+      (sum, account) =>
+        sum +
+        convertAmount(
+          balances.get(account.id)!.previousMonthEnd,
+          account.currency,
+          homeCurrency,
+          rates.rates,
+          rates.base
+        ),
+      0
+    );
+    const allMonthlyTotals = await calculateMonthlyTotals(userId, months, {
+      kind: "all",
+      home: homeCurrency,
+      rates,
+    });
+    const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, monthsThroughLatest, sliceQuery);
+
+    return {
+      currency: homeCurrency,
+      view: "all",
+      homeCurrency,
+      availableCurrencies: available,
+      currencyBalances,
+      totalBalance: total,
+      netWorth: netWorthFrom(total, previousMonthTotal),
+      accountBalances,
+      monthlyTotals,
+      sixMonthHistory,
+      ratesAsOf: rates.asOf,
+      ratesError: null,
+    };
+  }
+
+  const currency = requestedView === "all" && !rates ? homeCurrency : resolved;
+  const accounts = allAccounts.filter((account) => account.currency === currency);
+  const accountBalances: AccountBalance[] = accounts.map((account) => ({
+    accountId: account.id,
+    name: account.name,
+    currency: account.currency,
+    balance: balances.get(account.id)!.current,
+  }));
+  const total = accounts.reduce((sum, account) => sum + balances.get(account.id)!.current, 0);
+  const previousMonthTotal = accounts.reduce((sum, account) => sum + balances.get(account.id)!.previousMonthEnd, 0);
+  const allMonthlyTotals = await calculateMonthlyTotals(userId, months, { kind: "currency", currency });
+  const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, monthsThroughLatest, sliceQuery);
 
   return {
     currency,
+    view: "currency",
+    homeCurrency,
     availableCurrencies: available,
     currencyBalances,
     totalBalance: total,
-    netWorth: {
-      total,
-      previousMonthTotal,
-      change,
-      changePercent: previousMonthTotal !== 0 ? (change / Math.abs(previousMonthTotal)) * 100 : null,
-    },
+    netWorth: netWorthFrom(total, previousMonthTotal),
     accountBalances,
     monthlyTotals,
     sixMonthHistory,
+    ratesAsOf: null,
+    ratesError,
   };
 };

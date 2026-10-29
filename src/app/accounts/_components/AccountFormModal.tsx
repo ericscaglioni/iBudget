@@ -79,7 +79,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
 
       if (isNewCurrency && hasSeveralCurrencies) {
         showInfo(
-          `You now have accounts in more than one currency. The dashboard shows one currency at a time: switch between them there, or choose which one it opens in.`,
+          `You now have accounts in more than one currency. Switch them on the dashboard, or open All to see everything converted to your home currency.`,
           { label: "Choose default", onClick: () => router.push("/settings") }
         );
       }

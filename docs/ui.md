@@ -75,6 +75,13 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   / Net. One currency is visible; extra currencies expand with `Collapsible`
   via View all. Do not turn it into dashboard colour cards, the transactions
   `Table`, or add currencies together.
+- The dashboard can show **All**: every figure converted into the home
+  currency, with per-currency chips still native. A Tooltip next to the chips
+  explains All and links to Settings. Do not mix native amounts. If rates
+  fail, All is disabled and a banner explains the fallback.
+- This month's spending is a donut (`TopSpendingCategories`) with a legend
+  (name, amount, %). Top 5 then Other. Do not label slices or invent extra
+  brand colours; Other is `gray-300`. Respect `prefers-reduced-motion`.
 - Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.
 - Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker.
 - In a modal with a long list, the list scrolls and the action footer stays visible (`ReorderAccountsModal` is the reference).

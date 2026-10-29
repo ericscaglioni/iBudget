@@ -18,6 +18,7 @@ const SettingsPage = async () => {
       <SettingsPageShell
         defaultCurrency={settings.defaultCurrency}
         availableCurrencies={settings.availableCurrencies}
+        openDashboardOn={settings.openDashboardOn}
       />
     );
   } catch (error) {

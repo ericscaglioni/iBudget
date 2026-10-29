@@ -12,6 +12,10 @@ export const accountCurrencies = [
 
 export const DEFAULT_BASE_CURRENCY = "USD";
 
+/** What the dashboard opens on when the user holds more than one currency. */
+export const OPEN_DASHBOARD_ON = ["home", "all"] as const;
+export type OpenDashboardOn = (typeof OPEN_DASHBOARD_ON)[number];
+
 export type AccountCurrency = (typeof accountCurrencies)[keyof typeof accountCurrencies];
 
 export const accountTypes: AccountType[] = [

@@ -36,6 +36,7 @@ describe("GET /api/dashboard", () => {
       includePreviousMonth: true,
       month: undefined,
       currency: undefined,
+      view: undefined,
     });
   });
 
@@ -46,6 +47,7 @@ describe("GET /api/dashboard", () => {
       includePreviousMonth: false,
       month: "2026-05",
       currency: "EUR",
+      view: undefined,
     });
   });
 
@@ -53,6 +55,14 @@ describe("GET /api/dashboard", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(dashboardService.getDashboardData).mockRejectedValue(new Error("boom"));
     expect((await call(getDashboard, "/api/dashboard")).status).toBe(500);
+  });
+
+  it("passes the All view on", async () => {
+    await call(getDashboard, "/api/dashboard?view=all");
+    expect(dashboardService.getDashboardData).toHaveBeenCalledWith(
+      "u1",
+      expect.objectContaining({ view: "all" })
+    );
   });
 });
 

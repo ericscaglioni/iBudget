@@ -149,7 +149,7 @@ const MAX_ACCOUNTS_TO_ORDER = 500;
 
 /**
  * Saves the order the user chose: the first id gets position 0, and so on. Only accounts of the
- * same currency are ordered together, since the dashboard shows one currency at a time.
+ * same currency are ordered together, since reorder is per currency (including on All).
  */
 export const reorderAccounts = async (userId: string, accountIds: unknown) => {
   if (

@@ -2,7 +2,8 @@
 
 iBudget is a personal budget app. A signed-in user has accounts (each in one
 currency), categories, and transactions (income, expense, or a transfer between
-accounts). The dashboard shows one currency at a time: balances as of today,
+accounts). The dashboard shows one currency at a time, or **All** (converted
+into the home currency at today's rates): balances as of today,
 the month's income and expenses (including ones booked ahead), and a short
 history. The monthly summary and the six-month chart can step into later
 months when a transaction is already there; empty future months stay out of
@@ -57,8 +58,9 @@ Avoid adding libraries when Fetch, `URLSearchParams` or the existing kit will do
 - Categories are income or expense. Default categories are cloned per user on
   signup; "Transfer" stays shared.
 - Each account has one currency. The dashboard never adds two currencies
-  together. The user can pick a default currency only from currencies they
-  actually hold.
+  together without converting. All converts into the home currency (only a
+  currency the user holds). The user can also choose whether the dashboard
+  opens on All or that home currency.
 - Cross-currency transfers: the amount sent is an expense in the source
   currency, the amount received is income in the destination currency. They
   do not appear in the category chart. Same-currency transfers do not count
