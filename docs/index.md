@@ -28,9 +28,13 @@ The decisions that most often go wrong if you skip them:
   source account, income on the destination. Lists show only the expense side.
   Create, edit and delete always update both sides together. Different
   currencies need `toAmount` (the amount received).
-- The **dashboard** never mixes currencies. Same-currency transfers are
-  invisible there. Cross-currency transfers count as expense in the source
-  currency and income in the destination, and stay out of the category chart.
+- The **dashboard** never mixes native amounts. One-currency views stay native.
+  **All** converts everything into the home currency at today's rates (a
+  public feed, server-side). Same-currency transfers are invisible on a
+  one-currency view; All skips every transfer. Cross-currency transfers count
+  as expense in the source and income in the destination on a one-currency
+  view, and stay out of the category chart. If rates fail, All is disabled
+  and the dashboard falls back to the home currency.
 - **Auth** is Clerk. Pages redirect to `/login`. API handlers use
   `authHandler` and must answer 401 if nobody is signed in, not 500.
 - **API shape** is `{ data }` on success and `{ error: { message, code } }` on

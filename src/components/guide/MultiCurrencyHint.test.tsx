@@ -27,7 +27,7 @@ import { MultiCurrencyHint } from "./MultiCurrencyHint";
 describe("MultiCurrencyHint", () => {
   it("links to settings", async () => {
     render(<MultiCurrencyHint currency="USD" currencies={["USD", "BRL"]} />);
-    await userEvent.click(screen.getByRole("button", { name: "Choose default currency" }));
+    await userEvent.click(screen.getByRole("button", { name: "Open settings" }));
     expect(push).toHaveBeenCalledWith("/settings");
   });
 

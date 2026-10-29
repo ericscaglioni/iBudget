@@ -6,6 +6,25 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-29
+
+An All-currencies dashboard and a spending donut for the month.
+
+### Added
+- The dashboard can show All currencies converted into your home currency. You
+  choose the home currency and whether the dashboard opens on All, and you can
+  still switch chips any time. Rates come from a public feed (cached on the
+  server; the migration runs on deploy). If rates cannot be loaded, All is
+  turned off and the home currency is shown instead.
+
+### Changed
+- Dashboard accounts sit in a card per currency, so the total sits with the
+  accounts it belongs to instead of across the page.
+- Accounts sit directly under the monthly income / expenses / net, so spending
+  categories are no longer between those two.
+- This month's spending is a donut that fills around the total, with a legend
+  for amounts, instead of a numbered list.
+
 ## [1.1.0] - 2026-10-29
 
 Filtered list totals, clearer filters, and a less fussy transaction form.
@@ -256,6 +275,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[1.2.0]: https://github.com/ericscaglioni/iBudget/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/ericscaglioni/iBudget/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0
 [0.4.3]: https://github.com/ericscaglioni/iBudget/compare/0.4.2...0.4.3

@@ -15,10 +15,11 @@ interface Props {
 
 const DashboardPage = async ({ searchParams }: Props) => {
   try {
-    const { currency: currencyParam } = await searchParams;
+    const { currency: currencyParam, view: viewParam } = await searchParams;
     const currency = typeof currencyParam === "string" && accountCurrencies.includes(currencyParam)
       ? currencyParam
       : undefined;
+    const view = viewParam === "all" ? "all" as const : undefined;
 
     const { userId } = await auth();
     if (!userId) redirect("/login");
@@ -31,6 +32,7 @@ const DashboardPage = async ({ searchParams }: Props) => {
       includeCurrentMonth: true,
       includePreviousMonth: true,
       currency,
+      view,
     });
 
     // Fetch accounts and categories for transaction modal
@@ -44,11 +46,15 @@ const DashboardPage = async ({ searchParams }: Props) => {
     return (
       <DashboardPageShell
         currency={dashboardData.currency}
+        view={dashboardData.view}
+        homeCurrency={dashboardData.homeCurrency}
         currencyBalances={dashboardData.currencyBalances}
         netWorth={dashboardData.netWorth}
         accountBalances={dashboardData.accountBalances}
         monthlyTotals={dashboardData.monthlyTotals}
         sixMonthHistory={dashboardData.sixMonthHistory}
+        ratesAsOf={dashboardData.ratesAsOf}
+        ratesError={dashboardData.ratesError}
         accountOptions={accountOptions}
         categoryOptions={userCategories}
         transferCategoryId={transferCategory.id}

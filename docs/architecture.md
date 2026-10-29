@@ -75,10 +75,13 @@ transactions", …) are skipped — do not do that.
   currency vs currency exchange. Account balances are as of today. Monthly
   totals include booked future months through the latest transaction date.
   The six-month chart is the six months ending at the current month, or at
-  the latest booked month if that is later.
+  the latest booked month if that is later. All converts those figures in
+  `exchange-rates.ts` (public daily feed, cached per home currency per UTC
+  day). Do not fetch rates from the browser.
 - **Account order.** Nullable `sortOrder`. Ordered accounts first, then
   never-ordered ones by name. Reorder is per currency
-  (`PUT /api/accounts/order`).
+  (`PUT /api/accounts/order`), including on All where accounts are grouped
+  by currency.
 - **Descriptions.** `normalizeDescription` on create **and** edit (trim,
   required, max length). Do not run the search sanitizer on saved text; it
   strips punctuation and accents.

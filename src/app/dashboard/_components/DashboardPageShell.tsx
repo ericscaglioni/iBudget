@@ -25,6 +25,7 @@ interface AccountBalance {
   name: string;
   currency: string;
   balance: number;
+  convertedBalance?: number;
 }
 
 interface CategoryBreakdown {
@@ -54,11 +55,15 @@ type CategoryOption = Pick<Category, "id" | "name" | "type">;
 
 interface Props {
   currency: string;
+  view: "currency" | "all";
+  homeCurrency: string;
   currencyBalances: CurrencyBalance[];
   netWorth: NetWorth;
   accountBalances: AccountBalance[];
   monthlyTotals: MonthlyTotal[];
   sixMonthHistory: SixMonthHistory[];
+  ratesAsOf: string | null;
+  ratesError: string | null;
   accountOptions: ComboboxOption[];
   categoryOptions: CategoryOption[];
   transferCategoryId: string;
@@ -67,11 +72,15 @@ interface Props {
 
 export const DashboardPageShell = ({
   currency,
+  view,
+  homeCurrency,
   currencyBalances,
   netWorth,
   accountBalances,
   monthlyTotals,
   sixMonthHistory,
+  ratesAsOf,
+  ratesError,
   accountOptions,
   categoryOptions,
   transferCategoryId,
@@ -81,12 +90,19 @@ export const DashboardPageShell = ({
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openReorderModal, setOpenReorderModal] = useState(false);
+  const [reorderCurrency, setReorderCurrency] = useState(currency);
   const [isPending, startTransition] = useTransition();
+  const isAll = view === "all";
 
-  // The shown currency lives in the URL so the page is server-rendered with the right data
   const handleCurrencyChange = (next: string) => {
     startTransition(() => {
       router.replace(`/dashboard?currency=${next}`);
+    });
+  };
+
+  const handleViewAll = () => {
+    startTransition(() => {
+      router.replace("/dashboard?view=all");
     });
   };
 
@@ -141,11 +157,24 @@ export const DashboardPageShell = ({
 
         {/* Section 1: Net worth in the base currency, with the per-currency breakdown */}
         <section>
+          {ratesError && (
+            <div
+              className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              role="status"
+            >
+              {ratesError}
+            </div>
+          )}
           <NetWorthHero
             netWorth={netWorth}
             currency={currency}
+            view={view}
+            homeCurrency={homeCurrency}
             currencyBalances={currencyBalances}
+            ratesAsOf={ratesAsOf}
+            allDisabled={Boolean(ratesError)}
             onCurrencyChange={handleCurrencyChange}
+            onViewAll={handleViewAll}
             disabled={isPending}
           />
         </section>
@@ -158,7 +187,9 @@ export const DashboardPageShell = ({
               <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({currency})</span>
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 md:mb-4">
-              Income and expenses from your {currency} accounts
+              {isAll
+                ? `Income and expenses from all accounts, converted to ${currency}. Transfers are not counted.`
+                : `Income and expenses from your ${currency} accounts`}
             </p>
           </div>
 
@@ -223,7 +254,41 @@ export const DashboardPageShell = ({
           )}
         </section>
 
-        {/* Section 3: Where the money went this month */}
+        {/* Accounts sit with the month: balances as of today, next to this month's income and expenses */}
+        <section>
+          <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3 md:mb-4">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+              Accounts
+            </h2>
+            {/* With a single account there is nothing to put in order */}
+            {!isAll && accountBalances.length > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReorderCurrency(currency);
+                  setOpenReorderModal(true);
+                }}
+              >
+                <Icon name="reorder" className="mr-1.5 size-4" />
+                Reorder
+              </Button>
+            )}
+          </div>
+          <AccountsOverview
+            accountBalances={accountBalances}
+            displayCurrency={isAll ? currency : undefined}
+            onReorder={
+              isAll
+                ? (groupCurrency) => {
+                    setReorderCurrency(groupCurrency);
+                    setOpenReorderModal(true);
+                  }
+                : undefined
+            }
+          />
+        </section>
+
         {selectedMonthData && selectedMonthData.categoryBreakdown.length > 0 && (
           <section>
             <TopSpendingCategories
@@ -232,23 +297,6 @@ export const DashboardPageShell = ({
             />
           </section>
         )}
-
-        {/* Section 4: Accounts, grouped by currency */}
-        <section>
-          <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3 md:mb-4">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-              Accounts
-            </h2>
-            {/* With a single account there is nothing to put in order */}
-            {accountBalances.length > 1 && (
-              <Button variant="outline" size="sm" onClick={() => setOpenReorderModal(true)}>
-                <Icon name="reorder" className="mr-1.5 size-4" />
-                Reorder
-              </Button>
-            )}
-          </div>
-          <AccountsOverview accountBalances={accountBalances} />
-        </section>
 
         {/* Section 5: Financial Trends */}
         {sixMonthHistory && sixMonthHistory.length > 0 && (
@@ -271,8 +319,8 @@ export const DashboardPageShell = ({
       <ReorderAccountsModal
         open={openReorderModal}
         onClose={() => setOpenReorderModal(false)}
-        accounts={accountBalances}
-        currency={currency}
+        accounts={accountBalances.filter((account) => account.currency === reorderCurrency)}
+        currency={reorderCurrency}
       />
 
       <TransactionFormModal

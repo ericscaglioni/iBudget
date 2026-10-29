@@ -71,7 +71,11 @@ describe("getSettings", () => {
   it("returns the default and the available currencies", async () => {
     accountsIn("EUR", "USD", "EUR");
     db.userSettings.findUnique.mockResolvedValue(null);
-    await expect(settings.getSettings("u1")).resolves.toEqual({ defaultCurrency: "EUR", availableCurrencies: ["EUR", "USD"] });
+    await expect(settings.getSettings("u1")).resolves.toEqual({
+      defaultCurrency: "EUR",
+      availableCurrencies: ["EUR", "USD"],
+      openDashboardOn: "home",
+    });
   });
 });
 
@@ -89,7 +93,7 @@ describe("updateSettings", () => {
     });
     expect(db.userSettings.upsert).toHaveBeenCalledWith({
       where: { userId: "u1" },
-      create: { userId: "u1", baseCurrency: "EUR" },
+      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "home" },
       update: { baseCurrency: "EUR" },
     });
     expect(result.defaultCurrency).toBe("EUR");
@@ -106,5 +110,29 @@ describe("updateSettings", () => {
     db.userSettings.findUnique.mockResolvedValue(null);
     await settings.updateSettings("u1", {});
     expect(db.userSettings.upsert).not.toHaveBeenCalled();
+  });
+
+  it("saves All as the dashboard landing when the user holds more than one currency", async () => {
+    accountsIn("USD", "EUR");
+    db.userSettings.findUnique.mockResolvedValue({ baseCurrency: "EUR", openDashboardOn: "home" });
+
+    await settings.updateSettings("u1", { openDashboardOn: "all" });
+
+    expect(db.userSettings.upsert).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "all" },
+      update: { openDashboardOn: "all" },
+    });
+  });
+
+  it("refuses All when the user only holds one currency", async () => {
+    accountsIn("USD");
+    await expect(settings.updateSettings("u1", { openDashboardOn: "all" })).rejects.toThrow(ValidationError);
+    expect(db.userSettings.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown landing choice", async () => {
+    accountsIn("USD", "EUR");
+    await expect(settings.updateSettings("u1", { openDashboardOn: "banana" })).rejects.toThrow(ValidationError);
   });
 });
