@@ -11,6 +11,7 @@ import { RecurringDeleteModal } from "./RecurringDeleteModal";
 import { TransactionFormModal } from "./TransactionFormModal";
 import { TransactionsTable } from "./TransactionsTable";
 import { TransactionFilters } from "./TransactionFilters";
+import { TransactionTotals, type TransactionTotalsRow } from "./TransactionTotals";
 
 interface Props {
   transactions: TransactionWithDetails[];
@@ -20,6 +21,8 @@ interface Props {
   categoryOptions: CategoryOption[];
   accountOptions: ComboboxOption[];
   transferCategoryId: string;
+  totals: TransactionTotalsRow[];
+  preferredCurrency?: string;
 }
 
 export const TransactionsPageShell = ({
@@ -30,10 +33,12 @@ export const TransactionsPageShell = ({
   accountOptions,
   categoryOptions,
   transferCategoryId,
+  totals,
+  preferredCurrency,
 }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isFiltering, startTransition] = useTransition();
   
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -133,6 +138,12 @@ const handleEdit = (transaction: TransactionWithDetails) => {
             startTransition={startTransition}
           />
 
+          <TransactionTotals
+            totals={totals}
+            isPending={isFiltering}
+            preferredCurrency={preferredCurrency}
+          />
+
           <TransactionsTable
             data={transactions}
             totalCount={totalCount}
@@ -142,6 +153,7 @@ const handleEdit = (transaction: TransactionWithDetails) => {
             categoryOptions={categoryOptions.map((c) => ({ label: c.name, value: c.id, type: c.type }))}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            isFiltering={isFiltering}
           />
         </>
       )}

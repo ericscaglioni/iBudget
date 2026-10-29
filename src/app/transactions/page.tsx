@@ -1,4 +1,4 @@
-import { accountService, categoryService, transactionService } from "@/lib/server/services";
+import { accountService, categoryService, settingsService, transactionService } from "@/lib/server/services";
 import { parseQueryParams } from "@/lib/utils/parse-query";
 import { TransactionsPageShell } from "./_components";
 import { auth } from "@clerk/nextjs/server";
@@ -20,10 +20,15 @@ const TransactionsPage = async ({ searchParams }: Props) => {
     const resolvedSearchParams = await searchParams;
     const queryParams = await parseQueryParams(resolvedSearchParams);
 
-    const { transactions, total } = await transactionService.getTransactionsByUser(userId, queryParams);
-    const userAccounts = await accountService.getUserAccounts(userId);
-    const userCategories = await categoryService.getUserCategories(userId);
-    const transferCategory = await categoryService.getSystemTransferCategory();
+    const [{ transactions, total }, totals, userAccounts, userCategories, transferCategory, settings] =
+      await Promise.all([
+        transactionService.getTransactionsByUser(userId, queryParams),
+        transactionService.summarizeTransactionsByUser(userId, queryParams),
+        accountService.getUserAccounts(userId),
+        categoryService.getUserCategories(userId),
+        categoryService.getSystemTransferCategory(),
+        settingsService.getSettings(userId),
+      ]);
 
     const accountOptions = userAccounts.map((a) => ({ label: a.name, value: a.id, currency: a.currency }));
 
@@ -31,6 +36,8 @@ const TransactionsPage = async ({ searchParams }: Props) => {
       <TransactionsPageShell
         transactions={transactions}
         totalCount={total}
+        totals={totals}
+        preferredCurrency={settings.defaultCurrency}
         page={queryParams.page}
         pageSize={queryParams.pageSize}
         categoryOptions={userCategories}

@@ -4,3 +4,4 @@ export * from "./TransactionFilters";
 export * from "./TransactionFormModal";
 export * from "./TransactionsPageShell";
 export * from "./TransactionsTable";
+export * from "./TransactionTotals";

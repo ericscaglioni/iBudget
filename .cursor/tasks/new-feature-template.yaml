@@ -4,6 +4,7 @@ name: Build Feature (Personal Finance App)
 description: Template for developing new features in the personal finance app.
 
 instructions:
+  - Write a design record in docs/design/ (status proposed) before any feature code. Wait until the user approves, then implement. See the design-record skill.
   - Always respect the Cursor Rule: "Personal Finance App – Project Context".
   - Infer all architectural decisions based on that rule: folder structure, services, form handling, styling, toast usage, API interactions, etc.
   - Every feature should be broken into atomic steps:

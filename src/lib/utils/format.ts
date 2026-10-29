@@ -55,3 +55,23 @@ export const getMonthDateRange = (monthString: string): { startDate: Date; endDa
 
   return { startDate, endDate };
 };
+
+/** UTC dayjs for a YYYY-MM month. Does not use dayjs custom parse (that plugin is not loaded). */
+export const parseYearMonth = (monthString: string) => {
+  const range = getMonthDateRange(monthString);
+  if (!range) return null;
+  return dayjs.utc(range.startDate);
+};
+
+export const shiftCalendarMonth = (monthString: string, months: number) => {
+  const parsed = parseYearMonth(monthString);
+  if (!parsed) return monthString;
+  return parsed.add(months, "month").format("YYYY-MM");
+};
+
+/** Short or long month label from YYYY-MM (e.g. "Oct 2026" / "October 2026"). */
+export const formatMonthYear = (monthString: string, long = false) => {
+  const parsed = parseYearMonth(monthString);
+  if (!parsed) return monthString;
+  return parsed.format(long ? "MMMM YYYY" : "MMM YYYY");
+};

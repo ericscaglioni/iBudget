@@ -1,7 +1,8 @@
 "use client";
 
-import { Combobox, ComboboxOption, Input, MonthYearPicker, SegmentedControl } from "@/components/ui";
+import { ActiveFilters, Combobox, ComboboxOption, Input, MonthYearPicker, SegmentedControl } from "@/components/ui";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { getActiveFilterItems, stripFilterParams } from "@/lib/utils/active-filters";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -71,8 +72,28 @@ export const Filters = ({ filtersConfig, basePath, searchParams, startTransition
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedTextFilters]);
 
+  const handleRemove = (name: string) => {
+    setPendingTextFilters((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    handleFilterChange(name, "");
+  };
+
+  const handleClearAll = () => {
+    setPendingTextFilters({});
+    startTransition(() => {
+      router.push(`${basePath}?${stripFilterParams(searchParams).toString()}`);
+    });
+  };
+
+  const activeItems = getActiveFilterItems(filtersConfig, searchParams);
+
   return (
-    <div className="flex flex-wrap gap-3 sm:gap-4 p-3 sm:p-4">
+    <div className="space-y-3 p-3 sm:p-4">
+    <div className="flex flex-wrap gap-3 sm:gap-4">
       {filtersConfig.map((filter) => {
         const currentValue = searchParams.get(filter.name) || "";
 
@@ -146,6 +167,12 @@ export const Filters = ({ filtersConfig, basePath, searchParams, startTransition
 
         return null;
       })}
+    </div>
+    <ActiveFilters
+      items={activeItems}
+      onRemove={handleRemove}
+      onClearAll={handleClearAll}
+    />
     </div>
   );
 };

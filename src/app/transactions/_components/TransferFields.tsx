@@ -25,6 +25,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         form={form}
         name="fromAccountId"
         label="From Account"
+        required
         value={fromAccountId ?? ""}
         onChange={(val) => form.setValue("fromAccountId", val, { shouldDirty: true, shouldValidate: true })}
         options={accountOptions}
@@ -36,6 +37,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
         form={form}
         name="toAccountId"
         label="To Account"
+        required
         value={form.watch("toAccountId") ?? ""}
         onChange={(val) => form.setValue("toAccountId", val, { shouldDirty: true, shouldValidate: true })}
         disabled={!fromAccountId}
@@ -50,6 +52,7 @@ export const TransferFields = ({ form, accountOptions, onCreateAccount }: Props)
           form={form}
           name="toAmount"
           label={`Amount received (${toCurrency})`}
+          required
           inputProps={{
             type: "number",
             step: "0.01",

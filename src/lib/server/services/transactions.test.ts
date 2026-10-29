@@ -119,6 +119,82 @@ describe("getTransactionsByUser", () => {
   });
 });
 
+describe("summarizeTransactionsByUser", () => {
+  const row = (overrides: Record<string, unknown> = {}) => ({
+    type: "expense",
+    amount: decimal(10),
+    transferId: null,
+    account: { currency: "USD" },
+    ...overrides,
+  });
+
+  it("adds income and expenses per currency for every matching row, not the page", async () => {
+    db.transaction.findMany.mockResolvedValueOnce([
+      row({ type: "income", amount: decimal(100) }),
+      row({ amount: decimal(40) }),
+      row({ type: "income", amount: decimal(20), account: { currency: "BRL" } }),
+    ]);
+
+    await expect(transactions.summarizeTransactionsByUser("u1", queryParams({ page: 3, pageSize: 20 }))).resolves.toEqual([
+      { currency: "BRL", income: 20, expenses: 0, net: 20 },
+      { currency: "USD", income: 100, expenses: 40, net: 60 },
+    ]);
+    expect(db.transaction.findMany.mock.calls[0][0].skip).toBeUndefined();
+    expect(db.transaction.findMany.mock.calls[0][0].take).toBeUndefined();
+  });
+
+  it("ignores a transfer between two accounts of the same currency", async () => {
+    db.transaction.findMany
+      .mockResolvedValueOnce([
+        row({ amount: decimal(300), transferId: "tr1" }),
+        row({ type: "income", amount: decimal(300), transferId: "tr1" }),
+      ])
+      .mockResolvedValueOnce([
+        { transferId: "tr1", account: { currency: "USD" } },
+        { transferId: "tr1", account: { currency: "USD" } },
+      ]);
+
+    await expect(transactions.summarizeTransactionsByUser("u1", queryParams())).resolves.toEqual([]);
+  });
+
+  it("counts a currency exchange as expense in the source and income in the destination", async () => {
+    db.transaction.findMany
+      .mockResolvedValueOnce([
+        row({ amount: decimal(100), transferId: "tr1", account: { currency: "USD" } }),
+        row({ type: "income", amount: decimal(520), transferId: "tr1", account: { currency: "BRL" } }),
+      ])
+      .mockResolvedValueOnce([
+        { transferId: "tr1", account: { currency: "USD" } },
+        { transferId: "tr1", account: { currency: "BRL" } },
+      ]);
+
+    await expect(transactions.summarizeTransactionsByUser("u1", queryParams())).resolves.toEqual([
+      { currency: "BRL", income: 520, expenses: 0, net: 520 },
+      { currency: "USD", income: 0, expenses: 100, net: -100 },
+    ]);
+  });
+
+  it("uses the same account, category, type, description and month filters as the list", async () => {
+    db.transaction.findMany.mockResolvedValueOnce([]);
+    await transactions.summarizeTransactionsByUser(
+      "u1",
+      queryParams({
+        filters: { accountId: "a1", categoryId: "c1", type: "income", description: "coffee (big)", month: "2026-02" },
+      })
+    );
+    const { where } = db.transaction.findMany.mock.calls[0][0];
+    expect(where).toMatchObject({
+      userId: "u1",
+      accountId: "a1",
+      categoryId: "c1",
+      type: "income",
+      description: { contains: "coffee big" },
+    });
+    expect(where.OR).toBeUndefined();
+    expect(where.date.gte.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+  });
+});
+
 describe("getTransferTransactionByTransferId", () => {
   it("returns the incoming side of a transfer with plain numbers", async () => {
     db.transaction.findFirst.mockResolvedValue({

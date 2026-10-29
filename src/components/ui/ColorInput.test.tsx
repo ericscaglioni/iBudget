@@ -6,14 +6,14 @@ import { ColorInput } from "./ColorInput";
 
 type FormValues = { color: string };
 
-const Harness = ({ error }: { error?: string }) => {
+const Harness = ({ error, required }: { error?: string; required?: boolean }) => {
   const form = useForm<FormValues>({ defaultValues: { color: "#10B981" } });
   useEffect(() => {
     if (error) {
       form.setError("color", { type: "manual", message: error });
     }
   }, [error, form]);
-  return <ColorInput form={form} name="color" label="Colour" />;
+  return <ColorInput form={form} name="color" label="Colour" required={required} />;
 };
 
 describe("ColorInput", () => {
@@ -26,5 +26,10 @@ describe("ColorInput", () => {
   it("shows a validation error", async () => {
     render(<Harness error="Color is required" />);
     await waitFor(() => expect(screen.getByText("Color is required")).toBeInTheDocument());
+  });
+
+  it("marks a required field with an asterisk", () => {
+    render(<Harness required />);
+    expect(screen.getByText("*")).toBeInTheDocument();
   });
 });

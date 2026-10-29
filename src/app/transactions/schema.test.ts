@@ -67,6 +67,8 @@ describe("createTransactionFormSchema: expenses and incomes", () => {
   it("needs an account and a category", () => {
     expect(messages({ ...expense, accountId: undefined })).toContain("accountId: Account is required");
     expect(messages({ ...expense, categoryId: undefined })).toContain("categoryId: Category is required");
+    expect(messages({ ...expense, categoryId: null })).toContain("categoryId: Category is required");
+    expect(messages({ ...expense, categoryId: null }).join(" ")).not.toMatch(/expected string/i);
   });
 
   it("needs them to be among the available options", () => {

@@ -52,4 +52,7 @@ rather than inventing a new shape:
 - [Changelog entry](templates/changelog.md)
 - [Design record](templates/design-record.md)
 
-Accepted design records live in [docs/design](design/).
+Before any **new feature** code, write a design record in
+[docs/design](design/) (`proposed` → user approves → then code). The
+`design-record` skill is the workflow. Skip a new record for routine bug
+fixes.

@@ -15,6 +15,7 @@ extend that kit instead of styling a one-off.
 | Dropdown / selector | `Combobox` (`FormCombobox` in forms) | native `<select>` |
 | Month | `MonthYearPicker` | a free-text date or native month input |
 | Text field | `Input` / `FormTextInput` | a raw `<input>` with new styles |
+| Field label | `FieldLabel` (`required` for the asterisk) | a homemade `*` on the label |
 | Choice of a few options | `RadioGroup` / `FormRadioGroup` / `SegmentedControl` | a row of custom chips |
 | Dialog | `Modal`, `FormModal`, `ConfirmationModal`, `DeleteModal` | a homemade overlay |
 | Icons | `Icon` (add a name in `Icon.tsx` if missing) | importing Heroicons in the page |
@@ -58,13 +59,29 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   the page from sliding under it). Do not invent a second top bar. Do not put
   `overflow-x-hidden` on `html`/`body` — use `overflow-x-clip` (hidden makes
   sticky/fixed headers fail).
+- The site footer (`AppFooter`) shows `iBudget` and the version from
+  `package.json`. Do not hard-code a version number. Hide it on `/login`, like
+  the navbar.
 - Match the spacing, radius (`rounded-md`) and shadows of the neighbouring cards and tables.
 - Stack on mobile; follow the existing `md` / `xl` breakpoints (the dashboard grid is the reference: 1 column, then 3, then 5).
 - List pagination stays on one row on a phone: rows-per-page on the left, arrows and "Page x of x" on the right (no Previous/Next words).
+- Filtering, sorting or paging a list shows a loading overlay on the table
+  rows (not the filters or the rest of the page) until the new rows arrive.
+- Active list filters show as dismissible pills under the filter controls,
+  with a "Clear filters" action. Use `ActiveFilters`; do not restyle the
+  coloured category `Chip` for this.
+- The transactions list has a small “Totals for these filters” summary
+  (`TransactionTotals`): a labelled card with right-aligned Income / Expenses
+  / Net. One currency is visible; extra currencies expand with `Collapsible`
+  via View all. Do not turn it into dashboard colour cards, the transactions
+  `Table`, or add currencies together.
 - Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.
 - Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker.
 - In a modal with a long list, the list scrolls and the action footer stays visible (`ReorderAccountsModal` is the reference).
 - Height changes must be animated. `Collapsible` exists for that; do not snap content in and out.
+- Required fields in form modals show an asterisk on the label (`required` on
+  `FormTextInput` / `FormCombobox` / `FormRadioGroup` / `ColorInput`). Do not
+  invent a different required marker.
 
 ## Checklist
 
@@ -74,3 +91,4 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
 - [ ] It works stacked on a phone and at `md` / `xl`, like the screens around it.
 - [ ] Long lists in dialogs scroll; the footer does not disappear.
 - [ ] Expanding and collapsing is smooth.
+- [ ] Required fields in a form modal have an asterisk.

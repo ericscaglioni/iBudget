@@ -84,12 +84,14 @@ export const CategoryFormModal = ({ open, onClose, category, defaultName, defaul
         name="name"
         label="Name"
         form={form}
+        required
       />
 
       <FormRadioGroup
         form={form}
         name="type"
         label="Type"
+        required
         options={TYPE_OPTIONS}
       />
 
@@ -97,6 +99,7 @@ export const CategoryFormModal = ({ open, onClose, category, defaultName, defaul
         form={form}
         name="color"
         label="Color"
+        required
       />
     </FormModal>
   );

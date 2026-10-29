@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
-import { FieldErrors, FieldValues, UseFormReturn } from 'react-hook-form';
+import { FieldValues, UseFormReturn } from 'react-hook-form';
 import { Button } from './Button';
 import { Modal } from './Modal';
 import { Spinner } from './Spinner';
@@ -81,14 +81,6 @@ export const FormModal = <TData extends FieldValues,>({
     if (!isSubmitting) onClose();
   };
 
-  // handleSubmit does nothing visible when validation fails, so a problem in a field that isn't on
-  // screen would make Save look broken. Always say something.
-  const onInvalid = (errors: FieldErrors<TData>) => {
-    const first = Object.values(errors).find((error) => typeof error?.message === 'string');
-    const reason = first?.message as string | undefined;
-    showError(reason ? `Please check the form: ${reason}` : 'Please check the form and try again.');
-  };
-
   const onFormSubmit = (data: TData) => {
     setActiveAction('primary');
     return runSubmit(onSubmit)(data);
@@ -101,7 +93,7 @@ export const FormModal = <TData extends FieldValues,>({
 
   return (
     <Modal open={open} onClose={handleClose} title={title} description={description} maxWidth={maxWidth} fullScreenOnMobile>
-      <form onSubmit={form.handleSubmit(onFormSubmit, onInvalid)} className="min-w-0 max-w-full space-y-4">
+      <form onSubmit={form.handleSubmit(onFormSubmit)} className="min-w-0 max-w-full space-y-4">
         {/* Disabled while loading so nothing can be typed into (or submitted from) a half-filled form */}
         <div className="relative" aria-busy={isLoading}>
           <fieldset disabled={isLoading} className="m-0 min-w-0 space-y-4 border-0 p-0">
@@ -134,7 +126,7 @@ export const FormModal = <TData extends FieldValues,>({
               type='button'
               variant='outline'
               size='md'
-              onClick={form.handleSubmit(onSecondarySubmit, onInvalid)}
+              onClick={form.handleSubmit(onSecondarySubmit)}
               isLoading={isSubmitting && activeAction === 'secondary'}
               disabled={!isDirty || isSubmitting || isLoading}
               className="w-full sm:w-auto order-2"

@@ -14,18 +14,19 @@ export const createTransactionFormSchema = (accountOptions: { value: string; cur
       .min(3, "Description has to be at least 3 characters long")
       .max(DESCRIPTION_MAX_LENGTH, `Description can be at most ${DESCRIPTION_MAX_LENGTH} characters long`),
 
-    accountId: z.string().optional(),
-    categoryId: z.string().optional(),
+    // Comboboxes can send null when the selection is cleared; optional() alone rejects it
+    accountId: z.string().nullish(),
+    categoryId: z.string().nullish(),
 
-    fromAccountId: z.string().optional(),
-    toAccountId: z.string().optional(),
+    fromAccountId: z.string().nullish(),
+    toAccountId: z.string().nullish(),
     // Amount that arrives in the destination account, for transfers between different currencies
-    toAmount: z.string().optional(),
+    toAmount: z.string().nullish(),
 
     // Recurring transaction fields
     isRecurring: z.boolean().optional(),
-    frequency: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
-    endsAt: z.string().optional(),
+    frequency: z.enum(["daily", "weekly", "monthly", "yearly"]).nullish(),
+    endsAt: z.string().nullish(),
   })
   .superRefine((data, ctx) => {
     // Validate expense/income fields

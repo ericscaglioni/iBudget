@@ -25,6 +25,8 @@ type Props<TData> = {
   enablePagination?: boolean;
   enableSorting?: boolean;
   filtersConfig?: TableFilter[];
+  /** Extra pending from a parent that owns the filter row (transactions). */
+  isFiltering?: boolean;
 };
 
 export function Table<TData>({
@@ -37,10 +39,12 @@ export function Table<TData>({
   enablePagination = false,
   enableSorting = false,
   filtersConfig,
+  isFiltering = false,
 }: Props<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const showLoading = isPending || isFiltering;
 
   const table = useReactTable({
     data,
@@ -63,7 +67,6 @@ export function Table<TData>({
 
   return (
     <div className="space-y-4">
-      {/* 🚀 DYNAMIC FILTERS */}
       {filtersConfig && (
         <Filters
           filtersConfig={filtersConfig}
@@ -72,12 +75,17 @@ export function Table<TData>({
           startTransition={startTransition}
         />
       )}
-      <div className="relative overflow-x-auto overflow-y-visible rounded-md border border-gray-200">
-        {isPending && (
-          <div className="absolute inset-0 z-10 bg-white/70 flex items-center justify-center">
-            <Spinner />
-          </div>
-        )}
+      <div className="overflow-x-auto overflow-y-visible rounded-md border border-gray-200">
+        <div className="relative" aria-busy={showLoading || undefined}>
+          {showLoading && (
+            <div
+              className="absolute inset-0 z-10 flex items-center justify-center bg-white/50"
+              role="status"
+              aria-label="Loading"
+            >
+              <Spinner />
+            </div>
+          )}
         {/* 🚀 TABLE */}
         <table className="table-auto w-full min-w-[600px] sm:min-w-full bg-white text-sm text-left">
           <thead className="bg-gray-100">
@@ -158,6 +166,7 @@ export function Table<TData>({
         {data.length === 0 && (
           <div className="p-4 text-center text-sm text-gray-500">No data available.</div>
         )}
+        </div>
 
         {enablePagination && (
           <Pagination
@@ -166,6 +175,7 @@ export function Table<TData>({
             pageSize={pageSize}
             searchParams={searchParams}
             basePath={basePath}
+            startTransition={startTransition}
           />
         )}
       </div>

@@ -11,6 +11,7 @@ interface Props {
   pageSize: number;
   searchParams: URLSearchParams
   basePath?: string;
+  startTransition?: (callback: () => void) => void;
 }
 
 const pageSizeOptions = PAGE_SIZE_OPTIONS.map((size) => ({ label: String(size), value: String(size) }));
@@ -21,13 +22,20 @@ export const Pagination = ({
   pageSize,
   searchParams,
   basePath = "",
+  startTransition = (callback) => callback(),
 }: Props) => {
   const router = useRouter();
+
+  const navigate = (href: string) => {
+    startTransition(() => {
+      router.push(href);
+    });
+  };
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(newPage));
-    router.push(`${basePath}?${params.toString()}`);
+    navigate(`${basePath}?${params.toString()}`);
   };
 
   // The page size lives in the URL, like the filters and the sorting, so a link keeps it.
@@ -36,7 +44,7 @@ export const Pagination = ({
     const params = new URLSearchParams(searchParams.toString());
     params.set("pageSize", String(newPageSize));
     params.delete("page");
-    router.push(`${basePath}?${params.toString()}`);
+    navigate(`${basePath}?${params.toString()}`);
   };
 
   return (

@@ -44,6 +44,7 @@ export function FormFieldsByType({
         form={form}
         name="accountId"
         label="Account"
+        required
         value={watch("accountId") ?? ""}
         onChange={(val) => setValue("accountId", val, { shouldDirty: true, shouldValidate: true })}
         options={accountOptions}
@@ -54,6 +55,7 @@ export function FormFieldsByType({
         form={form}
         name="categoryId"
         label="Category"
+        required
         value={watch("categoryId") ?? ""}
         onChange={(val) => setValue("categoryId", val, { shouldDirty: true, shouldValidate: true })}
         options={categoryOptions}

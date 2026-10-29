@@ -80,11 +80,9 @@ const calculateInstallmentInfo = async (transactions: any[]): Promise<any[]> => 
   });
 };
 
-export const getTransactionsByUser = async (userId: string, props: QueryParams) => {
-  const { page, pageSize, sortField = "createdAt", sortOrder = "desc", filters } = props;
+const transactionSearchWhere = (userId: string, filters: QueryParams["filters"]) => {
   const sanitizedDescription = filters.description ? sanitizeFilterInput(filters.description) : undefined;
 
-  // Parse month filter if provided (format: YYYY-MM)
   let dateFilter = {};
   if (filters.month) {
     const dateRange = getMonthDateRange(filters.month);
@@ -98,23 +96,43 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
     }
   }
 
-  const where = {
+  return {
     userId,
     ...(filters.accountId ? { accountId: filters.accountId } : {}),
     ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.type ? { type: filters.type as TransactionType } : {}),
     ...(sanitizedDescription ? { description: { contains: sanitizedDescription } } : {}),
     ...dateFilter,
-    OR: [
-      { transferId: null },
-      {
-        AND: [
-          { transferId: { not: null } },
-          { type: TransactionType.expense },
-          { category: { userId: null } },
-        ],
-      },
-    ],
+  };
+};
+
+/** Listings hide the incoming side of a transfer; both sides stay in the database. */
+const listingScope = {
+  OR: [
+    { transferId: null },
+    {
+      AND: [
+        { transferId: { not: null } },
+        { type: TransactionType.expense },
+        { category: { userId: null } },
+      ],
+    },
+  ],
+};
+
+export type CurrencyTotal = {
+  currency: string;
+  income: number;
+  expenses: number;
+  net: number;
+};
+
+export const getTransactionsByUser = async (userId: string, props: QueryParams) => {
+  const { page, pageSize, sortField = "createdAt", sortOrder = "desc", filters } = props;
+
+  const where = {
+    ...transactionSearchWhere(userId, filters),
+    ...listingScope,
   };
 
   const [transactions, total] = await prisma.$transaction([
@@ -149,6 +167,75 @@ export const getTransactionsByUser = async (userId: string, props: QueryParams) 
 
   return { transactions: serializedTransactions, total };
 }
+
+/**
+ * Income / expenses / net for every row that matches the current filters (not just this page),
+ * grouped by currency. Same-currency transfers are skipped; a currency exchange counts as
+ * expense in the source currency and income in the destination.
+ */
+export const summarizeTransactionsByUser = async (
+  userId: string,
+  props: QueryParams
+): Promise<CurrencyTotal[]> => {
+  const rows = await prisma.transaction.findMany({
+    where: transactionSearchWhere(userId, props.filters),
+    select: {
+      type: true,
+      amount: true,
+      transferId: true,
+      account: { select: { currency: true } },
+    },
+  });
+
+  const transferIds = [
+    ...new Set(rows.map((row) => row.transferId).filter((id): id is string => Boolean(id))),
+  ];
+  const transferSides = transferIds.length
+    ? await prisma.transaction.findMany({
+        where: { userId, transferId: { in: transferIds } },
+        select: { transferId: true, account: { select: { currency: true } } },
+      })
+    : [];
+
+  const transferCurrencies = new Map<string, Set<string>>();
+  transferSides.forEach((side) => {
+    if (!side.transferId) return;
+    const currencies = transferCurrencies.get(side.transferId) ?? new Set<string>();
+    currencies.add(side.account.currency);
+    transferCurrencies.set(side.transferId, currencies);
+  });
+
+  const byCurrency = new Map<string, { income: number; expenses: number }>();
+  const ensure = (currency: string) => {
+    const entry = byCurrency.get(currency) ?? { income: 0, expenses: 0 };
+    byCurrency.set(currency, entry);
+    return entry;
+  };
+
+  rows.forEach((row) => {
+    if (row.transferId) {
+      const currencies = transferCurrencies.get(row.transferId);
+      if (!currencies || currencies.size < 2) return;
+    }
+
+    const amount = toNumber(row.amount);
+    const entry = ensure(row.account.currency);
+    if (row.type === TransactionType.income) {
+      entry.income += amount;
+    } else {
+      entry.expenses += amount;
+    }
+  });
+
+  return [...byCurrency.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([currency, { income, expenses }]) => ({
+      currency,
+      income,
+      expenses,
+      net: income - expenses,
+    }));
+};
 
 interface GetTransferTransactionByTransferIdProps {
   transferId: string;

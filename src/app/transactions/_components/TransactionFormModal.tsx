@@ -194,30 +194,28 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
     setPendingFormData(null);
   };
 
-  const handleCreate = async (data: TransactionFormInput) => {
-    const payload = {
-      ...data,
-      amount: parseFloat(data.amount),
-      toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
-      date: data.date,
-      type: mode,
-      endsAt: data.endsAt || undefined,
-    };
+  const toPayload = (data: TransactionFormInput) => ({
+    ...data,
+    amount: parseFloat(data.amount),
+    toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
+    date: data.date,
+    type: mode,
+    accountId: data.accountId || undefined,
+    categoryId: data.categoryId || undefined,
+    fromAccountId: data.fromAccountId || undefined,
+    toAccountId: data.toAccountId || undefined,
+    frequency: data.frequency || undefined,
+    endsAt: data.endsAt || undefined,
+  });
 
-    await transactionService.createTransaction(payload);
+  const handleCreate = async (data: TransactionFormInput) => {
+    await transactionService.createTransaction(toPayload(data));
   }
 
   const handleUpdate = async (data: TransactionFormInput, updateScope?: 'one' | 'future') => {
     if (!transaction) return;
 
-    const payload = {
-      ...data,
-      amount: parseFloat(data.amount),
-      toAmount: data.toAmount ? parseFloat(data.toAmount) : undefined,
-      date: data.date,
-      type: mode,
-      endsAt: data.endsAt || undefined,
-    };
+    const payload = toPayload(data);
 
     await transactionService.updateTransaction(
       transaction.id,
@@ -285,7 +283,13 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   const handleModeChange = (newMode: typeof mode) => {
     setMode(newMode);
     form.setValue("type", newMode);
-    form.trigger("type");
+    // Expense and income categories are different lists; a leftover selection is invalid
+    form.setValue(
+      "categoryId",
+      newMode === TransactionTypeEnum.transfer ? transferCategoryId : "",
+      { shouldDirty: true, shouldValidate: false },
+    );
+    form.clearErrors("categoryId");
   };
 
   const handleCreateAccountRequest = (field: AccountField, name: string) => {
@@ -368,6 +372,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
           form={form}
           name="amount"
           label="Amount"
+          required
           inputProps={{ type: "number", step: "0.01", autoFocus: true }}
         />
 
@@ -375,6 +380,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
           form={form}
           name="date"
           label="Date"
+          required
           inputProps={{ type: "date" }}
         />
 
@@ -391,6 +397,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
           form={form}
           name="description"
           label="Description"
+          required
           inputProps={{ placeholder: "Description" }}
         />
 
@@ -421,6 +428,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
                   form={form}
                   name="frequency"
                   label="Frequency"
+                  required
                   options={frequencyOptions}
                   value={selectedFrequency || ""}
                   onChange={(val) => setValue("frequency", val as "daily" | "weekly" | "monthly" | "yearly", { shouldDirty: true, shouldValidate: true })}

@@ -2,6 +2,7 @@
 
 import { PageShell } from "@/components";
 import { dayjs } from "@/lib/utils/dayjs.js";
+import { formatMonthYear, parseYearMonth, shiftCalendarMonth } from "@/lib/utils/format";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AccountsOverview } from "./AccountsOverview";
@@ -104,7 +105,7 @@ export const DashboardPageShell = ({
 
   // Find the monthly data for the selected month (and the one before, for the comparison)
   const selectedMonthData = monthlyTotals.find((m) => m.month === selectedMonth);
-  const previousMonthKey = dayjs(selectedMonth, "YYYY-MM").subtract(1, "month").format("YYYY-MM");
+  const previousMonthKey = shiftCalendarMonth(selectedMonth, -1);
   const previousMonthData = monthlyTotals.find((m) => m.month === previousMonthKey);
   const hasPreviousMonthData = !!previousMonthData;
   const currentMonthKey = dayjs().format("YYYY-MM");
@@ -112,7 +113,7 @@ export const DashboardPageShell = ({
   const newestMonth = monthlyTotals[monthlyTotals.length - 1]?.month ?? currentMonthKey;
 
   // Format the selected month for display
-  const formattedMonth = dayjs(selectedMonth, "YYYY-MM").format("MMMM YYYY");
+  const formattedMonth = formatMonthYear(selectedMonth, true);
 
   return (
     <>
@@ -180,7 +181,7 @@ export const DashboardPageShell = ({
                 </h3>
 
                 <button
-                  onClick={() => handleMonthChange(dayjs(selectedMonth, "YYYY-MM").add(1, "month").format("YYYY-MM"))}
+                  onClick={() => handleMonthChange(shiftCalendarMonth(selectedMonth, 1))}
                   disabled={selectedMonth >= newestMonth}
                   className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Next month"
@@ -211,7 +212,7 @@ export const DashboardPageShell = ({
               net={selectedMonthData.net}
               currency={currency}
               previousExpenses={previousMonthData?.expenses}
-              previousLabel={dayjs(previousMonthKey, "YYYY-MM").format("MMMM")}
+              previousLabel={parseYearMonth(previousMonthKey)?.format("MMMM") ?? previousMonthKey}
             />
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
