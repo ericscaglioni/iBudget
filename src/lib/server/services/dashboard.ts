@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { TransactionType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { calendarMonthString, getMonthDateRange } from "@/lib/utils/format";
+import { calendarMonthString, getMonthDateRange, parseYearMonth } from "@/lib/utils/format";
 import { dayjs } from "@/lib/utils/dayjs.js";
 import { resolveCurrency } from "./settings";
 import { sortAccountsByUserOrder } from "@/lib/utils/sort-accounts";
@@ -362,9 +362,9 @@ export const getDashboardData = async (
   const latestMonth = latest?.date ? calendarMonthString(latest.date) : currentMonthKey;
   const endMonth = latestMonth > currentMonthKey ? latestMonth : currentMonthKey;
   const monthsThroughLatest: string[] = [];
-  let cursor = dayjs(recentMonths[0], "YYYY-MM");
-  const end = dayjs(endMonth, "YYYY-MM");
-  while (!cursor.isAfter(end, "month")) {
+  let cursor = parseYearMonth(recentMonths[0]);
+  const end = parseYearMonth(endMonth);
+  while (cursor && end && !cursor.isAfter(end, "month")) {
     monthsThroughLatest.push(cursor.format("YYYY-MM"));
     cursor = cursor.add(1, "month");
   }

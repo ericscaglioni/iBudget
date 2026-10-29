@@ -9,6 +9,11 @@ describe("Input", () => {
     expect(screen.getByDisplayValue("Wallet")).toBeInTheDocument();
   });
 
+  it("marks a required field with an asterisk", () => {
+    render(<Input label="Amount" required />);
+    expect(screen.getByText("*")).toBeInTheDocument();
+  });
+
   it("renders without a label", () => {
     render(<Input aria-label="Search" />);
     expect(screen.getByRole("textbox", { name: "Search" })).toBeInTheDocument();

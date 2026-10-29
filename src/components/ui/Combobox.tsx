@@ -9,6 +9,7 @@ import {
 } from "@headlessui/react";
 import { useState, useEffect } from "react";
 import { Icon } from "./Icon";
+import { FieldLabel } from "./FieldLabel";
 import { MobileCombobox } from "./MobileCombobox";
 
 export type ComboboxOption = {
@@ -25,6 +26,7 @@ type Props = {
   onChange: (value: string) => void;
   placeholder?: string;
   label?: string;
+  required?: boolean;
   allValues?: boolean;
   disabled?: boolean;
   /** Called with the typed text when the user chooses "Create new ...". The parent owns creation and the options list. */
@@ -43,6 +45,7 @@ export const Combobox = ({
   onChange,
   placeholder,
   label,
+  required = false,
   allValues = false,
   disabled = false,
   onCreateOption,
@@ -80,13 +83,13 @@ export const Combobox = ({
 
   const selected = options.find((opt) => opt.value === value);
 
-  const handleChange = (selectedValue: string) => {
+  const handleChange = (selectedValue: string | null) => {
     if (selectedValue === CREATE_VALUE) {
       onCreateOption?.(query.trim());
       setQuery("");
       return;
     }
-    onChange(selectedValue);
+    onChange(selectedValue ?? "");
   };
 
   const showCreate =
@@ -98,7 +101,7 @@ export const Combobox = ({
 
   return (
     <div className="w-full min-w-0 max-w-full sm:w-auto">
-      {label && <label className="block text-sm font-medium mb-1">{label}</label>}
+      {label && <FieldLabel required={required}>{label}</FieldLabel>}
       
       {/* Mobile Modal Version */}
       {isMobile ? (

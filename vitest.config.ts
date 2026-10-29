@@ -12,6 +12,7 @@ const coverage = {
     "src/app/**/schema.ts",
     "src/components/ui/**/*.{ts,tsx}",
     "src/components/PageShell.tsx",
+    "src/components/AppFooter.tsx",
     "src/components/FloatingTransactionButton.tsx",
     "src/components/utils/**/*.tsx",
     "src/components/guide/**/*.tsx",

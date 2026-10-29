@@ -4,7 +4,7 @@ import { moveItem } from "./move-item";
 import { sortAccountsByUserOrder } from "./sort-accounts";
 import { ClientDecimal, toNumber } from "./decimal";
 import { getBaseUrl } from "./url";
-import { formatCurrency, formatDate, getMonthDateRange, parseCalendarDate } from "./format";
+import { formatCurrency, formatDate, formatMonthYear, getMonthDateRange, parseCalendarDate, parseYearMonth, shiftCalendarMonth } from "./format";
 import { cycleSortParams } from "./cycle-sort";
 
 describe("moveItem", () => {
@@ -138,6 +138,18 @@ describe("format helpers", () => {
   it("formats a date with the localized long format", () => {
     expect(formatDate("2026-10-25")).toContain("2026");
     expect(formatDate("2026-10-25")).toMatch(/Oct/);
+  });
+
+  it("formats a YYYY-MM month without producing Invalid Date", () => {
+    expect(formatMonthYear("2026-10")).toMatch(/Oct/);
+    expect(formatMonthYear("2026-10")).toContain("2026");
+    expect(formatMonthYear("2026-10", true)).toMatch(/October/);
+    expect(formatMonthYear("2026-10")).not.toMatch(/Invalid Date/i);
+    expect(formatMonthYear("nope")).toBe("nope");
+    expect(parseYearMonth("2026-10")?.format("YYYY-MM")).toBe("2026-10");
+    expect(parseYearMonth("nope")).toBeNull();
+    expect(shiftCalendarMonth("2026-10", 1)).toBe("2026-11");
+    expect(shiftCalendarMonth("2026-01", -1)).toBe("2025-12");
   });
 
   it("gives the first and last UTC moment of a month", () => {

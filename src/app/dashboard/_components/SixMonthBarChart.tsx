@@ -1,14 +1,13 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { dayjs } from "@/lib/utils/dayjs.js";
+import { formatMonthYear } from "@/lib/utils/format";
 
 interface SixMonthBarChartProps {
   data: { month: string; income: number; expenses: number }[];
   currency: string;
 }
 
-// Custom tooltip component
 interface TooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -24,7 +23,7 @@ const CustomTooltip = ({ active, payload, label, currency }: TooltipProps & { cu
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
         <p className="text-sm font-medium text-gray-900 mb-2">
-          {dayjs(label, "YYYY-MM").format("MMMM YYYY")}
+          {label ? formatMonthYear(label, true) : ""}
         </p>
         {payload.map((entry, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
@@ -37,7 +36,6 @@ const CustomTooltip = ({ active, payload, label, currency }: TooltipProps & { cu
   return null;
 };
 
-// Format currency helper
 const formatCurrency = (amount: number, currency: string): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -47,7 +45,6 @@ const formatCurrency = (amount: number, currency: string): string => {
   }).format(amount);
 };
 
-// Compact Y-axis ticks (e.g. "R$12K"), in the currency being displayed
 const formatCompactCurrency = (amount: number, currency: string): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -57,30 +54,20 @@ const formatCompactCurrency = (amount: number, currency: string): string => {
   }).format(amount);
 };
 
-// Format month for display
-const formatMonth = (month: string): string => {
-  return dayjs(month, "YYYY-MM").format("MMM YYYY");
-};
-
 export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
-  // Transform data for Recharts
   const chartData = data.map(item => ({
     month: item.month,
-    displayMonth: formatMonth(item.month),
     Income: item.income,
     Expenses: item.expenses,
   }));
 
-  // Calculate max value for Y-axis scaling
   const maxValue = Math.max(
     ...chartData.flatMap(item => [item.Income, item.Expenses])
   );
   
-  // Smart Y-axis scaling: round to nice increments with padding above max
   const calculateYAxisConfig = (max: number): { yAxisMax: number; stepSize: number } => {
     if (max === 0) return { yAxisMax: 100, stepSize: 20 };
     
-    // Determine the step size based on max value
     let stepSize: number;
     if (max <= 100) stepSize = 20;
     else if (max <= 500) stepSize = 100;
@@ -90,8 +77,6 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
     else if (max <= 100000) stepSize = 10000;
     else stepSize = 50000;
     
-    // Round up to the nearest step, then add one more step for padding
-    // This ensures the max value never coincides with the top tick
     const roundedMax = Math.ceil(max / stepSize) * stepSize;
     const yAxisMax = roundedMax === max ? roundedMax + stepSize : roundedMax;
     
@@ -100,7 +85,6 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
   
   const { yAxisMax, stepSize } = calculateYAxisConfig(maxValue);
   
-  // Generate tick values based on step size for perfect alignment
   const generateTicks = (max: number, step: number): number[] => {
     const ticks: number[] = [];
     for (let i = 0; i <= max; i += step) {
@@ -111,7 +95,6 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
   
   const yAxisTicks = generateTicks(yAxisMax, stepSize);
 
-  // Format Y-axis tick values
   const formatYAxisTick = (value: number) => formatCompactCurrency(value, currency);
 
   if (chartData.length === 0) {
@@ -146,7 +129,8 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
-              dataKey="displayMonth" 
+              dataKey="month"
+              tickFormatter={(value: string) => formatMonthYear(value)}
               tick={{ fontSize: 12, fill: '#6b7280' }}
               axisLine={{ stroke: '#e5e7eb' }}
               tickLine={{ stroke: '#e5e7eb' }}

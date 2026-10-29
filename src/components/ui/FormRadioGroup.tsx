@@ -1,6 +1,7 @@
 "use client";
 
 import { UseFormReturn, Path, FieldValues, useWatch } from "react-hook-form";
+import { FieldLabel } from "./FieldLabel";
 import { RadioGroup } from "./RadioGroup";
 
 interface RadioOption {
@@ -14,6 +15,7 @@ interface FormRadioGroupProps<TFormValues extends FieldValues> {
   label: string;
   options: RadioOption[];
   className?: string;
+  required?: boolean;
 }
 
 export const FormRadioGroup = <TFormValues extends FieldValues>({
@@ -22,6 +24,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
   label,
   options,
   className,
+  required,
 }: FormRadioGroupProps<TFormValues>) => {
   const {
     setValue,
@@ -33,7 +36,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
 
   return (
     <div className={className}>
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <FieldLabel required={required} className="text-gray-700">{label}</FieldLabel>
       <RadioGroup
         options={options}
         value={value}

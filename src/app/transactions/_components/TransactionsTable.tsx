@@ -15,6 +15,7 @@ interface Props {
   categoryOptions: ComboboxOption[];
   onEdit: (transaction: TransactionWithDetails) => void;
   onDelete: (transaction: TransactionWithDetails) => void;
+  isFiltering?: boolean;
 }
 
 export const TransactionsTable = ({
@@ -24,6 +25,7 @@ export const TransactionsTable = ({
   pageSize,
   onEdit,
   onDelete,
+  isFiltering = false,
 }: Props) => {
   return (
     <Table
@@ -39,6 +41,7 @@ export const TransactionsTable = ({
       basePath="/transactions"
       enablePagination
       enableSorting
+      isFiltering={isFiltering}
     />
   );
 };

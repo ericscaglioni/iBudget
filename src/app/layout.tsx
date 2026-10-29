@@ -1,3 +1,4 @@
+import { AppFooter } from "@/components/AppFooter";
 import { Navbar } from "@/components/NavBar";
 import { FloatingTransactionButton } from "@/components/FloatingTransactionButton";
 import { GlobalTransactionModal } from "@/components/GlobalTransactionModal";
@@ -35,9 +36,10 @@ export default function RootLayout({
                 <Toaster
                   position="top-right"
                 />
-                <main className="min-h-screen pb-24">
+                <main className="min-h-screen pb-8">
                   {children}
                 </main>
+                <AppFooter />
                 <FloatingTransactionButton />
                 <GlobalTransactionModal />
                 <TransactionModalDataInitializer />

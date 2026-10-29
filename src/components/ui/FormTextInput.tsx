@@ -11,6 +11,7 @@ type Props<TData extends FieldValues> = {
   className?: string;
   /** Short help text shown under the field (hidden while there is an error) */
   hint?: string;
+  required?: boolean;
   inputProps?: InputHTMLAttributes<HTMLInputElement>;
 };
 
@@ -20,6 +21,7 @@ export const FormTextInput = <TData extends FieldValues,>({
   name,
   className,
   hint,
+  required,
   inputProps,
 }: Props<TData>) => {
   const { formState: { errors } } = form;
@@ -29,6 +31,7 @@ export const FormTextInput = <TData extends FieldValues,>({
     <div className={className ? `min-w-0 max-w-full ${className}` : "min-w-0 max-w-full"}>
       <Input
         label={label}
+        required={required}
         {...form.register(name)}
         {...inputProps}
       />

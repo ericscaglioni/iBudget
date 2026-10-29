@@ -1,3 +1,4 @@
+export * from './ActiveFilters';
 export * from './Button';
 export * from './Chip';
 export * from './Collapsible';
@@ -8,6 +9,7 @@ export * from './MobileCombobox';
 export * from './ConfirmationModal';
 export * from './DeleteModal';
 export * from './EmptyState';
+export * from './FieldLabel';
 export * from './FormCombobox';
 export * from './FormModal';
 export * from './FormRadioGroup';

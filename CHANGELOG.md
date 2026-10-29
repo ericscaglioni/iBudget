@@ -6,6 +6,28 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-29
+
+Filtered list totals, clearer filters, and a less fussy transaction form.
+
+### Added
+- The current app version is shown at the bottom of every page.
+- Selected list filters show as pills you can dismiss, with a control to clear them all.
+- The transactions list shows income, expenses and net for the current filters,
+  aligned by currency. Extra currencies stay behind View all.
+- Required fields in forms are marked with an asterisk.
+
+### Changed
+- Filtering a list shows a loading state on the table until the new rows arrive.
+- Saving a form with a missing field no longer shows an error toast; the message on the field is enough.
+
+### Fixed
+- The 6-month trend chart no longer shows "Invalid Date" on the months.
+- Switching between expense, income and transfer clears the category, so an old
+  one is not kept.
+- A missing category on a transaction says "Category is required" instead of a
+  technical error about null.
+
 ## [1.0.0] - 2026-10-28
 
 A users table behind the scenes, dates that stay on the day you picked, and clearer navigation and lists.
@@ -234,6 +256,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[1.1.0]: https://github.com/ericscaglioni/iBudget/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0
 [0.4.3]: https://github.com/ericscaglioni/iBudget/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/ericscaglioni/iBudget/compare/0.4.1...0.4.2

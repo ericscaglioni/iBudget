@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { FormModal } from "./FormModal";
 import { FormTextInput } from "./FormTextInput";
 
@@ -72,6 +74,29 @@ describe("FormModal", () => {
     render(<Harness onSubmit={vi.fn()} isLoading />);
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(screen.getByRole("status")).toHaveTextContent("Loading...");
+  });
+
+  it("does not toast when a field is invalid; the field message is enough", async () => {
+    const InvalidHarness = () => {
+      const form = useForm<FormValues>({
+        defaultValues: { name: "Wallet" },
+        resolver: zodResolver(z.object({ name: z.string().min(1, "Name is required") })),
+      });
+      useEffect(() => {
+        form.setValue("name", "", { shouldDirty: true });
+      }, [form]);
+      return (
+        <FormModal form={form} open onSubmit={vi.fn()} onClose={() => undefined} title="Edit account">
+          <FormTextInput form={form} name="name" label="Name" />
+        </FormModal>
+      );
+    };
+
+    render(<InvalidHarness />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save" })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(screen.getByText("Name is required")).toBeInTheDocument());
+    expect(showError).not.toHaveBeenCalled();
   });
 
   it("runs the secondary action", async () => {

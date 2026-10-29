@@ -15,6 +15,7 @@ type Props<TData extends FieldValues> = {
   disabled?: boolean;
   /** Short help text shown under the field (hidden while there is an error) */
   hint?: string;
+  required?: boolean;
   onCreateOption?: (label: string) => void;
   createLabel?: string;
 };
@@ -28,6 +29,7 @@ export const FormCombobox = <TData extends FieldValues>({
   form,
   disabled = false,
   hint,
+  required,
   onCreateOption,
   createLabel,
 }: Props<TData>) => {
@@ -41,6 +43,7 @@ export const FormCombobox = <TData extends FieldValues>({
       <Combobox
         options={options}
         label={label}
+        required={required}
         value={value}
         onChange={onChange}
         disabled={disabled}

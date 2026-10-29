@@ -52,6 +52,13 @@ Follow [UI and theme](ui.md). After a UI change, exercise the flow in the
 browser the way a user would (not only a screenshot of the first render).
 Check the other pages that share the state you touched.
 
+## New features
+
+Write a [design record](templates/design-record.md) in `docs/design/` and wait
+for approval before feature code. Status moves `proposed` → `approved` →
+`implemented` (after the matching commit). The `design-record` skill is the
+workflow. Skip this for routine bug fixes.
+
 ## Git and releases
 
 - Do not commit unless asked. Do not push, delete branches, or force-push

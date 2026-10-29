@@ -1,9 +1,10 @@
 "use client";
 
-import { ComboboxOption, SegmentedControl, Combobox, Input, MonthYearPicker } from "@/components/ui";
+import { ActiveFilters, ComboboxOption, SegmentedControl, Combobox, Input, MonthYearPicker } from "@/components/ui";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { getActiveFilterItems, stripFilterParams } from "@/lib/utils/active-filters";
 
 type FilterConfig = {
   name: string;
@@ -200,6 +201,23 @@ export const TransactionFilters = ({ accountOptions, categoryOptions, searchPara
     return null;
   };
 
+  const handleRemove = (name: string) => {
+    setPendingTextFilters((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+    handleFilterChange(name, "");
+  };
+
+  const handleClearAll = () => {
+    setPendingTextFilters({});
+    startTransition(() => {
+      router.push(`${basePath}?${stripFilterParams(searchParams).toString()}`);
+    });
+  };
+
   return (
     <div className="space-y-3 sm:space-y-4 p-3 sm:p-4">
       {/* First row: Type and Category filters */}
@@ -212,6 +230,12 @@ export const TransactionFilters = ({ accountOptions, categoryOptions, searchPara
       <div className="flex flex-wrap gap-3 sm:gap-4">
         {otherFilters.map(renderFilter)}
       </div>
+
+      <ActiveFilters
+        items={getActiveFilterItems(updatedFiltersConfig, searchParams)}
+        onRemove={handleRemove}
+        onClearAll={handleClearAll}
+      />
     </div>
   );
 };

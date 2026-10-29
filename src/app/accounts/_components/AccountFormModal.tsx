@@ -125,12 +125,14 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
         label="Name"
         name="name"
         form={form}
+        required
       />
 
       <FormCombobox
         form={form}
         label="Type"
         name="type"
+        required
         hint="Just a label to help you tell your accounts apart."
         options={accountTypes.map((type) => ({
           value: type,
@@ -144,6 +146,7 @@ export const AccountFormModal = ({ open, onClose, account, defaultName, descript
         form={form}
         label="Currency"
         name="currency"
+        required
         hint="The currency this account is held in. Accounts in different currencies are shown separately on the dashboard."
         options={accountCurrencies.map((currency) => ({
           value: currency,

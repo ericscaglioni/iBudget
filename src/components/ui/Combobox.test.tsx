@@ -50,4 +50,18 @@ describe("Combobox", () => {
     );
     expect(screen.getAllByText("Category")).toHaveLength(1);
   });
+
+  it("marks a required field with an asterisk", () => {
+    setInnerWidth(1024);
+    render(
+      <Combobox
+        label="Category"
+        required
+        options={options}
+        value=""
+        onChange={() => undefined}
+      />
+    );
+    expect(screen.getByText("*")).toBeInTheDocument();
+  });
 });
