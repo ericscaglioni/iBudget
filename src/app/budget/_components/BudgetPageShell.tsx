@@ -3,7 +3,7 @@
 import { PageShell } from "@/components";
 import { ClientOnlyCurrency, ConfirmationModal, EmptyState, Icon, Input } from "@/components/ui";
 import { budgetService } from "@/lib/client/services";
-import type { BudgetData, BudgetLine } from "@/lib/client/services/budget";
+import type { BudgetData, ExchangeDirection } from "@/lib/client/services/budget";
 import { formatMonthYear, shiftCalendarMonth } from "@/lib/utils/format";
 import { showError, showSuccess } from "@/lib/utils/toast";
 import { useRouter } from "next/navigation";
@@ -38,41 +38,49 @@ const ExpectedBar = ({ actual, expected }: { actual: number; expected: number | 
 };
 
 const LineRow = ({
-  line,
+  name,
+  color,
+  expected,
+  actual,
   currency,
   canEdit,
+  unplannedLabel = "Unplanned spend",
   onSave,
 }: {
-  line: BudgetLine;
+  name: string;
+  color: string | null;
+  expected: number | null;
+  actual: number;
   currency: string;
   canEdit: boolean;
-  onSave: (categoryId: string, amount: number) => Promise<void>;
+  unplannedLabel?: string;
+  onSave: (amount: number) => Promise<void>;
 }) => {
-  const [draft, setDraft] = useState(line.expected == null ? "" : String(line.expected));
+  const [draft, setDraft] = useState(expected == null ? "" : String(expected));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setDraft(line.expected == null ? "" : String(line.expected));
-  }, [line.expected]);
+    setDraft(expected == null ? "" : String(expected));
+  }, [expected]);
 
   const commit = async () => {
     const parsed = draft.trim() === "" ? 0 : Number(draft);
-    const current = line.expected ?? 0;
+    const current = expected ?? 0;
     if (!Number.isFinite(parsed) || parsed < 0) {
-      setDraft(line.expected == null ? "" : String(line.expected));
+      setDraft(expected == null ? "" : String(expected));
       return;
     }
     if (parsed === current) return;
     setSaving(true);
     try {
-      await onSave(line.categoryId, parsed);
+      await onSave(parsed);
     } finally {
       setSaving(false);
     }
   };
 
-  const remaining = line.expected != null ? line.expected - line.actual : null;
-  const unplanned = line.expected == null && line.actual > 0;
+  const remaining = expected != null ? expected - actual : null;
+  const unplanned = expected == null && actual > 0;
 
   return (
     <li className="space-y-1.5 rounded-md px-1.5 py-2 sm:px-2">
@@ -80,16 +88,16 @@ const LineRow = ({
         <span className="flex min-w-0 items-center gap-2 sm:gap-3">
           <span
             className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 rounded-full ring-2 ring-white shadow-sm"
-            style={{ backgroundColor: line.color }}
+            style={{ backgroundColor: color ?? "#d1d5db" }}
             aria-hidden
           />
-          <span className="truncate text-xs sm:text-sm font-medium text-gray-700">{line.name}</span>
+          <span className="truncate text-xs sm:text-sm font-medium text-gray-700">{name}</span>
         </span>
         <span className="flex shrink-0 items-center gap-3 text-xs sm:text-sm tabular-nums">
           {canEdit ? (
             <div className="w-24">
               <Input
-                aria-label={`Expected for ${line.name}`}
+                aria-label={`Expected for ${name}`}
                 type="number"
                 step="0.01"
                 min="0"
@@ -104,17 +112,17 @@ const LineRow = ({
             </div>
           ) : (
             <ClientOnlyCurrency
-              value={line.expected ?? 0}
+              value={expected ?? 0}
               currency={currency}
-              className={line.expected == null ? "text-grayNeutral" : "font-medium text-gray-900"}
+              className={expected == null ? "text-grayNeutral" : "font-medium text-gray-900"}
             />
           )}
-          <ClientOnlyCurrency value={line.actual} currency={currency} className="font-semibold text-gray-900 w-[5.5rem] text-right" />
+          <ClientOnlyCurrency value={actual} currency={currency} className="font-semibold text-gray-900 w-[5.5rem] text-right" />
         </span>
       </div>
-      <ExpectedBar actual={line.actual} expected={line.expected} />
+      <ExpectedBar actual={actual} expected={expected} />
       <p className="text-xs text-grayNeutral">
-        {unplanned && "Unplanned spend"}
+        {unplanned && unplannedLabel}
         {remaining != null && remaining >= 0 && (
           <>
             <ClientOnlyCurrency value={remaining} currency={currency} /> left of expected
@@ -153,6 +161,20 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
         yearMonth: budget.yearMonth,
         currency: budget.currency,
         categoryId,
+        expectedAmount,
+      });
+      setBudget(next);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "Couldn't save that expected amount.");
+    }
+  };
+
+  const handleSaveExchange = async (direction: ExchangeDirection, expectedAmount: number) => {
+    try {
+      const next = await budgetService.upsertExchangeExpected({
+        yearMonth: budget.yearMonth,
+        currency: budget.currency,
+        direction,
         expectedAmount,
       });
       setBudget(next);
@@ -347,7 +369,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
             </div>
           </div>
 
-          {noCategories ? (
+          {allActive && noCategories ? (
             <EmptyState
               title="No categories yet"
               description="Categories are what you plan against, like Salary or Groceries. Create some, then come back to set expected amounts."
@@ -363,13 +385,28 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                   <span className="text-xs text-grayNeutral sm:text-sm">Expected · actual</span>
                 </div>
                 <ul>
+                  {budget.exchangeIn && (
+                    <LineRow
+                      name="From other currencies"
+                      color={null}
+                      expected={budget.exchangeIn.expected}
+                      actual={budget.exchangeIn.actual}
+                      currency={budget.currency}
+                      canEdit={budget.canEdit}
+                      unplannedLabel="Unplanned"
+                      onSave={(amount) => handleSaveExchange("in", amount)}
+                    />
+                  )}
                   {budget.income.map((line) => (
                     <LineRow
                       key={line.categoryId}
-                      line={line}
+                      name={line.name}
+                      color={line.color}
+                      expected={line.expected}
+                      actual={line.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
-                      onSave={handleSave}
+                      onSave={(amount) => handleSave(line.categoryId, amount)}
                     />
                   ))}
                 </ul>
@@ -386,12 +423,27 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                   {budget.expenses.map((line) => (
                     <LineRow
                       key={line.categoryId}
-                      line={line}
+                      name={line.name}
+                      color={line.color}
+                      expected={line.expected}
+                      actual={line.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
-                      onSave={handleSave}
+                      onSave={(amount) => handleSave(line.categoryId, amount)}
                     />
                   ))}
+                  {budget.exchangeOut && (
+                    <LineRow
+                      name="To other currencies"
+                      color={null}
+                      expected={budget.exchangeOut.expected}
+                      actual={budget.exchangeOut.actual}
+                      currency={budget.currency}
+                      canEdit={budget.canEdit}
+                      unplannedLabel="Unplanned"
+                      onSave={(amount) => handleSaveExchange("out", amount)}
+                    />
+                  )}
                 </ul>
               </section>
             </>
@@ -404,7 +456,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
         onClose={() => setConfirmCopy(false)}
         onConfirm={() => runCopy(true)}
         title="Replace this month's plan?"
-        description="This month already has expected amounts. Copying last month will override them."
+        description="This month already has expected amounts, including from and to other currencies. Copying last month will override them."
         confirmLabel="Override"
       />
     </>

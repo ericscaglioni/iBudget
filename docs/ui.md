@@ -85,9 +85,12 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   When a budget exists, the legend can show expected next to actual.
 - The Budget page is a month of expected vs actual, income then expenses,
   with the same currency chips as the dashboard. Expected is an editable
-  amount, not a lock. Copy previous month is the primary header action on
-  every month, including the current one; it confirms before overwrite.
-  All is read-only (switch to a currency to edit).
+  amount, not a lock. Income includes **From other currencies**; expenses
+  include **To other currencies** — not category rows, no category colour.
+  Those rows are hidden on All, and when the user only has one currency.
+  Copy previous month is the primary header action on every month,
+  including the current one; it confirms before overwrite. All is
+  read-only (switch to a currency to edit).
 - On the dashboard, Plan this month (or View plan) sits in the Monthly
   Summary heading. Full width on a phone; next to the title from `md` up.
 - Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.

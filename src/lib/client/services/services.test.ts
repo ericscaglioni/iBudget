@@ -129,6 +129,13 @@ describe("budget", () => {
     });
     await budget.copyPreviousMonth({ yearMonth: "2026-11", currency: "USD" });
     await budget.getCategoryStatus({ categoryId: "food", yearMonth: "2026-11", currency: "USD" });
+    await budget.upsertExchangeExpected({
+      yearMonth: "2026-11",
+      currency: "EUR",
+      direction: "in",
+      expectedAmount: 3000,
+    });
+    await budget.getExchangeStatus({ yearMonth: "2026-11", currency: "EUR", direction: "in" });
     expect(get).toHaveBeenCalledWith("/api/budget?yearMonth=2026-11&currency=USD");
     expect(put).toHaveBeenCalledWith("/api/budget", {
       yearMonth: "2026-11",
@@ -140,5 +147,12 @@ describe("budget", () => {
     expect(get).toHaveBeenCalledWith(
       "/api/budget/category?categoryId=food&yearMonth=2026-11&currency=USD",
     );
+    expect(put).toHaveBeenCalledWith("/api/budget/exchange", {
+      yearMonth: "2026-11",
+      currency: "EUR",
+      direction: "in",
+      expectedAmount: 3000,
+    });
+    expect(get).toHaveBeenCalledWith("/api/budget/exchange?yearMonth=2026-11&currency=EUR&direction=in");
   });
 });

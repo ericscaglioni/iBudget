@@ -55,9 +55,17 @@ beforeEach(() => {
   db.budgetEntry.findMany.mockResolvedValue([]);
   db.budgetEntry.count.mockResolvedValue(0);
   db.budgetEntry.findUnique.mockResolvedValue(null);
+  db.budgetEntry.findFirst.mockResolvedValue(null);
   db.budgetEntry.deleteMany.mockResolvedValue({ count: 0 });
   db.budgetEntry.upsert.mockResolvedValue({});
   db.budgetEntry.createMany.mockResolvedValue({ count: 0 });
+  db.budgetExchange.findMany.mockResolvedValue([]);
+  db.budgetExchange.findUnique.mockResolvedValue(null);
+  db.budgetExchange.findFirst.mockResolvedValue(null);
+  db.budgetExchange.count.mockResolvedValue(0);
+  db.budgetExchange.deleteMany.mockResolvedValue({ count: 0 });
+  db.budgetExchange.upsert.mockResolvedValue({});
+  db.budgetExchange.create.mockResolvedValue({});
   db.category.findFirst.mockResolvedValue(food);
 });
 
@@ -73,6 +81,33 @@ describe("getBudget", () => {
     expect(result.expenses).toEqual([
       { categoryId: "food", name: "Food", color: "#f00", expected: null, actual: 0 },
     ]);
+    expect(result.exchangeIn).toEqual({ expected: null, actual: 0 });
+    expect(result.exchangeOut).toEqual({ expected: null, actual: 0 });
+  });
+
+  it("hides from/to other currencies when the user has only one currency", async () => {
+    db.account.findMany.mockResolvedValue([{ currency: "USD" }]);
+    db.budgetExchange.findUnique.mockResolvedValue({ expectedIn: decimal(3000), expectedOut: decimal(0) });
+
+    const result = await budget.getBudget("u1", { yearMonth: "2026-11", currency: "USD" });
+
+    expect(result.exchangeIn).toBeNull();
+    expect(result.exchangeOut).toBeNull();
+    expect(db.budgetExchange.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("pairs from/to other currencies with exchange actuals", async () => {
+    db.budgetExchange.findUnique.mockResolvedValue({ expectedIn: decimal(3000), expectedOut: decimal(0) });
+    calculateMonthlyTotals.mockResolvedValue([
+      { ...emptyMonth, income: 2800, incomeFromExchange: 2800, net: 2800 },
+    ]);
+
+    const result = await budget.getBudget("u1", { yearMonth: "2026-11", currency: "EUR" });
+
+    expect(result.hasPlan).toBe(true);
+    expect(result.exchangeIn).toEqual({ expected: 3000, actual: 2800 });
+    expect(result.totals.expectedIncome).toBe(3000);
+    expect(result.totals.actualIncome).toBe(2800);
   });
 
   it("pairs expected with actuals", async () => {
@@ -110,6 +145,8 @@ describe("getBudget", () => {
     expect(result.view).toBe("all");
     expect(result.canEdit).toBe(false);
     expect(result.expenses[0].expected).toBe(200);
+    expect(result.exchangeIn).toBeNull();
+    expect(result.exchangeOut).toBeNull();
   });
 
   it("refuses a month that is not YYYY-MM", async () => {
@@ -166,16 +203,53 @@ describe("upsertExpected", () => {
   });
 });
 
+describe("upsertExchangeExpected", () => {
+  it("saves money expected from other currencies", async () => {
+    await budget.upsertExchangeExpected("u1", {
+      yearMonth: "2026-11",
+      currency: "EUR",
+      direction: "in",
+      expectedAmount: 3000,
+    });
+    expect(db.budgetExchange.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ expectedIn: 3000, expectedOut: 0, currency: "EUR" }),
+      })
+    );
+  });
+
+  it("refuses when the user has only one currency", async () => {
+    db.account.findMany.mockResolvedValue([{ currency: "USD" }]);
+    await expect(
+      budget.upsertExchangeExpected("u1", {
+        yearMonth: "2026-11",
+        currency: "USD",
+        direction: "in",
+        expectedAmount: 3000,
+      })
+    ).rejects.toThrow("more than one currency");
+    expect(db.budgetExchange.upsert).not.toHaveBeenCalled();
+  });
+
+  it("deletes the row when both sides are zero", async () => {
+    db.budgetExchange.findUnique.mockResolvedValue({ expectedIn: decimal(3000), expectedOut: decimal(0) });
+    await budget.upsertExchangeExpected("u1", {
+      yearMonth: "2026-11",
+      currency: "EUR",
+      direction: "in",
+      expectedAmount: 0,
+    });
+    expect(db.budgetExchange.deleteMany).toHaveBeenCalled();
+    expect(db.budgetExchange.upsert).not.toHaveBeenCalled();
+  });
+});
+
 describe("copyPreviousMonth", () => {
   const planFromOctober = () => {
-    db.budgetEntry.findMany.mockImplementation(async (args: { where?: { yearMonth?: unknown } }) => {
-      const yearMonth = args.where?.yearMonth;
-      if (yearMonth && typeof yearMonth === "object" && yearMonth !== null && "lt" in yearMonth) {
-        return [{ yearMonth: "2026-10" }];
-      }
-      if (yearMonth === "2026-10") return [{ categoryId: "food", expectedAmount: decimal(90) }];
-      return [];
-    });
+    db.budgetEntry.findFirst.mockResolvedValue({ yearMonth: "2026-10" });
+    db.budgetExchange.findFirst.mockResolvedValue(null);
+    db.budgetEntry.findMany.mockResolvedValue([{ categoryId: "food", expectedAmount: decimal(90) }]);
+    db.budgetExchange.findUnique.mockResolvedValue(null);
   };
 
   it("copies the latest earlier plan", async () => {
@@ -215,6 +289,25 @@ describe("copyPreviousMonth", () => {
       "no earlier month"
     );
   });
+
+  it("copies from/to other currencies along with categories", async () => {
+    db.budgetEntry.findFirst.mockResolvedValue({ yearMonth: "2026-10" });
+    db.budgetExchange.findFirst.mockResolvedValue({ yearMonth: "2026-10" });
+    db.budgetEntry.findMany.mockResolvedValue([{ categoryId: "food", expectedAmount: decimal(90) }]);
+    db.budgetExchange.findUnique.mockResolvedValue({ expectedIn: decimal(3000), expectedOut: decimal(0) });
+
+    await budget.copyPreviousMonth("u1", { yearMonth: "2026-11", currency: "EUR" });
+
+    expect(db.budgetExchange.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: "u1",
+        yearMonth: "2026-11",
+        currency: "EUR",
+      }),
+    });
+    const created = db.budgetExchange.create.mock.calls[0][0].data;
+    expect(created.expectedIn.toNumber()).toBe(3000);
+  });
 });
 
 describe("getCategoryStatus", () => {
@@ -235,5 +328,15 @@ describe("getCategoryStatus", () => {
     await expect(
       budget.getCategoryStatus("u1", { categoryId: "food", yearMonth: "2026-11", currency: "USD" })
     ).resolves.toEqual({ expected: null, actual: 0 });
+  });
+});
+
+describe("getExchangeStatus", () => {
+  it("returns remaining pieces for a transfer into this currency", async () => {
+    db.budgetExchange.findUnique.mockResolvedValue({ expectedIn: decimal(3000), expectedOut: decimal(0) });
+    calculateMonthlyTotals.mockResolvedValue([{ ...emptyMonth, incomeFromExchange: 500 }]);
+    await expect(
+      budget.getExchangeStatus("u1", { yearMonth: "2026-11", currency: "EUR", direction: "in" })
+    ).resolves.toEqual({ expected: 3000, actual: 500 });
   });
 });

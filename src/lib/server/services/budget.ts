@@ -24,6 +24,11 @@ export type BudgetLine = {
   actual: number;
 };
 
+export type ExchangeLine = {
+  expected: number | null;
+  actual: number;
+};
+
 export type BudgetData = {
   currency: string;
   view: "currency" | "all";
@@ -37,6 +42,9 @@ export type BudgetData = {
   copyFromMonth: string | null;
   income: BudgetLine[];
   expenses: BudgetLine[];
+  /** Null on All — FX expected is per-currency and would double-count salary. */
+  exchangeIn: ExchangeLine | null;
+  exchangeOut: ExchangeLine | null;
   totals: {
     expectedIncome: number;
     actualIncome: number;
@@ -51,6 +59,8 @@ export type CategoryBudgetStatus = {
   expected: number | null;
   actual: number;
 };
+
+export type ExchangeDirection = "in" | "out";
 
 type BudgetQuery = {
   yearMonth?: string;
@@ -90,18 +100,33 @@ const expectedMap = (
   return byId;
 };
 
+const plannedAmount = (value: Decimal | number | null | undefined) => {
+  if (value == null) return null;
+  const amount = toNumber(value);
+  return amount > 0 ? amount : null;
+};
+
 const previousPlanMonth = async (userId: string, yearMonth: string, currency?: string) => {
-  const rows = await prisma.budgetEntry.findMany({
-    where: {
-      userId,
-      yearMonth: { lt: yearMonth },
-      ...(currency ? { currency } : {}),
-    },
-    select: { yearMonth: true },
-    orderBy: { yearMonth: "desc" },
-    take: 1,
-  });
-  return rows[0]?.yearMonth ?? null;
+  const where = {
+    userId,
+    yearMonth: { lt: yearMonth },
+    ...(currency ? { currency } : {}),
+  };
+  const [fromEntries, fromFx] = await Promise.all([
+    prisma.budgetEntry.findFirst({
+      where,
+      select: { yearMonth: true },
+      orderBy: { yearMonth: "desc" },
+    }),
+    prisma.budgetExchange.findFirst({
+      where,
+      select: { yearMonth: true },
+      orderBy: { yearMonth: "desc" },
+    }),
+  ]);
+  const months = [fromEntries?.yearMonth, fromFx?.yearMonth].filter((month): month is string => Boolean(month));
+  if (months.length === 0) return null;
+  return months.sort()[months.length - 1];
 };
 
 export const getBudget = async (userId: string, query: BudgetQuery = {}): Promise<BudgetData> => {
@@ -133,12 +158,13 @@ export const getBudget = async (userId: string, query: BudgetQuery = {}): Promis
   }
 
   const allView = Boolean(wantAll && rates);
+  const canExchange = available.length > 1;
   const currency = allView ? homeCurrency : wantAll ? homeCurrency : resolved;
   const mode = allView
     ? ({ kind: "all" as const, home: homeCurrency, rates: rates! })
     : ({ kind: "currency" as const, currency });
 
-  const [categories, entries, [monthTotals], copyFromMonth] = await Promise.all([
+  const [categories, entries, exchange, [monthTotals], copyFromMonth] = await Promise.all([
     prisma.category.findMany({
       where: { userId },
       select: { id: true, name: true, color: true, type: true },
@@ -151,6 +177,12 @@ export const getBudget = async (userId: string, query: BudgetQuery = {}): Promis
       },
       select: { categoryId: true, currency: true, expectedAmount: true },
     }),
+    allView || !canExchange
+      ? Promise.resolve(null)
+      : prisma.budgetExchange.findUnique({
+          where: { userId_yearMonth_currency: { userId, yearMonth, currency } },
+          select: { expectedIn: true, expectedOut: true },
+        }),
     calculateMonthlyTotals(userId, [yearMonth], mode),
     previousPlanMonth(userId, yearMonth, allView ? undefined : currency),
   ]);
@@ -160,8 +192,24 @@ export const getBudget = async (userId: string, query: BudgetQuery = {}): Promis
   const expectedById = expectedMap(entries, convert);
   const income = linesFrom(categories, "income", expectedById, monthTotals.incomeBreakdown);
   const expenses = linesFrom(categories, "expense", expectedById, monthTotals.categoryBreakdown);
-  const expectedIncome = income.reduce((sum, line) => sum + (line.expected ?? 0), 0);
-  const expectedExpenses = expenses.reduce((sum, line) => sum + (line.expected ?? 0), 0);
+  const exchangeIn =
+    allView || !canExchange
+      ? null
+      : {
+          expected: plannedAmount(exchange?.expectedIn),
+          actual: monthTotals.incomeFromExchange,
+        };
+  const exchangeOut =
+    allView || !canExchange
+      ? null
+      : {
+          expected: plannedAmount(exchange?.expectedOut),
+          actual: monthTotals.expensesFromExchange,
+        };
+  const expectedIncome =
+    income.reduce((sum, line) => sum + (line.expected ?? 0), 0) + (exchangeIn?.expected ?? 0);
+  const expectedExpenses =
+    expenses.reduce((sum, line) => sum + (line.expected ?? 0), 0) + (exchangeOut?.expected ?? 0);
 
   return {
     currency,
@@ -171,11 +219,13 @@ export const getBudget = async (userId: string, query: BudgetQuery = {}): Promis
     yearMonth,
     ratesAsOf: allView ? rates!.asOf : null,
     ratesError: allView ? null : ratesError,
-    hasPlan: expectedById.size > 0,
+    hasPlan: expectedById.size > 0 || exchangeIn?.expected != null || exchangeOut?.expected != null,
     canEdit: !allView,
     copyFromMonth,
     income,
     expenses,
+    exchangeIn,
+    exchangeOut,
     totals: {
       expectedIncome,
       actualIncome: monthTotals.income,
@@ -234,6 +284,62 @@ export const upsertExpected = async (
   return getBudget(userId, { yearMonth, currency });
 };
 
+export const upsertExchangeExpected = async (
+  userId: string,
+  data: {
+    yearMonth: string;
+    currency: string;
+    direction: ExchangeDirection;
+    expectedAmount: number | string;
+  }
+) => {
+  const { yearMonth, currency, direction } = data;
+  const expectedAmount = typeof data.expectedAmount === "number" ? data.expectedAmount : Number(data.expectedAmount);
+
+  if (!isYearMonth(yearMonth)) {
+    throw new ValidationError("Month must be YYYY-MM.");
+  }
+  if (direction !== "in" && direction !== "out") {
+    throw new ValidationError("Direction must be in or out.");
+  }
+  if (!accountCurrencies.includes(currency)) {
+    throw new ValidationError("That currency is not supported.");
+  }
+  if (!Number.isFinite(expectedAmount) || expectedAmount < 0) {
+    throw new ValidationError("Expected amount must be zero or more.");
+  }
+
+  await ensureUserRow(userId);
+
+  const available = await getAvailableCurrencies(userId);
+  if (available.length < 2) {
+    throw new ValidationError("From and to other currencies are only available when you have accounts in more than one currency.");
+  }
+  if (!available.includes(currency)) {
+    throw new ValidationError("You can only plan a currency you have an account in.");
+  }
+
+  const existing = await prisma.budgetExchange.findUnique({
+    where: { userId_yearMonth_currency: { userId, yearMonth, currency } },
+    select: { expectedIn: true, expectedOut: true },
+  });
+  const nextIn = direction === "in" ? expectedAmount : toNumber(existing?.expectedIn ?? 0);
+  const nextOut = direction === "out" ? expectedAmount : toNumber(existing?.expectedOut ?? 0);
+
+  if (nextIn <= 0 && nextOut <= 0) {
+    await prisma.budgetExchange.deleteMany({ where: { userId, yearMonth, currency } });
+    return getBudget(userId, { yearMonth, currency });
+  }
+
+  await prisma.budgetExchange.upsert({
+    where: { userId_yearMonth_currency: { userId, yearMonth, currency } },
+    create: { userId, yearMonth, currency, expectedIn: nextIn, expectedOut: nextOut },
+    update: { expectedIn: nextIn, expectedOut: nextOut },
+  });
+
+  return getBudget(userId, { yearMonth, currency });
+};
+
 export const copyPreviousMonth = async (
   userId: string,
   data: { yearMonth: string; currency?: string; view?: "all"; overwrite?: boolean }
@@ -246,17 +352,25 @@ export const copyPreviousMonth = async (
   await ensureUserRow(userId);
 
   const available = await getAvailableCurrencies(userId);
-  const allView = data.view === "all" && available.length > 1;
+  const canExchange = available.length > 1;
+  const allView = data.view === "all" && canExchange;
   const currencies = allView
     ? available
     : data.currency && available.includes(data.currency)
       ? [data.currency]
       : [(await resolveCurrency(userId, data.currency)).currency];
 
-  const existing = await prisma.budgetEntry.count({
-    where: { userId, yearMonth, currency: { in: currencies } },
-  });
-  if (existing > 0 && !data.overwrite) {
+  const [existingEntries, existingFx] = await Promise.all([
+    prisma.budgetEntry.count({
+      where: { userId, yearMonth, currency: { in: currencies } },
+    }),
+    canExchange
+      ? prisma.budgetExchange.count({
+          where: { userId, yearMonth, currency: { in: currencies } },
+        })
+      : Promise.resolve(0),
+  ]);
+  if (existingEntries + existingFx > 0 && !data.overwrite) {
     throw new ValidationError("This month already has a plan. Confirm to replace it.");
   }
 
@@ -264,18 +378,35 @@ export const copyPreviousMonth = async (
     (await prisma.category.findMany({ where: { userId }, select: { id: true } })).map((category) => category.id)
   );
 
-  const copies: { currency: string; rows: { categoryId: string; expectedAmount: Decimal | number }[] }[] = [];
+  const copies: {
+    currency: string;
+    rows: { categoryId: string; expectedAmount: Decimal | number }[];
+    exchange: { expectedIn: Decimal | number; expectedOut: Decimal | number } | null;
+  }[] = [];
   for (const currency of currencies) {
     const fromMonth = await previousPlanMonth(userId, yearMonth, currency);
     if (!fromMonth) continue;
-    const rows = await prisma.budgetEntry.findMany({
-      where: { userId, yearMonth: fromMonth, currency },
-      select: { categoryId: true, expectedAmount: true },
+    const [rows, exchange] = await Promise.all([
+      prisma.budgetEntry.findMany({
+        where: { userId, yearMonth: fromMonth, currency },
+        select: { categoryId: true, expectedAmount: true },
+      }),
+      canExchange
+        ? prisma.budgetExchange.findUnique({
+            where: { userId_yearMonth_currency: { userId, yearMonth: fromMonth, currency } },
+            select: { expectedIn: true, expectedOut: true },
+          })
+        : Promise.resolve(null),
+    ]);
+    copies.push({
+      currency,
+      rows: rows.filter((row) => categoryIds.has(row.categoryId)),
+      exchange:
+        exchange && (toNumber(exchange.expectedIn) > 0 || toNumber(exchange.expectedOut) > 0) ? exchange : null,
     });
-    copies.push({ currency, rows: rows.filter((row) => categoryIds.has(row.categoryId)) });
   }
 
-  if (copies.every((copy) => copy.rows.length === 0)) {
+  if (copies.every((copy) => copy.rows.length === 0 && !copy.exchange)) {
     throw new ValidationError("There is no earlier month to copy from.");
   }
 
@@ -283,17 +414,32 @@ export const copyPreviousMonth = async (
     await tx.budgetEntry.deleteMany({
       where: { userId, yearMonth, currency: { in: currencies } },
     });
+    await tx.budgetExchange.deleteMany({
+      where: { userId, yearMonth, currency: { in: currencies } },
+    });
     for (const copy of copies) {
-      if (copy.rows.length === 0) continue;
-      await tx.budgetEntry.createMany({
-        data: copy.rows.map((row) => ({
-          userId,
-          yearMonth,
-          currency: copy.currency,
-          categoryId: row.categoryId,
-          expectedAmount: row.expectedAmount,
-        })),
-      });
+      if (copy.rows.length > 0) {
+        await tx.budgetEntry.createMany({
+          data: copy.rows.map((row) => ({
+            userId,
+            yearMonth,
+            currency: copy.currency,
+            categoryId: row.categoryId,
+            expectedAmount: row.expectedAmount,
+          })),
+        });
+      }
+      if (copy.exchange) {
+        await tx.budgetExchange.create({
+          data: {
+            userId,
+            yearMonth,
+            currency: copy.currency,
+            expectedIn: copy.exchange.expectedIn,
+            expectedOut: copy.exchange.expectedOut,
+          },
+        });
+      }
     }
   });
 
@@ -333,4 +479,34 @@ export const getCategoryStatus = async (
   const expected = entry ? toNumber(entry.expectedAmount) : null;
 
   return { expected: expected !== null && expected > 0 ? expected : null, actual };
+};
+
+export const getExchangeStatus = async (
+  userId: string,
+  query: { yearMonth: string; currency: string; direction: ExchangeDirection }
+): Promise<CategoryBudgetStatus> => {
+  const { yearMonth, currency, direction } = query;
+  if (!isYearMonth(yearMonth)) {
+    throw new ValidationError("Month must be YYYY-MM.");
+  }
+  if (direction !== "in" && direction !== "out") {
+    throw new ValidationError("Direction must be in or out.");
+  }
+
+  const available = await getAvailableCurrencies(userId);
+  if (available.length < 2) {
+    return { expected: null, actual: 0 };
+  }
+
+  const [exchange, [monthTotals]] = await Promise.all([
+    prisma.budgetExchange.findUnique({
+      where: { userId_yearMonth_currency: { userId, yearMonth, currency } },
+      select: { expectedIn: true, expectedOut: true },
+    }),
+    calculateMonthlyTotals(userId, [yearMonth], { kind: "currency", currency }),
+  ]);
+
+  const expected = plannedAmount(direction === "in" ? exchange?.expectedIn : exchange?.expectedOut);
+  const actual = direction === "in" ? monthTotals.incomeFromExchange : monthTotals.expensesFromExchange;
+  return { expected, actual };
 };

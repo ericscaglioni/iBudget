@@ -34,8 +34,9 @@ model User {
   categories    Category[]
   transactions  Transaction[]
   settings      UserSettings?
-  guide         UserGuide?
-  budgetEntries BudgetEntry[]
+  guide            UserGuide?
+  budgetEntries    BudgetEntry[]
+  budgetExchanges  BudgetExchange[]
 
   @@map("users")
 }
@@ -151,6 +152,24 @@ model BudgetEntry {
   @@unique([userId, yearMonth, currency, categoryId])
   @@index([userId, yearMonth, currency])
   @@map("budget_entries")
+}
+
+// Expected amounts that arrive from / leave to another currency (not a category).
+// Zero or missing on a side means that side is unplanned.
+model BudgetExchange {
+  id          String   @id @default(cuid())
+  userId      String
+  yearMonth   String   @db.VarChar(7)
+  currency    String   @db.VarChar(8)
+  expectedIn  Decimal  @db.Decimal(10, 2)
+  expectedOut Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, yearMonth, currency])
+  @@map("budget_exchanges")
 }
 
 // Onboarding guide: remembers which tips the user has dismissed (e.g. "checklist", "multi-currency")

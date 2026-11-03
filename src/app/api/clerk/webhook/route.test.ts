@@ -115,6 +115,7 @@ describe("POST /api/clerk/webhook", () => {
     vi.mocked(deleteUserData).mockResolvedValue({
       transactions: 3,
       budgetEntries: 2,
+      budgetExchanges: 1,
       accounts: 1,
       categories: 10,
       settings: 0,
@@ -127,7 +128,7 @@ describe("POST /api/clerk/webhook", () => {
     expect(response.status).toBe(200);
     expect(deleteUserData).toHaveBeenCalledWith("u1");
     expect(await response.json()).toEqual({
-      data: { message: "User deleted successfully", deleted: { transactions: 3, budgetEntries: 2, accounts: 1, categories: 10, settings: 0, guide: 0, users: 1 } },
+      data: { message: "User deleted successfully", deleted: { transactions: 3, budgetEntries: 2, budgetExchanges: 1, accounts: 1, categories: 10, settings: 0, guide: 0, users: 1 } },
     });
   });
 

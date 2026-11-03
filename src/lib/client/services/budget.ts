@@ -3,7 +3,13 @@ import type { BudgetData, CategoryBudgetStatus } from "@/lib/server/services/bud
 
 const budgetPath = "/api/budget";
 
-export type { BudgetData, BudgetLine, CategoryBudgetStatus } from "@/lib/server/services/budget";
+export type {
+  BudgetData,
+  BudgetLine,
+  CategoryBudgetStatus,
+  ExchangeDirection,
+  ExchangeLine,
+} from "@/lib/server/services/budget";
 
 export const getBudget = async (options: {
   yearMonth?: string;
@@ -43,4 +49,22 @@ export const getCategoryStatus = async (query: {
 }) => {
   const params = new URLSearchParams(query);
   return get<CategoryBudgetStatus>(`${budgetPath}/category?${params}`);
+};
+
+export const upsertExchangeExpected = async (data: {
+  yearMonth: string;
+  currency: string;
+  direction: "in" | "out";
+  expectedAmount: number;
+}) => {
+  return put<typeof data, BudgetData>(`${budgetPath}/exchange`, data);
+};
+
+export const getExchangeStatus = async (query: {
+  yearMonth: string;
+  currency: string;
+  direction: "in" | "out";
+}) => {
+  const params = new URLSearchParams(query);
+  return get<CategoryBudgetStatus>(`${budgetPath}/exchange?${params}`);
 };
