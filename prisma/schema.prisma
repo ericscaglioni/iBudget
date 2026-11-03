@@ -30,11 +30,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts     Account[]
-  categories   Category[]
-  transactions Transaction[]
-  settings     UserSettings?
-  guide        UserGuide?
+  accounts      Account[]
+  categories    Category[]
+  transactions  Transaction[]
+  settings      UserSettings?
+  guide         UserGuide?
+  budgetEntries BudgetEntry[]
 
   @@map("users")
 }
@@ -70,8 +71,9 @@ model Category {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  user         User?        @relation(fields: [userId], references: [id])
-  transactions Transaction[]
+  user          User?         @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  budgetEntries BudgetEntry[]
 
   @@map("categories")
 }
@@ -130,6 +132,25 @@ model ExchangeRateSnapshot {
 
   @@id([base, fetchedOn])
   @@map("exchange_rate_snapshots")
+}
+
+// Expected amount for one category in one month and currency. Missing or zero = not planned.
+model BudgetEntry {
+  id             String   @id @default(cuid())
+  userId         String
+  yearMonth      String   @db.VarChar(7)
+  currency       String   @db.VarChar(8)
+  categoryId     String
+  expectedAmount Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, yearMonth, currency, categoryId])
+  @@index([userId, yearMonth, currency])
+  @@map("budget_entries")
 }
 
 // Onboarding guide: remembers which tips the user has dismissed (e.g. "checklist", "multi-currency")

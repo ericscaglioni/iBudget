@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { TransactionFormInput, createTransactionFormResolver } from "../schema";
 import { CategoryOption, TransactionWithDetails } from "../types";
+import { BudgetHint } from "./BudgetHint";
 import { EditRecurringModal } from "./EditRecurringModal";
 import { AccountField, FormFieldsByType } from "./FormFieldsByType";
 import { AccountFormModal } from "@/app/accounts/_components/AccountFormModal";
@@ -102,6 +103,11 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
   const { reset, watch, setValue } = form;
   const isRecurring = watch("isRecurring");
   const selectedFrequency = watch("frequency");
+  const watchedAmount = watch("amount");
+  const watchedCategoryId = watch("categoryId");
+  const watchedDate = watch("date");
+  const watchedAccountId = watch("accountId");
+  const accountCurrency = accountOptions.find((option) => option.value === watchedAccountId)?.currency;
   
   const loadTransferTransaction = useCallback(async (transaction: TransactionWithDetails, isStale: () => boolean) => {
     const baseValues = {
@@ -392,6 +398,18 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
           onCreateAccount={handleCreateAccountRequest}
           onCreateCategory={handleCreateCategoryRequest}
         />
+
+        {mode !== TransactionTypeEnum.transfer && (
+          <BudgetHint
+            categoryId={watchedCategoryId ?? ""}
+            amount={watchedAmount ?? ""}
+            date={watchedDate ?? ""}
+            currency={accountCurrency}
+            originalAmount={transaction ? Number(transaction.amount) : 0}
+            originalCategoryId={transaction?.categoryId ?? undefined}
+            originalMonth={transaction ? calendarDateString(transaction.date).slice(0, 7) : undefined}
+          />
+        )}
 
         <FormTextInput
           form={form}

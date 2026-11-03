@@ -4,3 +4,4 @@ export * as dashboardService from "./dashboard";
 export * as transactionService from "./transactions";
 export * as settingsService from "./settings";
 export * as guideService from "./guide";
+export * as budgetService from "./budget";

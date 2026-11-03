@@ -62,6 +62,7 @@ const givenData = ({
       : monthly.map(({ currency, ...tx }) => ({ ...tx, account: { currency } }))
   );
   db.transaction.findFirst.mockResolvedValue(latest ? { date: latest } : null);
+  db.budgetEntry.findMany.mockResolvedValue([]);
 };
 
 const usd = (id: string, name: string, initialBalance: number, extra: Partial<Account> = {}): Account => ({

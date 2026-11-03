@@ -35,6 +35,10 @@ The decisions that most often go wrong if you skip them:
   as expense in the source and income in the destination on a one-currency
   view, and stay out of the category chart. If rates fail, All is disabled
   and the dashboard falls back to the home currency.
+- A **budget** is expected income and expenses per category for one month and
+  one currency. Expected is a target, not a limit. Actuals use the same
+  transfer rules as the dashboard. All converts expected the same way as
+  actuals. Do not refuse a transaction for going past expected.
 - **Auth** is Clerk. Pages redirect to `/login`. API handlers use
   `authHandler` and must answer 401 if nobody is signed in, not 500.
 - **API shape** is `{ data }` on success and `{ error: { message, code } }` on

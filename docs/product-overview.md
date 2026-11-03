@@ -61,6 +61,10 @@ Avoid adding libraries when Fetch, `URLSearchParams` or the existing kit will do
   together without converting. All converts into the home currency (only a
   currency the user holds). The user can also choose whether the dashboard
   opens on All or that home currency.
+- A **budget** is the expected amount per category for a month, in one
+  currency (All converts). It is a target, not a hard stop. Copy last month
+  is how a plan usually starts. The dashboard and the transaction form show
+  actual vs expected; they never block a save.
 - Cross-currency transfers: the amount sent is an expense in the source
   currency, the amount received is income in the destination currency. They
   do not appear in the category chart. Same-currency transfers do not count

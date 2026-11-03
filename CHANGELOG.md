@@ -6,6 +6,14 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- A Budget page for the month: expected income and expected expenses per
+  category, usually copied from last month. Those numbers are targets, not
+  limits. The dashboard shows actual vs expected when a plan exists, and
+  adding a transaction says how much of that category is left (or how far
+  over). Plans are per currency; All converts them. The migration runs on
+  deploy.
+
 ## [1.2.0] - 2026-10-29
 
 An All-currencies dashboard and a spending donut for the month.

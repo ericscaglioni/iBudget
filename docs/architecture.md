@@ -71,6 +71,11 @@ transactions", …) are skipped — do not do that.
   one.
 - **Balances.** `initialBalance` plus income minus expense, including both
   sides of a transfer, excluding future dates (`date <= now`).
+- **Budget.** `budget_entries` are expected amounts per user / month /
+  currency / category. Zero or missing means unplanned, not a limit of 0.
+  Actuals reuse dashboard monthly totals (same transfer rules). All converts
+  expected at today's rates. Refuse deleting a category that still has plan
+  lines. Money lives in `budget.ts`, not in the page.
 - **Dashboard month.** See [product overview](product-overview.md) — same
   currency vs currency exchange. Account balances are as of today. Monthly
   totals include booked future months through the latest transaction date.

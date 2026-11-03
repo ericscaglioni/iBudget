@@ -14,6 +14,8 @@ interface Props {
   /** Expenses of the month before, to show how spending moved. */
   previousExpenses?: number;
   previousLabel?: string;
+  expectedIncome?: number | null;
+  expectedExpenses?: number | null;
 }
 
 export const MonthlySummary = ({
@@ -25,6 +27,8 @@ export const MonthlySummary = ({
   currency = "USD",
   previousExpenses,
   previousLabel = "last month",
+  expectedIncome = null,
+  expectedExpenses = null,
 }: Props) => {
   // Spending vs. the previous month (lower spending is good, so down = green)
   const expenseChange =
@@ -56,6 +60,11 @@ export const MonthlySummary = ({
             Includes {formatAmount(incomeFromExchange)} received from currency exchange
           </p>
         )}
+        {expectedIncome != null && (
+          <p className="mt-1 text-xs sm:text-sm text-green-700">
+            of {formatAmount(expectedIncome)} expected
+          </p>
+        )}
       </div>
 
       {/* Expenses Card */}
@@ -71,7 +80,13 @@ export const MonthlySummary = ({
             Includes {formatAmount(expensesFromExchange)} sent in currency exchange
           </p>
         )}
-        {expenseChange !== null && (
+        {expectedExpenses != null ? (
+          <p className={`mt-1 text-xs sm:text-sm ${expenses > expectedExpenses ? "font-medium text-red-800" : "text-red-700"}`}>
+            of {formatAmount(expectedExpenses)} expected
+            {expenses > expectedExpenses ? " · over" : ""}
+          </p>
+        ) : (
+          expenseChange !== null && (
           <Tooltip
             className="mt-1"
             content={`This compares what is already booked this month with ${previousLabel}. It is not a target or a forecast. Green means this month is lower so far — a month that is still ahead, or only just started, often looks much lower.`}
@@ -80,6 +95,7 @@ export const MonthlySummary = ({
               {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}
             </span>
           </Tooltip>
+          )
         )}
       </div>
 
@@ -105,6 +121,11 @@ export const MonthlySummary = ({
         >
           {formatAmount(net)}
         </p>
+        {expectedIncome != null && expectedExpenses != null && (
+          <p className={`mt-1 text-xs sm:text-sm ${net >= 0 ? "text-blue-700" : "text-orange-700"}`}>
+            of {formatAmount(expectedIncome - expectedExpenses)} expected
+          </p>
+        )}
       </div>
     </div>
   );

@@ -43,6 +43,9 @@ interface MonthlyTotal {
   expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
+  expectedIncome: number | null;
+  expectedExpenses: number | null;
+  expectedByCategory: Record<string, number>;
 }
 
 interface SixMonthHistory {
@@ -181,16 +184,34 @@ export const DashboardPageShell = ({
 
         {/* Section 2: Month at a glance, with month selector */}
         <section className="space-y-3 sm:space-y-4 md:space-y-6">
-          <div>
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
-              Monthly Summary
-              <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({currency})</span>
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 md:mb-4">
-              {isAll
-                ? `Income and expenses from all accounts, converted to ${currency}. Transfers are not counted.`
-                : `Income and expenses from your ${currency} accounts`}
-            </p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+                Monthly Summary
+                <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({currency})</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600">
+                {isAll
+                  ? `Income and expenses from all accounts, converted to ${currency}. Transfers are not counted.`
+                  : `Income and expenses from your ${currency} accounts`}
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full md:w-auto shrink-0"
+              onClick={() =>
+                router.push(
+                  isAll
+                    ? `/budget?view=all&yearMonth=${selectedMonth}`
+                    : `/budget?currency=${currency}&yearMonth=${selectedMonth}`
+                )
+              }
+            >
+              {selectedMonthData?.expectedIncome != null || selectedMonthData?.expectedExpenses != null
+                ? "View plan"
+                : "Plan this month"}
+            </Button>
           </div>
 
           {/* Month Selector */}
@@ -244,6 +265,8 @@ export const DashboardPageShell = ({
               currency={currency}
               previousExpenses={previousMonthData?.expenses}
               previousLabel={parseYearMonth(previousMonthKey)?.format("MMMM") ?? previousMonthKey}
+              expectedIncome={selectedMonthData.expectedIncome}
+              expectedExpenses={selectedMonthData.expectedExpenses}
             />
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
@@ -294,6 +317,7 @@ export const DashboardPageShell = ({
             <TopSpendingCategories
               categories={selectedMonthData.categoryBreakdown}
               currency={currency}
+              expectedByCategory={selectedMonthData.expectedByCategory}
             />
           </section>
         )}

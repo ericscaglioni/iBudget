@@ -12,6 +12,7 @@ import * as dashboardOverview from "./dashboard-overview";
 import * as guide from "./guide";
 import * as settings from "./settings";
 import * as transactions from "./transactions";
+import * as budget from "./budget";
 
 const { get, post, patch, put, del } = vi.mocked(api);
 
@@ -114,5 +115,30 @@ describe("guide and settings", () => {
     await settings.updateSettings({ defaultCurrency: "EUR" });
     expect(get).toHaveBeenCalledWith("/api/settings");
     expect(patch).toHaveBeenCalledWith("/api/settings", { defaultCurrency: "EUR" });
+  });
+});
+
+describe("budget", () => {
+  it("loads, saves, copies and checks a category", async () => {
+    await budget.getBudget({ yearMonth: "2026-11", currency: "USD" });
+    await budget.upsertExpected({
+      yearMonth: "2026-11",
+      currency: "USD",
+      categoryId: "food",
+      expectedAmount: 80,
+    });
+    await budget.copyPreviousMonth({ yearMonth: "2026-11", currency: "USD" });
+    await budget.getCategoryStatus({ categoryId: "food", yearMonth: "2026-11", currency: "USD" });
+    expect(get).toHaveBeenCalledWith("/api/budget?yearMonth=2026-11&currency=USD");
+    expect(put).toHaveBeenCalledWith("/api/budget", {
+      yearMonth: "2026-11",
+      currency: "USD",
+      categoryId: "food",
+      expectedAmount: 80,
+    });
+    expect(post).toHaveBeenCalledWith("/api/budget/copy", { yearMonth: "2026-11", currency: "USD" });
+    expect(get).toHaveBeenCalledWith(
+      "/api/budget/category?categoryId=food&yearMonth=2026-11&currency=USD",
+    );
   });
 });

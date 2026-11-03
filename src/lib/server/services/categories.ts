@@ -120,6 +120,13 @@ export const deleteCategory = async (userId: string, id: string) => {
     throw new ValidationError('Cannot delete category with existing transactions');
   }
 
+  const budgetCount = await prisma.budgetEntry.count({
+    where: { categoryId: id },
+  });
+  if (budgetCount > 0) {
+    throw new ValidationError("Cannot delete a category that is in a budget plan");
+  }
+
   await prisma.category.delete({
     where: { id },
   });

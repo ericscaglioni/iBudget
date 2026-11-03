@@ -109,6 +109,7 @@ describe("deleteCategory", () => {
   it("deletes a category nothing uses", async () => {
     db.category.findUnique.mockResolvedValue({ id: "c1" });
     db.transaction.count.mockResolvedValue(0);
+    db.budgetEntry.count.mockResolvedValue(0);
     await expect(categories.deleteCategory("u1", "c1")).resolves.toEqual({ message: "Category deleted successfully" });
     expect(db.category.delete).toHaveBeenCalledWith({ where: { id: "c1" } });
   });
@@ -117,6 +118,14 @@ describe("deleteCategory", () => {
     db.category.findUnique.mockResolvedValue({ id: "c1" });
     db.transaction.count.mockResolvedValue(2);
     await expect(categories.deleteCategory("u1", "c1")).rejects.toThrow("existing transactions");
+    expect(db.category.delete).not.toHaveBeenCalled();
+  });
+
+  it("keeps a category that is in a budget plan", async () => {
+    db.category.findUnique.mockResolvedValue({ id: "c1" });
+    db.transaction.count.mockResolvedValue(0);
+    db.budgetEntry.count.mockResolvedValue(1);
+    await expect(categories.deleteCategory("u1", "c1")).rejects.toThrow("budget plan");
     expect(db.category.delete).not.toHaveBeenCalled();
   });
 
