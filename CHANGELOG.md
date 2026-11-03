@@ -17,6 +17,10 @@ All notable changes to iBudget are documented here. The format follows
   converts category expected, not the exchange lines (that would
   double-count). The migration runs on deploy.
 
+### Fixed
+- Turning a normal transaction into a recurring one now creates the rest of
+  the series, instead of saving with no effect.
+
 ## [1.2.0] - 2026-10-29
 
 An All-currencies dashboard and a spending donut for the month.

@@ -458,6 +458,42 @@ describe("updateTransaction", () => {
     db.transaction.findUnique.mockResolvedValue({ ...existing, date: null });
     await expect(transactions.updateTransaction("u1", props, { updateScope: "future" })).rejects.toThrow("date is missing");
   });
+
+  it("turns a one-off into a recurring series from that date", async () => {
+    db.transaction.findUnique.mockResolvedValue({ ...existing, recurringId: null });
+    db.transaction.update.mockResolvedValue({ id: "t1" });
+    db.transaction.createMany.mockResolvedValue({ count: 11 });
+
+    const result = await transactions.updateTransaction("u1", {
+      ...props,
+      isRecurring: true,
+      frequency: "monthly",
+    });
+
+    expect(db.transaction.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      data: expect.objectContaining({
+        isRecurring: true,
+        frequency: "monthly",
+        recurringId: expect.any(String),
+      }),
+    });
+    expect(db.transaction.createMany).toHaveBeenCalled();
+    const created = db.transaction.createMany.mock.calls[0][0].data as { date: Date }[];
+    expect(created).toHaveLength(11);
+    expect(result).toMatchObject({ count: 12, message: "Created 12 recurring transaction(s)" });
+  });
+
+  it("does not start a series when the transaction is already recurring", async () => {
+    db.transaction.createMany.mockClear();
+    db.transaction.findUnique.mockResolvedValue(existing);
+    db.transaction.update.mockResolvedValue({ id: "t1", amount: decimal(30) });
+
+    await transactions.updateTransaction("u1", { ...props, isRecurring: true, frequency: "monthly" });
+
+    expect(db.transaction.createMany).not.toHaveBeenCalled();
+    expect(db.transaction.update).toHaveBeenCalled();
+  });
 });
 
 describe("updateTransferTransaction", () => {

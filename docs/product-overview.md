@@ -54,7 +54,8 @@ Avoid adding libraries when Fetch, `URLSearchParams` or the existing kit will do
   midnight (that shifts the 1st into the previous month for UTC+ users).
 - Recurring transactions share a `recurringId`. Updates and deletes can apply
   to one occurrence or to this one and every later one (`updateScope` /
-  `scope=future`).
+  `scope=future`). Turning a one-off into recurring creates the rest of the
+  series from that date.
 - Categories are income or expense. Default categories are cloned per user on
   signup; "Transfer" stays shared.
 - Each account has one currency. The dashboard never adds two currencies
