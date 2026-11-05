@@ -330,7 +330,7 @@ export const DashboardPageShell = ({
                 Financial Trends
               </h2>
               <p className="text-xs sm:text-sm text-gray-600">
-                Income and expenses by month, including months you have already booked
+                Income and expenses for the last six months
               </p>
             </div>
             <SixMonthBarChart data={sixMonthHistory} currency={currency} />

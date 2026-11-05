@@ -45,5 +45,15 @@ transaction. Account balances keep ignoring future dates.
 - Rows saved before this change (local midnight) need an edit and save to
   land in the right month.
 - Empty future months are not navigable until something is booked there.
-- The six-month chart is the six months ending at the latest booked month
-  when that is in the future, otherwise the trailing six through today.
+- The six-month chart is always the six months ending at the **current**
+  month (this month on the right). Recurring rent booked into next year
+  must not slide that window into 2027. The monthly summary still steps
+  into later booked months.
+
+## Decision history
+
+- 2026-10-28: accepted.
+- 2026-11-05: the trend chart ends at the current month, not at the
+  latest booked month. A year of recurring occurrences had made QA show
+  May–Oct 2027. A trend is recent history; looking ahead stays on the
+  monthly summary.

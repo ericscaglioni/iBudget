@@ -86,6 +86,8 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   (name, amount, %). Top 5 then Other. Do not label slices or invent extra
   brand colours; Other is `gray-300`. Respect `prefers-reduced-motion`.
   When a budget exists, the legend can show expected next to actual.
+- The six-month trend ends at the current month (this month on the right).
+  Do not slide it to a later booked month. The monthly summary still can.
 - The Budget page is a month of expected vs actual, income then expenses,
   with the same currency chips as the dashboard. Expected is an editable
   amount, not a lock. Income includes **From other currencies**; expenses

@@ -83,8 +83,8 @@ transactions", …) are skipped — do not do that.
 - **Dashboard month.** See [product overview](product-overview.md) — same
   currency vs currency exchange. Account balances are as of today. Monthly
   totals include booked future months through the latest transaction date.
-  The six-month chart is the six months ending at the current month, or at
-  the latest booked month if that is later. All converts those figures in
+  The six-month chart is the six months ending at the current month (this
+  month on the right), even if later months are already booked. All converts those figures in
   `exchange-rates.ts` (public daily feed, cached per home currency per UTC
   day). Do not fetch rates from the browser.
 - **Account order.** Nullable `sortOrder`. Ordered accounts first, then

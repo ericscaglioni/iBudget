@@ -6,6 +6,14 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-05
+
+The six-month trend stays on the current month.
+
+### Fixed
+- The six-month trend chart always ends at the current month, even when
+  later months already have booked transactions.
+
 ## [2.0.0] - 2026-11-05
 
 A Budget page with expected vs actual, including money from and to other currencies.
@@ -298,6 +306,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[2.0.1]: https://github.com/ericscaglioni/iBudget/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/ericscaglioni/iBudget/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ericscaglioni/iBudget/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/ericscaglioni/iBudget/compare/1.0.0...1.1.0
