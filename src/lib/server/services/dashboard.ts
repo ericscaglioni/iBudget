@@ -479,12 +479,10 @@ const monthsForDashboard = async (userId: string, month?: string) => {
 
 const pickMonthlySlice = (
   allMonthlyTotals: MonthlyTotal[],
-  monthsThroughLatest: string[],
   query: Pick<DashboardQuery, "includeCurrentMonth" | "includePreviousMonth" | "month">
 ) => {
   const { includeCurrentMonth = true, includePreviousMonth = true, month } = query;
-  const chartMonths = monthsThroughLatest.slice(-6);
-  const sixMonthHistory = chartMonths.map((monthKey) => {
+  const sixMonthHistory = lastMonths(6).map((monthKey) => {
     const entry = allMonthlyTotals.find((item) => item.month === monthKey)!;
     return { month: monthKey, income: entry.income, expenses: entry.expenses };
   });
@@ -558,7 +556,7 @@ export const getDashboardData = async (
     balance: totals.get(code) ?? 0,
   }));
 
-  const { months, monthsThroughLatest } = await monthsForDashboard(userId, month);
+  const { months } = await monthsForDashboard(userId, month);
   const sliceQuery = { includeCurrentMonth, includePreviousMonth, month };
 
   let ratesError: string | null = null;
@@ -605,7 +603,6 @@ export const getDashboardData = async (
     });
     const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(
       await attachExpected(userId, allMonthlyTotals, { kind: "all", home: homeCurrency, rates }),
-      monthsThroughLatest,
       sliceQuery
     );
 
@@ -641,7 +638,7 @@ export const getDashboardData = async (
     { kind: "currency", currency },
     { includeExchange: available.length > 1 }
   );
-  const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, monthsThroughLatest, sliceQuery);
+  const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, sliceQuery);
 
   return {
     currency,

@@ -5,10 +5,10 @@ currency), categories, and transactions (income, expense, or a transfer between
 accounts). The dashboard shows one currency at a time, or **All** (converted
 into the home currency at today's rates): balances as of today,
 the month's income and expenses (including ones booked ahead), and a short
-history. The monthly summary and the six-month chart can step into later
-months when a transaction is already there; empty future months stay out of
-the way. Percentages vs the previous month are not a target — a tooltip
-explains them.
+history. The monthly summary can step into later months when a transaction
+is already there; empty future months stay out of the way. The six-month
+chart always ends at the current month. Percentages vs the previous month
+are not a target — a tooltip explains them.
 
 This page used to live as Cursor-only context in
 `.cursor/rules/ibudget-context.yaml`. That file is gone; this is the source of

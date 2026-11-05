@@ -369,13 +369,33 @@ describe("getDashboardData", () => {
     ]);
     expect(result.monthlyTotals[7]).toMatchObject({ month: "2026-12", expenses: 40 });
     expect(result.sixMonthHistory.map((m) => m.month)).toEqual([
+      "2026-05",
+      "2026-06",
       "2026-07",
       "2026-08",
       "2026-09",
       "2026-10",
-      "2026-11",
-      "2026-12",
     ]);
+  });
+
+  it("keeps this month on the right of the chart when later months are already booked", async () => {
+    givenData({
+      accounts: [usd("a1", "Main", 0)],
+      monthly: [monthlyTx({ date: new Date("2027-10-01T00:00:00.000Z"), amount: decimal(40) })],
+      latest: new Date("2027-10-01T00:00:00.000Z"),
+    });
+
+    const result = await dashboard.getDashboardData("u1", { currency: "USD" });
+
+    expect(result.sixMonthHistory.map((m) => m.month)).toEqual([
+      "2026-05",
+      "2026-06",
+      "2026-07",
+      "2026-08",
+      "2026-09",
+      "2026-10",
+    ]);
+    expect(result.monthlyTotals.map((m) => m.month).at(-1)).toBe("2027-10");
   });
 
   describe("All currencies (converted into the home currency)", () => {
