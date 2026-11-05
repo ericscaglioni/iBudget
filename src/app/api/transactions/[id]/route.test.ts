@@ -32,7 +32,18 @@ describe("PATCH /api/transactions/[id]", () => {
     expect(body).toEqual({ data: { id: "t1" } });
     expect(transactionService.updateTransaction).toHaveBeenCalledWith(
       "u1",
-      { id: "t1", type: "expense", amount: 30, accountId: "a1", categoryId: "c1", description: "New", date: "2026-10-21" },
+      {
+        id: "t1",
+        type: "expense",
+        amount: 30,
+        accountId: "a1",
+        categoryId: "c1",
+        description: "New",
+        date: "2026-10-21",
+        isRecurring: undefined,
+        frequency: undefined,
+        endsAt: undefined,
+      },
       undefined
     );
     expect(transactionService.updateTransferTransaction).not.toHaveBeenCalled();
@@ -59,6 +70,16 @@ describe("PATCH /api/transactions/[id]", () => {
     expect(status).toBe(400);
     expect(body).toMatchObject({ error: { code: "VALIDATION_ERROR" } });
     expect(transactionService.updateTransaction).not.toHaveBeenCalled();
+  });
+
+  it("passes recurring fields so a one-off can become a series", async () => {
+    vi.mocked(transactionService.updateTransaction).mockResolvedValue({ count: 12 } as never);
+    await patch({ ...edit, isRecurring: true, frequency: "monthly", endsAt: "2027-01-01" });
+    expect(vi.mocked(transactionService.updateTransaction).mock.calls[0][1]).toMatchObject({
+      isRecurring: true,
+      frequency: "monthly",
+      endsAt: "2027-01-01",
+    });
   });
 
   it("passes the scope on when the whole recurring series is updated", async () => {

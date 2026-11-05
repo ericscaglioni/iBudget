@@ -42,6 +42,7 @@ export const TransactionsTable = ({
       enablePagination
       enableSorting
       isFiltering={isFiltering}
+      onRowClick={onEdit}
     />
   );
 };

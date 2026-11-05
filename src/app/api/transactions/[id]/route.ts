@@ -21,6 +21,9 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
       fromAccountId,
       toAccountId,
       toAmount,
+      isRecurring,
+      frequency,
+      endsAt,
     } = body;
 
     if (updateScope && updateScope !== 'one' && updateScope !== 'future') {
@@ -54,6 +57,9 @@ export const PATCH = authHandler(async ({ userId, request, params }) => {
         categoryId,
         description: sanitizedDescription,
         date,
+        isRecurring,
+        frequency,
+        endsAt,
       },
       updateScope ? { updateScope } : undefined
     );

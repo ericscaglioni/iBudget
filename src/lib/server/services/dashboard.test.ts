@@ -62,6 +62,8 @@ const givenData = ({
       : monthly.map(({ currency, ...tx }) => ({ ...tx, account: { currency } }))
   );
   db.transaction.findFirst.mockResolvedValue(latest ? { date: latest } : null);
+  db.budgetEntry.findMany.mockResolvedValue([]);
+  db.budgetExchange.findMany.mockResolvedValue([]);
 };
 
 const usd = (id: string, name: string, initialBalance: number, extra: Partial<Account> = {}): Account => ({
@@ -428,6 +430,18 @@ describe("getDashboardData", () => {
       expect(result.view).toBe("all");
     });
 
+    it("does not add from-other-currencies expected (that would double-count salary)", async () => {
+      givenData({ accounts: mixed, baseCurrency: "EUR" });
+      getRateTable.mockResolvedValue(eurRates);
+      db.budgetExchange.findMany.mockResolvedValue([
+        { yearMonth: "2026-10", expectedIn: decimal(3000), expectedOut: decimal(0) },
+      ]);
+
+      const result = await dashboard.getDashboardData("u1", { view: "all" });
+      const october = result.monthlyTotals.find((entry) => entry.month === "2026-10");
+      expect(october?.expectedIncome).toBeNull();
+    });
+
     it("falls back to the home currency and reports the error when rates fail", async () => {
       givenData({ accounts: mixed, baseCurrency: "EUR" });
       getRateTable.mockRejectedValue(new RatesUnavailableError("Couldn't load exchange rates. Showing your home currency instead."));
@@ -439,5 +453,52 @@ describe("getDashboardData", () => {
       expect(result.accountBalances.map((a) => a.accountId)).toEqual(["a2"]);
       expect(result.ratesError).toMatch(/exchange rates/i);
     });
+  });
+
+  it("adds from-other-currencies expected to income, not to the donut", async () => {
+    givenData({
+      accounts: [
+        usd("a1", "Main", 0),
+        { id: "a2", name: "Euro", currency: "EUR", initialBalance: decimal(0), sortOrder: null },
+      ],
+    });
+    db.budgetExchange.findMany.mockResolvedValue([
+      { yearMonth: "2026-10", expectedIn: decimal(3000), expectedOut: decimal(0) },
+    ]);
+
+    const result = await dashboard.getDashboardData("u1", { currency: "USD" });
+    const october = result.monthlyTotals.find((entry) => entry.month === "2026-10");
+    expect(october?.expectedIncome).toBe(3000);
+    expect(october?.expectedByCategory).toEqual({});
+  });
+
+  it("ignores from-other-currencies expected when the user has only one currency", async () => {
+    givenData({ accounts: [usd("a1", "Main", 0)] });
+    db.budgetExchange.findMany.mockResolvedValue([
+      { yearMonth: "2026-10", expectedIn: decimal(3000), expectedOut: decimal(0) },
+    ]);
+
+    const result = await dashboard.getDashboardData("u1", { currency: "USD" });
+    const october = result.monthlyTotals.find((entry) => entry.month === "2026-10");
+    expect(october?.expectedIncome).toBeNull();
+    expect(db.budgetExchange.findMany).not.toHaveBeenCalled();
+  });
+
+  it("leaves income expected empty when only expenses are planned", async () => {
+    givenData({ accounts: [usd("a1", "Main", 0)] });
+    db.budgetEntry.findMany.mockResolvedValue([
+      {
+        yearMonth: "2026-10",
+        currency: "USD",
+        categoryId: "food",
+        expectedAmount: decimal(200),
+        category: { type: "expense" },
+      },
+    ]);
+
+    const result = await dashboard.getDashboardData("u1", { currency: "USD" });
+    const october = result.monthlyTotals.find((entry) => entry.month === "2026-10");
+    expect(october?.expectedIncome).toBeNull();
+    expect(october?.expectedExpenses).toBe(200);
   });
 });

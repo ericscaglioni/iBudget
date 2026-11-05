@@ -39,6 +39,12 @@ export interface MonthlyTotal {
   expensesFromExchange: number;
   net: number;
   categoryBreakdown: CategoryBreakdown[];
+  incomeBreakdown: CategoryBreakdown[];
+  /** Null when this month has no plan. */
+  expectedIncome: number | null;
+  expectedExpenses: number | null;
+  /** Expected amount per category id; omitted categories are unplanned. */
+  expectedByCategory: Record<string, number>;
 }
 
 export interface SixMonthHistory {
@@ -144,9 +150,27 @@ const calculateBalances = async (accounts: AccountRecord[]) => {
 const lastMonths = (count: number) =>
   Array.from({ length: count }, (_, i) => dayjs().subtract(count - 1 - i, "month").format("YYYY-MM"));
 
-type MonthlyMode =
+export type MonthlyMode =
   | { kind: "currency"; currency: string }
   | { kind: "all"; home: string; rates: RateTable };
+
+const addCategoryAmount = (
+  map: Map<string, CategoryBreakdown>,
+  category: { id: string; name: string; color: string },
+  amount: number
+) => {
+  const existing = map.get(category.id);
+  if (existing) {
+    existing.amount += amount;
+    return;
+  }
+  map.set(category.id, {
+    categoryId: category.id,
+    categoryName: category.name,
+    amount,
+    color: category.color,
+  });
+};
 
 /**
  * Income / expense totals and category breakdown for each given month.
@@ -159,7 +183,7 @@ type MonthlyMode =
  * All view: every transfer is skipped. Remaining income and expenses are converted into the
  * home currency at today's rates.
  */
-const calculateMonthlyTotals = async (
+export const calculateMonthlyTotals = async (
   userId: string,
   months: string[],
   mode: MonthlyMode
@@ -204,10 +228,24 @@ const calculateMonthlyTotals = async (
 
   const byMonth = new Map<
     string,
-    { income: number; expenses: number; incomeFromExchange: number; expensesFromExchange: number; categories: Map<string, CategoryBreakdown> }
+    {
+      income: number;
+      expenses: number;
+      incomeFromExchange: number;
+      expensesFromExchange: number;
+      categories: Map<string, CategoryBreakdown>;
+      incomeCategories: Map<string, CategoryBreakdown>;
+    }
   >();
   months.forEach((month) =>
-    byMonth.set(month, { income: 0, expenses: 0, incomeFromExchange: 0, expensesFromExchange: 0, categories: new Map() })
+    byMonth.set(month, {
+      income: 0,
+      expenses: 0,
+      incomeFromExchange: 0,
+      expensesFromExchange: 0,
+      categories: new Map(),
+      incomeCategories: new Map(),
+    })
   );
 
   const toDisplay = (amount: number, from: string) =>
@@ -229,28 +267,18 @@ const calculateMonthlyTotals = async (
     if (tx.type === TransactionType.income) {
       entry.income += amount;
       if (isTransfer) entry.incomeFromExchange += amount;
+      else if (tx.category) addCategoryAmount(entry.incomeCategories, tx.category, amount);
       return;
     }
 
     entry.expenses += amount;
     if (isTransfer) entry.expensesFromExchange += amount;
-    if (tx.category && !isTransfer) {
-      const existing = entry.categories.get(tx.category.id);
-      if (existing) {
-        existing.amount += amount;
-      } else {
-        entry.categories.set(tx.category.id, {
-          categoryId: tx.category.id,
-          categoryName: tx.category.name,
-          amount,
-          color: tx.category.color,
-        });
-      }
-    }
+    if (tx.category && !isTransfer) addCategoryAmount(entry.categories, tx.category, amount);
   });
 
   return months.map((month) => {
-    const { income, expenses, incomeFromExchange, expensesFromExchange, categories } = byMonth.get(month)!;
+    const { income, expenses, incomeFromExchange, expensesFromExchange, categories, incomeCategories } =
+      byMonth.get(month)!;
     return {
       month,
       income,
@@ -259,6 +287,101 @@ const calculateMonthlyTotals = async (
       expensesFromExchange,
       net: income - expenses,
       categoryBreakdown: Array.from(categories.values()).sort((a, b) => b.amount - a.amount),
+      incomeBreakdown: Array.from(incomeCategories.values()).sort((a, b) => b.amount - a.amount),
+      expectedIncome: null,
+      expectedExpenses: null,
+      expectedByCategory: {},
+    };
+  });
+};
+
+const attachExpected = async (
+  userId: string,
+  months: MonthlyTotal[],
+  mode: MonthlyMode,
+  options: { includeExchange?: boolean } = {}
+): Promise<MonthlyTotal[]> => {
+  if (months.length === 0) return months;
+  const monthKeys = months.map((entry) => entry.month);
+  const currencyFilter = mode.kind === "currency" ? { currency: mode.currency } : {};
+  const includeExchange = Boolean(options.includeExchange) && mode.kind === "currency";
+  const [entries, exchanges] = await Promise.all([
+    prisma.budgetEntry.findMany({
+      where: {
+        userId,
+        yearMonth: { in: monthKeys },
+        ...currencyFilter,
+      },
+      select: {
+        yearMonth: true,
+        currency: true,
+        categoryId: true,
+        expectedAmount: true,
+        category: { select: { type: true } },
+      },
+    }),
+    // All skips transfers, so FX expected would double-count USD salary. One-currency
+    // users have nowhere to exchange from.
+    includeExchange
+      ? prisma.budgetExchange.findMany({
+          where: { userId, yearMonth: { in: monthKeys }, currency: mode.currency },
+          select: { yearMonth: true, expectedIn: true, expectedOut: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  type Acc = {
+    income: number;
+    expenses: number;
+    byCategory: Record<string, number>;
+    hasIncome: boolean;
+    hasExpenses: boolean;
+  };
+  const byMonth = new Map<string, Acc>();
+  const toDisplay = (amount: number, from: string) =>
+    mode.kind === "all" ? convertAmount(amount, from, mode.home, mode.rates.rates, mode.rates.base) : amount;
+  const bucketFor = (yearMonth: string) =>
+    byMonth.get(yearMonth) ?? { income: 0, expenses: 0, byCategory: {}, hasIncome: false, hasExpenses: false };
+
+  entries.forEach((entry) => {
+    const amount = toDisplay(toNumber(entry.expectedAmount), entry.currency);
+    if (amount <= 0) return;
+    const bucket = bucketFor(entry.yearMonth);
+    if (entry.category.type === "income") {
+      bucket.income += amount;
+      bucket.hasIncome = true;
+    } else {
+      bucket.expenses += amount;
+      bucket.hasExpenses = true;
+    }
+    bucket.byCategory[entry.categoryId] = (bucket.byCategory[entry.categoryId] ?? 0) + amount;
+    byMonth.set(entry.yearMonth, bucket);
+  });
+
+  exchanges.forEach((row) => {
+    const incoming = toNumber(row.expectedIn);
+    const outgoing = toNumber(row.expectedOut);
+    if (incoming <= 0 && outgoing <= 0) return;
+    const bucket = bucketFor(row.yearMonth);
+    if (incoming > 0) {
+      bucket.income += incoming;
+      bucket.hasIncome = true;
+    }
+    if (outgoing > 0) {
+      bucket.expenses += outgoing;
+      bucket.hasExpenses = true;
+    }
+    byMonth.set(row.yearMonth, bucket);
+  });
+
+  return months.map((month) => {
+    const planned = byMonth.get(month.month);
+    if (!planned) return month;
+    return {
+      ...month,
+      expectedIncome: planned.hasIncome ? planned.income : null,
+      expectedExpenses: planned.hasExpenses ? planned.expenses : null,
+      expectedByCategory: planned.byCategory,
     };
   });
 };
@@ -480,7 +603,11 @@ export const getDashboardData = async (
       home: homeCurrency,
       rates,
     });
-    const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, monthsThroughLatest, sliceQuery);
+    const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(
+      await attachExpected(userId, allMonthlyTotals, { kind: "all", home: homeCurrency, rates }),
+      monthsThroughLatest,
+      sliceQuery
+    );
 
     return {
       currency: homeCurrency,
@@ -508,7 +635,12 @@ export const getDashboardData = async (
   }));
   const total = accounts.reduce((sum, account) => sum + balances.get(account.id)!.current, 0);
   const previousMonthTotal = accounts.reduce((sum, account) => sum + balances.get(account.id)!.previousMonthEnd, 0);
-  const allMonthlyTotals = await calculateMonthlyTotals(userId, months, { kind: "currency", currency });
+  const allMonthlyTotals = await attachExpected(
+    userId,
+    await calculateMonthlyTotals(userId, months, { kind: "currency", currency }),
+    { kind: "currency", currency },
+    { includeExchange: available.length > 1 }
+  );
   const { monthlyTotals, sixMonthHistory } = pickMonthlySlice(allMonthlyTotals, monthsThroughLatest, sliceQuery);
 
   return {

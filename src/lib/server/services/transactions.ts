@@ -422,6 +422,40 @@ interface CreateRecurringTransactionProps {
   endsAt?: string | Date;
 };
 
+const intervalFor = (freq: string): { amount: number; unit: "day" | "week" | "month" | "year" } => {
+  switch (freq) {
+    case "daily":
+      return { amount: 1, unit: "day" };
+    case "weekly":
+      return { amount: 1, unit: "week" };
+    case "monthly":
+      return { amount: 1, unit: "month" };
+    case "yearly":
+      return { amount: 1, unit: "year" };
+    default:
+      throw new ValidationError(`Invalid frequency: ${freq}`);
+  }
+};
+
+/** Dates for the first occurrence and every later one, same rules as a new recurring series. */
+const recurringDates = (date: string | Date, frequency: string, endsAt?: string | Date | null): Date[] => {
+  const startDate = dayjs.utc(parseCalendarDate(date));
+  let currentDate = startDate;
+  const finalDate = endsAt ? dayjs.utc(parseCalendarDate(endsAt)) : null;
+  const interval = intervalFor(frequency);
+  const dates: Date[] = [];
+  const maxOccurrences = finalDate ? 1000 : 12;
+
+  while (dates.length < maxOccurrences) {
+    if (finalDate && currentDate.isAfter(finalDate, "day")) break;
+    dates.push(currentDate.toDate());
+    currentDate = currentDate.add(interval.amount, interval.unit);
+  }
+
+  if (dates.length === 0) dates.push(startDate.toDate());
+  return dates;
+};
+
 export const createRecurringTransaction = async (
   userId: string,
   props: CreateRecurringTransactionProps
@@ -434,98 +468,38 @@ export const createRecurringTransaction = async (
 
   await ensureUserRow(userId);
 
-  // Generate a unique recurringId for all occurrences
   const recurringId = uuid();
+  const parsedEndsAt = endsAt ? parseCalendarDate(endsAt) : null;
+  const dates = recurringDates(date, frequency, endsAt);
 
-  // Generate initial transaction + future occurrences using dayjs for reliable date math
-  const transactions = [];
-  const startDate = dayjs.utc(parseCalendarDate(date));
-  let currentDate = startDate;
-
-  // Determine how many occurrences to generate
-  const defaultOccurrences = 12; // Default if no end date provided
-  const finalDate = endsAt ? dayjs.utc(parseCalendarDate(endsAt)) : null;
-
-  // Calculate the interval unit based on frequency
-  const getIntervalConfig = (freq: string): { amount: number; unit: string } => {
-    switch (freq) {
-      case 'daily':
-        return { amount: 1, unit: 'day' };
-      case 'weekly':
-        return { amount: 1, unit: 'week' };
-      case 'monthly':
-        return { amount: 1, unit: 'month' };
-      case 'yearly':
-        return { amount: 1, unit: 'year' };
-      default:
-        throw new ValidationError(`Invalid frequency: ${freq}`);
-    }
-  };
-
-  const interval = getIntervalConfig(frequency);
-
-  // Generate occurrences
-  let occurrenceCount = 0;
-  const maxOccurrences = finalDate ? 1000 : defaultOccurrences; // Safety limit when finalDate is provided
-
-  while (occurrenceCount < maxOccurrences) {
-    // Check if current date exceeds final date (if provided)
-    if (finalDate && currentDate.isAfter(finalDate, 'day')) {
-      break;
-    }
-
-    // Add the transaction
-    transactions.push({
-      userId,
-      type,
-      amount: Math.abs(amount),
-      accountId,
-      categoryId,
-      description,
-      date: currentDate.toDate(), // Convert dayjs to native Date for Prisma
-      isRecurring: true,
-      frequency,
-      endsAt: endsAt ? parseCalendarDate(endsAt) : null,
-      recurringId,
-    });
-
-    occurrenceCount++;
-
-    // Calculate next occurrence date
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    currentDate = currentDate.add(interval.amount, interval.unit as any);
-  }
-
-  // Edge case: If no transactions were generated, create at least the original one
-  if (transactions.length === 0) {
-    transactions.push({
-      userId,
-      type,
-      amount: Math.abs(amount),
-      accountId,
-      categoryId,
-      description,
-      date: startDate.toDate(),
-      isRecurring: true,
-      frequency,
-      endsAt: endsAt ? parseCalendarDate(endsAt) : null,
-      recurringId,
-    });
-  }
-
-  // Create all transactions at once
   await prisma.transaction.createMany({
-    data: transactions,
+    data: dates.map((occurrenceDate) => ({
+      userId,
+      type,
+      amount: Math.abs(amount),
+      accountId,
+      categoryId,
+      description,
+      date: occurrenceDate,
+      isRecurring: true,
+      frequency,
+      endsAt: parsedEndsAt,
+      recurringId,
+    })),
   });
 
   return {
-    message: `Created ${transactions.length} recurring transaction(s)`,
-    count: transactions.length,
+    message: `Created ${dates.length} recurring transaction(s)`,
+    count: dates.length,
     recurringId,
   };
 };
 
-type UpdateTransactionProps = CreateTransactionProps & { id: string };
+type UpdateTransactionProps = CreateTransactionProps & {
+  id: string;
+  frequency?: string;
+  endsAt?: string | Date;
+};
 
 interface UpdateTransactionOptions {
   updateScope?: 'one' | 'future';
@@ -536,7 +510,7 @@ export const updateTransaction = async (
   props: UpdateTransactionProps, 
   options?: UpdateTransactionOptions
 ) => {
-  const { id, amount, accountId, categoryId, description, date } = props;
+  const { id, amount, accountId, categoryId, description, date, isRecurring, frequency, endsAt } = props;
   const updateScope = options?.updateScope || 'one';
 
   const existing = await prisma.transaction.findUnique({
@@ -548,6 +522,59 @@ export const updateTransaction = async (
 
   if (!existing) {
     throw new NotFoundError('Transaction');
+  }
+
+  // A one-off that they just marked recurring: this row becomes the first occurrence,
+  // then the rest of the series is created the same way as a new recurring transaction.
+  if (!existing.recurringId && isRecurring && frequency) {
+    if (!accountId || !categoryId) {
+      throw new ValidationError("Missing required transaction data");
+    }
+
+    const recurringId = uuid();
+    const parsedEndsAt = endsAt ? parseCalendarDate(endsAt) : null;
+    const [first, ...rest] = recurringDates(date, frequency, endsAt);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.transaction.update({
+        where: { id: existing.id },
+        data: {
+          type: existing.type,
+          amount: Math.abs(amount),
+          accountId,
+          categoryId,
+          description,
+          date: first,
+          isRecurring: true,
+          frequency,
+          endsAt: parsedEndsAt,
+          recurringId,
+        },
+      });
+      if (rest.length > 0) {
+        await tx.transaction.createMany({
+          data: rest.map((occurrenceDate) => ({
+            userId,
+            type: existing.type,
+            amount: Math.abs(amount),
+            accountId,
+            categoryId,
+            description,
+            date: occurrenceDate,
+            isRecurring: true,
+            frequency,
+            endsAt: parsedEndsAt,
+            recurringId,
+          })),
+        });
+      }
+    });
+
+    return {
+      message: `Created ${rest.length + 1} recurring transaction(s)`,
+      count: rest.length + 1,
+      recurringId,
+    };
   }
 
   // Handle updateScope=future: update this transaction and all future recurring transactions

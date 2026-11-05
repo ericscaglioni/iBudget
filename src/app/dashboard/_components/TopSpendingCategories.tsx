@@ -9,6 +9,7 @@ type Props = {
   categories: SpendingCategory[];
   limit?: number;
   currency?: string;
+  expectedByCategory?: Record<string, number>;
 };
 
 const useMediaQuery = (query: string) => {
@@ -45,7 +46,12 @@ const SliceTooltip = ({ active, payload, currency }: SliceTooltipProps) => {
   );
 };
 
-export const TopSpendingCategories = ({ categories, limit = 5, currency = "USD" }: Props) => {
+export const TopSpendingCategories = ({
+  categories,
+  limit = 5,
+  currency = "USD",
+  expectedByCategory = {},
+}: Props) => {
   const headingId = useId();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const { slices, total } = toSpendingSlices(categories, limit);
@@ -147,6 +153,12 @@ export const TopSpendingCategories = ({ categories, limit = 5, currency = "USD" 
                   currency={currency}
                   className="font-semibold text-gray-900"
                 />
+                {expectedByCategory[slice.id] != null && (
+                  <span className="ml-2 text-grayNeutral">
+                    of{" "}
+                    <ClientOnlyCurrency value={expectedByCategory[slice.id]} currency={currency} />
+                  </span>
+                )}
                 <span className="ml-2 text-grayNeutral">{sliceShare(slice.amount, total)}%</span>
               </span>
             </li>

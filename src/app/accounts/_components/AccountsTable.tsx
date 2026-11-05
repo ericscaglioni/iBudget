@@ -30,6 +30,7 @@ export const AccountsTable = ({ data, totalCount, page, pageSize, onEdit, onDele
       basePath='/accounts'
       enablePagination
       enableSorting
+      onRowClick={onEdit}
       filtersConfig={[
         {
           type: "combobox",

@@ -6,6 +6,29 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-05
+
+A Budget page with expected vs actual, including money from and to other currencies.
+
+### Added
+- A Budget page for the month: expected income and expected expenses per
+  category, usually copied from last month. Those numbers are targets, not
+  limits. You can also plan money that arrives from other currencies (and
+  money sent out), so EUR life can be covered by a USD salary without
+  pretending the landing is EUR income. The dashboard shows actual vs
+  expected when a plan exists, and adding a transaction says how much of
+  that category is left (or how far over). Plans are per currency; All
+  converts category expected, not the exchange lines (that would
+  double-count). The migration runs on deploy.
+
+### Changed
+- Accounts, Categories and Transactions lists show a hand cursor on rows.
+  Click a row to edit it.
+
+### Fixed
+- Turning a normal transaction into a recurring one now creates the rest of
+  the series, instead of saving with no effect.
+
 ## [1.2.0] - 2026-10-29
 
 An All-currencies dashboard and a spending donut for the month.
@@ -275,6 +298,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[2.0.0]: https://github.com/ericscaglioni/iBudget/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ericscaglioni/iBudget/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/ericscaglioni/iBudget/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0

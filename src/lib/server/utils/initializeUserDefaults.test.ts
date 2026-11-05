@@ -43,6 +43,8 @@ describe("initializeUserDefaults", () => {
 describe("deleteUserData", () => {
   it("deletes everything that belongs to the user, in one transaction, and says how much", async () => {
     db.transaction.deleteMany.mockResolvedValue({ count: 10 });
+    db.budgetEntry.deleteMany.mockResolvedValue({ count: 4 });
+    db.budgetExchange.deleteMany.mockResolvedValue({ count: 1 });
     db.account.deleteMany.mockResolvedValue({ count: 2 });
     db.category.deleteMany.mockResolvedValue({ count: 15 });
     db.userSettings.deleteMany.mockResolvedValue({ count: 1 });
@@ -53,13 +55,23 @@ describe("deleteUserData", () => {
 
     expect(result).toEqual({
       transactions: 10,
+      budgetEntries: 4,
+      budgetExchanges: 1,
       accounts: 2,
       categories: 15,
       settings: 1,
       guide: 1,
       users: 1,
     });
-    for (const model of ["transaction", "account", "category", "userSettings", "userGuide"] as const) {
+    for (const model of [
+      "transaction",
+      "budgetEntry",
+      "budgetExchange",
+      "account",
+      "category",
+      "userSettings",
+      "userGuide",
+    ] as const) {
       expect(db[model].deleteMany).toHaveBeenCalledWith({ where: { userId: "u1" } });
     }
     expect(db.user.deleteMany).toHaveBeenCalledWith({ where: { id: "u1" } });
