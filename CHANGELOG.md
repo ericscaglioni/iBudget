@@ -6,6 +6,10 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-05
+
+A Budget page with expected vs actual, including money from and to other currencies.
+
 ### Added
 - A Budget page for the month: expected income and expected expenses per
   category, usually copied from last month. Those numbers are targets, not
@@ -294,6 +298,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[2.0.0]: https://github.com/ericscaglioni/iBudget/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ericscaglioni/iBudget/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/ericscaglioni/iBudget/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/ericscaglioni/iBudget/compare/0.4.3...1.0.0
