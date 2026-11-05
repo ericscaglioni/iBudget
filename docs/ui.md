@@ -65,6 +65,9 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
 - Match the spacing, radius (`rounded-md`) and shadows of the neighbouring cards and tables.
 - Stack on mobile; follow the existing `md` / `xl` breakpoints (the dashboard grid is the reference: 1 column, then 3, then 5).
 - List pagination stays on one row on a phone: rows-per-page on the left, arrows and "Page x of x" on the right (no Previous/Next words).
+- Shared list tables (Accounts, Categories, Transactions) show a hand cursor
+  on data rows. Click a row to edit; Edit / Delete stay on the row. Budget
+  and the transaction totals summary do not.
 - Filtering, sorting or paging a list shows a loading overlay on the table
   rows (not the filters or the rest of the page) until the new rows arrive.
 - Active list filters show as dismissible pills under the filter controls,

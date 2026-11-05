@@ -71,5 +71,67 @@ describe("Table sorting", () => {
 
     await userEvent.click(header);
     expect(push).toHaveBeenCalledWith("/accounts?sortField=name&sortOrder=asc");
+    expect(header).toHaveClass("cursor-pointer");
+  });
+});
+
+describe("Table row click", () => {
+  beforeEach(() => {
+    transition.pending = false;
+    params.current = new URLSearchParams();
+    push.mockClear();
+  });
+
+  it("shows a hand cursor on data rows when click opens edit", () => {
+    render(
+      <Table
+        data={[{ name: "Wallet" }]}
+        columns={columns}
+        onRowClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Wallet").closest("tr")).toHaveClass("cursor-pointer");
+  });
+
+  it("does not show a hand cursor when the row cannot be edited that way", () => {
+    render(<Table data={[{ name: "Wallet" }]} columns={columns} />);
+    expect(screen.getByText("Wallet").closest("tr")).not.toHaveClass("cursor-pointer");
+  });
+
+  it("opens edit on click of the row", async () => {
+    const onRowClick = vi.fn();
+    render(
+      <Table
+        data={[{ name: "Wallet" }]}
+        columns={columns}
+        onRowClick={onRowClick}
+      />
+    );
+
+    await userEvent.click(screen.getByText("Wallet"));
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).toHaveBeenCalledWith({ name: "Wallet" });
+  });
+
+  it("does not open edit when the click is on a row button", async () => {
+    const onRowClick = vi.fn();
+    const columnsWithAction: ColumnDef<{ name: string }, unknown>[] = [
+      {
+        id: "actions",
+        header: "Actions",
+        cell: () => <button type="button">Edit</button>,
+      },
+      { accessorKey: "name", header: "Name" },
+    ];
+    render(
+      <Table
+        data={[{ name: "Wallet" }]}
+        columns={columnsWithAction}
+        onRowClick={onRowClick}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(onRowClick).not.toHaveBeenCalled();
   });
 });

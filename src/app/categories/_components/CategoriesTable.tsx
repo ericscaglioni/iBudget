@@ -36,6 +36,7 @@ export const CategoriesTable = ({
       basePath="/categories"
       enablePagination
       enableSorting
+      onRowClick={onEdit}
       filtersConfig={[
         {
           type: "segmentedControl",

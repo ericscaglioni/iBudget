@@ -17,6 +17,10 @@ All notable changes to iBudget are documented here. The format follows
   converts category expected, not the exchange lines (that would
   double-count). The migration runs on deploy.
 
+### Changed
+- Accounts, Categories and Transactions lists show a hand cursor on rows.
+  Click a row to edit it.
+
 ### Fixed
 - Turning a normal transaction into a recurring one now creates the rest of
   the series, instead of saving with no effect.

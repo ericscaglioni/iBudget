@@ -27,6 +27,8 @@ type Props<TData> = {
   filtersConfig?: TableFilter[];
   /** Extra pending from a parent that owns the filter row (transactions). */
   isFiltering?: boolean;
+  /** Opens the row's edit modal. Shared lists pass this; Budget and totals do not. */
+  onRowClick?: (row: TData) => void;
 };
 
 export function Table<TData>({
@@ -40,6 +42,7 @@ export function Table<TData>({
   enableSorting = false,
   filtersConfig,
   isFiltering = false,
+  onRowClick,
 }: Props<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -123,7 +126,7 @@ export function Table<TData>({
                         type="button"
                         onClick={() => handleSortChange(header.column.id)}
                         className={clsx(
-                          "inline-flex items-center gap-1 rounded-sm text-left font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                          "inline-flex items-center gap-1 rounded-sm text-left font-medium hover:text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50",
                           header.column.columnDef.meta?.className?.includes("text-center") && "justify-center w-full"
                         )}
                       >
@@ -149,7 +152,21 @@ export function Table<TData>({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
+              <tr
+                key={row.id}
+                className={clsx(
+                  "hover:bg-gray-50",
+                  onRowClick && "cursor-pointer select-none"
+                )}
+                onClick={
+                  onRowClick
+                    ? (event) => {
+                        if ((event.target as HTMLElement).closest("button, a")) return;
+                        onRowClick(row.original);
+                      }
+                    : undefined
+                }
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className={clsx(
                     "px-2 sm:px-4 py-2 text-gray-800 text-xs sm:text-sm",
