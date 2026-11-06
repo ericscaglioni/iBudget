@@ -6,6 +6,19 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-06
+
+Account pickers show the currency, and extra income is no longer red.
+
+### Added
+- Account pickers show the currency next to the name when you hold more
+  than one, so N26 in euros is not confused with N26 in dollars.
+
+### Fixed
+- Extra income (and money from other currencies) no longer shows as a red
+  overspend. It is “more than expected,” in green. Expenses still go red
+  when they pass the plan.
+
 ## [2.0.2] - 2026-11-06
 
 Changing a recurring transaction's date now saves.
@@ -314,6 +327,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[2.1.0]: https://github.com/ericscaglioni/iBudget/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/ericscaglioni/iBudget/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/ericscaglioni/iBudget/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/ericscaglioni/iBudget/compare/1.2.0...2.0.0

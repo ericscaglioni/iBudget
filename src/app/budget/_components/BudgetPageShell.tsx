@@ -16,7 +16,15 @@ type Props = {
 const hrefFor = (yearMonth: string, currency: string, view: "currency" | "all") =>
   view === "all" ? `/budget?view=all&yearMonth=${yearMonth}` : `/budget?currency=${currency}&yearMonth=${yearMonth}`;
 
-const ExpectedBar = ({ actual, expected }: { actual: number; expected: number | null }) => {
+const ExpectedBar = ({
+  actual,
+  expected,
+  overIsBad,
+}: {
+  actual: number;
+  expected: number | null;
+  overIsBad: boolean;
+}) => {
   if (expected == null || expected <= 0) {
     if (actual <= 0) return <div className="h-1.5 rounded-full bg-gray-100" />;
     return (
@@ -30,7 +38,7 @@ const ExpectedBar = ({ actual, expected }: { actual: number; expected: number | 
   return (
     <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
       <div
-        className={`h-full ${over ? "bg-red-500" : "bg-primary"}`}
+        className={`h-full ${over && overIsBad ? "bg-red-500" : "bg-primary"}`}
         style={{ width: `${width}%` }}
       />
     </div>
@@ -44,6 +52,7 @@ const LineRow = ({
   actual,
   currency,
   canEdit,
+  overIsBad,
   unplannedLabel = "Unplanned spend",
   onSave,
 }: {
@@ -53,6 +62,8 @@ const LineRow = ({
   actual: number;
   currency: string;
   canEdit: boolean;
+  /** Expenses (and money sent out) go red when actual is past expected. Income does not. */
+  overIsBad: boolean;
   unplannedLabel?: string;
   onSave: (amount: number) => Promise<void>;
 }) => {
@@ -120,7 +131,7 @@ const LineRow = ({
           <ClientOnlyCurrency value={actual} currency={currency} className="font-semibold text-gray-900 w-[5.5rem] text-right" />
         </span>
       </div>
-      <ExpectedBar actual={actual} expected={expected} />
+      <ExpectedBar actual={actual} expected={expected} overIsBad={overIsBad} />
       <p className="text-xs text-grayNeutral">
         {unplanned && unplannedLabel}
         {remaining != null && remaining >= 0 && (
@@ -129,8 +140,9 @@ const LineRow = ({
           </>
         )}
         {remaining != null && remaining < 0 && (
-          <span className="text-red-600">
-            <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> over expected
+          <span className={overIsBad ? "text-red-600" : "text-primary"}>
+            <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} />{" "}
+            {overIsBad ? "over expected" : "more than expected"}
           </span>
         )}
       </p>
@@ -393,6 +405,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                       actual={budget.exchangeIn.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
+                      overIsBad={false}
                       unplannedLabel="Unplanned"
                       onSave={(amount) => handleSaveExchange("in", amount)}
                     />
@@ -406,6 +419,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                       actual={line.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
+                      overIsBad={false}
                       onSave={(amount) => handleSave(line.categoryId, amount)}
                     />
                   ))}
@@ -429,6 +443,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                       actual={line.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
+                      overIsBad
                       onSave={(amount) => handleSave(line.categoryId, amount)}
                     />
                   ))}
@@ -440,6 +455,7 @@ export const BudgetPageShell = ({ budget: initial }: Props) => {
                       actual={budget.exchangeOut.actual}
                       currency={budget.currency}
                       canEdit={budget.canEdit}
+                      overIsBad
                       unplannedLabel="Unplanned"
                       onSave={(amount) => handleSaveExchange("out", amount)}
                     />

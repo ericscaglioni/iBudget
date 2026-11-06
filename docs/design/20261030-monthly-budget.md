@@ -94,7 +94,9 @@ pace; expected income per category.
 - Same month control as the dashboard. Same currency chips + All.
 - Two lists: expected income, then expected expenses. Each row:
   category colour, name, expected (editable), actual, and a short
-  bar or remaining / over figure.
+  bar or remaining / over figure. Extra **income** (and from other
+  currencies) is “more than expected” in the brand green — not red.
+  Extra **expenses** (and to other currencies) stay red “over expected.”
 - **Copy previous month** is the primary header action on every month,
   including the current one (day one, or any later day). It fills this
   month's expected amounts from the last month that has a plan (usually
@@ -108,8 +110,9 @@ pace; expected income per category.
 ### Dashboard (expected vs actual)
 
 - Income and Expenses cards: keep the actual as the big number; add
-  a quieter "€X of €Y expected" (and over in red if actual is past
-  expected). Net can show expected net the same way.
+  a quieter "€X of €Y expected". Expenses past expected are over in
+  red. Extra income is not an overspend. Net can show expected net
+  the same way.
 - The spending donut stays **actual** spend (share of the month).
   The legend can show expected next to actual, without turning the
   ring into a second chart.
@@ -121,9 +124,10 @@ pace; expected income per category.
 ### Transaction form
 
 - After a category and an amount are chosen, one line of copy:
-  remaining of expected, or how far over, for that category in the
-  transaction's month and the account's currency. Keep a reserved line
-  so the modal footer does not jump when the hint appears.
+  remaining of expected, or how far over (expenses) / more than
+  expected (income), for that category in the transaction's month and
+  the account's currency. Keep a reserved line so the modal footer
+  does not jump when the hint appears.
 - Transfers: no budget line (they have no category in the plan).
 - Do not toast on save. Do not refuse save. Do not add push
   notifications in this version.
@@ -177,3 +181,5 @@ pace; expected income per category.
   dashboard Plan this month / View plan sits in the Monthly Summary
   heading (full width on a phone); form hint keeps a reserved line so
   the modal does not leap.
+- 2026-11-06: extra income is not red. Red is for spending past the
+  plan only.

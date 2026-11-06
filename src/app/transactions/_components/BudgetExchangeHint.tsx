@@ -60,6 +60,10 @@ export const BudgetExchangeHint = ({
           <ClientOnlyCurrency value={remaining} currency={currency} /> left of{" "}
           <ClientOnlyCurrency value={expected} currency={currency} /> {label}
         </>
+      ) : direction === "in" ? (
+        <span className="text-primary">
+          <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> more than {label}
+        </span>
       ) : (
         <span className="text-red-600">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> over {label}

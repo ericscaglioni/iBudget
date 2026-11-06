@@ -10,6 +10,8 @@ type Props = {
   amount: string;
   date: string;
   currency?: string;
+  /** Income going past expected is good; expenses going past it is not. */
+  kind?: "income" | "expense";
   originalAmount?: number;
   originalCategoryId?: string;
   originalMonth?: string;
@@ -20,6 +22,7 @@ export const BudgetHint = ({
   amount,
   date,
   currency,
+  kind = "expense",
   originalAmount = 0,
   originalCategoryId,
   originalMonth,
@@ -62,6 +65,10 @@ export const BudgetHint = ({
           <ClientOnlyCurrency value={remaining} currency={currency} /> left of{" "}
           <ClientOnlyCurrency value={expected} currency={currency} /> expected
         </>
+      ) : kind === "income" ? (
+        <span className="text-primary">
+          <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> more than expected
+        </span>
       ) : (
         <span className="text-red-600">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> over expected
