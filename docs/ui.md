@@ -95,11 +95,13 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   Those rows are hidden on All, and when the user only has one currency.
   Copy previous month is the primary header action on every month,
   including the current one; it confirms before overwrite. All is
-  read-only (switch to a currency to edit).
+  read-only (switch to a currency to edit). Extra income is “more
+  than expected” in primary green, not red; extra expenses stay red
+  “over expected.”
 - On the dashboard, Plan this month (or View plan) sits in the Monthly
   Summary heading. Full width on a phone; next to the title from `md` up.
 - Nothing should scroll sideways on a phone. Clip overflow on the overlay, not on the form itself, so the focus ring is not cut off. Fields use `min-w-0` so they shrink instead of pushing the page wider.
-- Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker.
+- Short dialogs (delete, confirm) are a centred card on a phone (`Modal`). Long forms use `fullScreenOnMobile` (`FormModal`). Comboboxes on a phone stay a button that opens the picker. Account options show the currency code next to the name when the list has more than one currency (closed field and list). Categories and one-currency users see names only. Do not add flags, balances, or group the list by currency.
 - In a modal with a long list, the list scrolls and the action footer stays visible (`ReorderAccountsModal` is the reference).
 - Height changes must be animated. `Collapsible` exists for that; do not snap content in and out.
 - Required fields in form modals show an asterisk on the label (`required` on

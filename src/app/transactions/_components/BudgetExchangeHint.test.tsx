@@ -28,4 +28,16 @@ describe("BudgetExchangeHint", () => {
     await waitFor(() => expect(budgetService.getExchangeStatus).toHaveBeenCalled());
     expect(screen.queryByText(/left of/)).not.toBeInTheDocument();
   });
+
+  it("does not treat extra money from other currencies as overspend", async () => {
+    vi.mocked(budgetService.getExchangeStatus).mockResolvedValue({ expected: 1000, actual: 900 });
+    render(
+      <BudgetExchangeHint direction="in" amount="200" date="2026-11-04" currency="EUR" />
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/more than/)).toBeInTheDocument();
+    });
+    expect(screen.getByText(/more than/).className).toContain("text-primary");
+    expect(screen.queryByText(/over /)).not.toBeInTheDocument();
+  });
 });

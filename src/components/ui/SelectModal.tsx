@@ -5,7 +5,12 @@ import { useState } from "react";
 import { Icon } from "./Icon";
 import { Button } from "./Button";
 import { Input } from "./Input";
-import { ComboboxOption } from "./Combobox";
+import {
+  ComboboxOption,
+  ComboboxOptionLabel,
+  optionMatchesQuery,
+  optionsShowCurrency,
+} from "./Combobox";
 
 interface SelectModalProps {
   isOpen: boolean;
@@ -34,12 +39,9 @@ export const SelectModal = ({
 }: SelectModalProps) => {
   const [query, setQuery] = useState("");
 
+  const showCurrency = optionsShowCurrency(options);
   const filteredOptions =
-    query === ""
-      ? options
-      : options.filter((option) =>
-          option.label.toLowerCase().includes(query.toLowerCase())
-        );
+    query === "" ? options : options.filter((option) => optionMatchesQuery(option, query));
 
   const selected = options.find((opt) => opt.value === value);
 
@@ -115,8 +117,8 @@ export const SelectModal = ({
               size="lg"
               className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 last:border-b-0 rounded-none"
             >
-              <Icon name='checkMark' className={`size-5 ${selected?.value === option.value ? "visible" : "invisible"}`} />
-              {option.label}
+              <Icon name='checkMark' className={`size-5 shrink-0 ${selected?.value === option.value ? "visible" : "invisible"}`} />
+              <ComboboxOptionLabel option={option} showCurrency={showCurrency} />
             </Button>
           ))}
           {(showCreate || showCreatePrompt) && (

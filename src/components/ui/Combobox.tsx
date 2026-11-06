@@ -39,6 +39,36 @@ type Props = {
 
 const CREATE_VALUE = "__create__";
 
+export const optionsShowCurrency = (options: ComboboxOption[]) =>
+  new Set(options.map((option) => option.currency).filter(Boolean)).size > 1;
+
+export const optionDisplayValue = (option: ComboboxOption, showCurrency: boolean) =>
+  showCurrency && option.currency ? `${option.label} · ${option.currency}` : option.label;
+
+export const optionMatchesQuery = (option: ComboboxOption, query: string) => {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    option.label.toLowerCase().includes(q) ||
+    Boolean(option.currency?.toLowerCase().includes(q))
+  );
+};
+
+export const ComboboxOptionLabel = ({
+  option,
+  showCurrency,
+}: {
+  option: ComboboxOption;
+  showCurrency: boolean;
+}) => (
+  <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+    <span className="truncate">{option.label}</span>
+    {showCurrency && option.currency ? (
+      <span className="shrink-0 text-xs font-medium text-grayNeutral">{option.currency}</span>
+    ) : null}
+  </span>
+);
+
 export const Combobox = ({
   options,
   value,
@@ -74,12 +104,9 @@ export const Combobox = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const showCurrency = optionsShowCurrency(options);
   const filteredOptions =
-    query === ""
-      ? options
-      : options.filter((option) =>
-          option.label.toLowerCase().includes(query.toLowerCase())
-        );
+    query === "" ? options : options.filter((option) => optionMatchesQuery(option, query));
 
   const selected = options.find((opt) => opt.value === value);
 
@@ -125,7 +152,7 @@ export const Combobox = ({
                 disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
               }`}
               onChange={(event) => setQuery(event.target.value)}
-              displayValue={() => selected?.label ?? query}
+              displayValue={() => (selected ? optionDisplayValue(selected, showCurrency) : query)}
               placeholder={placeholder}
             />
             <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
@@ -148,10 +175,10 @@ export const Combobox = ({
                 <ComboboxOption
                   key={option.value}
                   value={option.value}
-                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white data-[focus]:bg-blue-100"
                 >
-                  <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
-                  {option.label}
+                  <Icon name='checkMark' className="invisible size-5 shrink-0 group-data-[selected]:visible" />
+                  <ComboboxOptionLabel option={option} showCurrency={showCurrency} />
                 </ComboboxOption>
               ))}
               {(showCreate || showCreatePrompt) && (

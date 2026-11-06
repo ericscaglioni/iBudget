@@ -76,6 +76,33 @@ describe("BudgetPageShell", () => {
     expect(screen.getByRole("button", { name: "Copy previous month" })).toBeDisabled();
   });
 
+  it("treats extra income as more than expected, not as overspend", () => {
+    render(
+      <BudgetPageShell
+        budget={{
+          ...budget,
+          income: [{ categoryId: "other", name: "Other", color: "#0aa", expected: 500, actual: 600 }],
+        }}
+      />
+    );
+    expect(screen.getByText(/more than expected/)).toBeInTheDocument();
+    expect(screen.queryByText(/over expected/)).not.toBeInTheDocument();
+    expect(screen.getByText(/more than expected/).className).toContain("text-primary");
+  });
+
+  it("treats extra expenses as over expected in red", () => {
+    render(
+      <BudgetPageShell
+        budget={{
+          ...budget,
+          expenses: [{ categoryId: "food", name: "Food", color: "#f00", expected: 200, actual: 250 }],
+        }}
+      />
+    );
+    expect(screen.getByText(/over expected/)).toBeInTheDocument();
+    expect(screen.getByText(/over expected/).className).toContain("text-red-600");
+  });
+
   it("asks before overriding a month that already has a plan", async () => {
     const user = userEvent.setup();
     render(<BudgetPageShell budget={budget} />);

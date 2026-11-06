@@ -416,6 +416,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
             amount={watchedAmount ?? ""}
             date={watchedDate ?? ""}
             currency={accountCurrency}
+            kind={mode === TransactionTypeEnum.income ? "income" : "expense"}
             originalAmount={transaction ? Number(transaction.amount) : 0}
             originalCategoryId={transaction?.categoryId ?? undefined}
             originalMonth={transaction ? calendarDateString(transaction.date).slice(0, 7) : undefined}
