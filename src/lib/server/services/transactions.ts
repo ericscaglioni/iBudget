@@ -587,28 +587,55 @@ export const updateTransaction = async (
       throw new ValidationError('Cannot update future transactions: transaction date is missing');
     }
 
-    // Update all transactions with the same recurringId and date >= current date
+    const shared = {
+      type: existing.type,
+      amount: Math.abs(amount),
+      accountId,
+      categoryId,
+      description,
+    };
+    const futureWhere = {
+      userId,
+      recurringId: existing.recurringId,
+      date: { gte: existing.date },
+    };
+    const oldDay = parseCalendarDate(existing.date);
+    const newDay = parseCalendarDate(date);
+    const deltaDays = dayjs.utc(newDay).diff(dayjs.utc(oldDay), "day");
+
+    // A new date shifts this occurrence and later ones by the same number of
+    // days (1st → 5th stays on the 5th each month). Setting every row to the
+    // same day would collapse the series.
+    if (deltaDays !== 0) {
+      const rows = await prisma.transaction.findMany({
+        where: futureWhere,
+        select: { id: true, date: true },
+      });
+      await prisma.$transaction(async (tx) => {
+        for (const row of rows) {
+          if (!row.date) continue;
+          const shifted = dayjs.utc(parseCalendarDate(row.date)).add(deltaDays, "day");
+          await tx.transaction.update({
+            where: { id: row.id },
+            data: {
+              ...shared,
+              date: parseCalendarDate(shifted.format("YYYY-MM-DD")),
+            },
+          });
+        }
+      });
+      return {
+        message: `Updated ${rows.length} transaction(s) successfully`,
+        count: rows.length,
+      };
+    }
+
     const updateResult = await prisma.transaction.updateMany({
-      where: {
-        userId,
-        recurringId: existing.recurringId,
-        date: {
-          gte: existing.date,
-        },
-      },
-      data: {
-        type: existing.type,
-        amount: Math.abs(amount),
-        accountId,
-        categoryId,
-        description,
-        // Note: We don't update the date for bulk updates to maintain the recurring schedule
-      },
+      where: futureWhere,
+      data: shared,
     });
 
-    console.log(`Updated ${updateResult.count} recurring transaction(s) with recurringId: ${existing.recurringId}`);
-    
-    return { 
+    return {
       message: `Updated ${updateResult.count} transaction(s) successfully`,
       count: updateResult.count,
     };

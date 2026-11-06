@@ -6,6 +6,14 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-06
+
+Changing a recurring transaction's date now saves.
+
+### Fixed
+- Changing the date of a recurring transaction now saves, including when
+  the change applies to this occurrence and later ones.
+
 ## [2.0.1] - 2026-11-05
 
 The six-month trend stays on the current month.
@@ -306,6 +314,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[2.0.2]: https://github.com/ericscaglioni/iBudget/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/ericscaglioni/iBudget/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/ericscaglioni/iBudget/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/ericscaglioni/iBudget/compare/1.1.0...1.2.0

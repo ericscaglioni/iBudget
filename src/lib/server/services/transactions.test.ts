@@ -440,13 +440,42 @@ describe("updateTransaction", () => {
     db.transaction.findUnique.mockResolvedValue(existing);
     db.transaction.updateMany.mockResolvedValue({ count: 5 });
 
-    const result = await transactions.updateTransaction("u1", props, { updateScope: "future" });
+    const result = await transactions.updateTransaction("u1", { ...props, date: existing.date }, { updateScope: "future" });
 
     expect(db.transaction.updateMany).toHaveBeenCalledWith({
       where: { userId: "u1", recurringId: "r1", date: { gte: existing.date } },
       data: { type: "expense", amount: 30, accountId: "a2", categoryId: "c2", description: "New" },
     });
     expect(result).toEqual({ message: "Updated 5 transaction(s) successfully", count: 5 });
+  });
+
+  it("shifts this and later occurrence dates when the date changes", async () => {
+    db.transaction.updateMany.mockClear();
+    db.transaction.update.mockClear();
+    db.transaction.findUnique.mockResolvedValue(existing);
+    db.transaction.findMany.mockResolvedValue([
+      { id: "t1", date: new Date("2026-10-01T00:00:00.000Z") },
+      { id: "t2", date: new Date("2026-11-01T00:00:00.000Z") },
+    ]);
+    db.transaction.update.mockResolvedValue({ id: "t1" });
+
+    const result = await transactions.updateTransaction(
+      "u1",
+      { ...props, date: "2026-10-05" },
+      { updateScope: "future" }
+    );
+
+    expect(db.transaction.updateMany).not.toHaveBeenCalled();
+    expect(db.transaction.update).toHaveBeenCalledTimes(2);
+    expect(db.transaction.update).toHaveBeenNthCalledWith(1, {
+      where: { id: "t1" },
+      data: expect.objectContaining({ date: new Date("2026-10-05T00:00:00.000Z") }),
+    });
+    expect(db.transaction.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "t2" },
+      data: expect.objectContaining({ date: new Date("2026-11-05T00:00:00.000Z") }),
+    });
+    expect(result).toEqual({ message: "Updated 2 transaction(s) successfully", count: 2 });
   });
 
   it("does not update 'future' occurrences of something that is not recurring", async () => {
