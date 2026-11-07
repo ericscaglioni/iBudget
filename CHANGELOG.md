@@ -6,6 +6,13 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-11-07
+
+Login sits higher on a phone.
+
+### Fixed
+- On a phone, login no longer leaves a large empty band above the copy.
+
 ## [3.0.0] - 2026-11-07
 
 A Forest ledger: sidebar, phone tabs, and light or dark.
@@ -355,6 +362,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[3.0.1]: https://github.com/ericscaglioni/iBudget/compare/3.0.0...3.0.1
 [3.0.0]: https://github.com/ericscaglioni/iBudget/compare/2.1.0...3.0.0
 [2.1.0]: https://github.com/ericscaglioni/iBudget/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/ericscaglioni/iBudget/compare/2.0.1...2.0.2

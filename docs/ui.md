@@ -75,8 +75,8 @@ card, including the footer, matches the page in both themes.
   Categories, Settings, Sign out. Do not put `overflow-x-hidden` on
   `html`/`body` (hidden makes sticky/fixed headers fail). Clip overflow-x
   on `html` only — clip on both makes opening a header menu add a nested
-  scrollbar. Login has no shell. On a phone the copy and SignIn sit as one
-  centred block (not a stretched lower pane). Sidebar Settings uses the same full-width
+  scrollbar. Login has no shell. On a phone the copy and SignIn pack from
+  the top (not a centred stack or a stretched lower pane). Sidebar Settings uses the same full-width
   link as the other items. Phone tabs are at least as tall as the header
   (`min-h-14`). Opening More lifts the page and the new-transaction button
   above the sheet.
