@@ -106,7 +106,8 @@ card, including the footer, matches the page in both themes.
 - This month's spending is a donut (`TopSpendingCategories`) with a legend
   (name, amount, %). Top 5 then Other.   Do not label slices or invent extra
   brand colours; Other is muted stone, not brand. Respect `prefers-reduced-motion`.
-  When a budget exists, the legend can show expected next to actual.
+  When a budget exists, the legend shows expected next to actual: actual is
+  ink and semibold, expected is smaller muted type.
 - The six-month trend ends at the current month (this month on the right).
   Do not slide it to a later booked month. The monthly summary still can.
 - The Budget page is a month of expected vs actual, income then expenses,
