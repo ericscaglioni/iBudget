@@ -49,7 +49,7 @@ export const Pagination = ({
 
   return (
     <div className="flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4">
-      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted">
         <span className="whitespace-nowrap">Rows per page</span>
         <div className="w-16 sm:w-24">
           <Combobox
@@ -69,14 +69,14 @@ export const Pagination = ({
           disabled={page <= 1}
           aria-label="Previous page"
           className={clsx(
-            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-1 sm:px-0 py-0",
+            "text-sm text-muted hover:text-brand disabled:opacity-50 px-1 sm:px-0 py-0",
             page <= 1 && "cursor-not-allowed"
           )}
         >
           <Icon name="arrowLeft" className="size-4 inline"/>
           <span className="hidden sm:inline"> Previous</span>
         </Button>
-        <span className="whitespace-nowrap text-xs sm:text-sm text-gray-600">
+        <span className="whitespace-nowrap text-xs sm:text-sm text-muted">
           Page {page} of {Math.max(pageCount, 1)}
         </span>
         <Button
@@ -86,7 +86,7 @@ export const Pagination = ({
           disabled={page >= pageCount}
           aria-label="Next page"
           className={clsx(
-            "text-sm text-gray-500 hover:text-primary disabled:opacity-50 px-1 sm:px-0 py-0",
+            "text-sm text-muted hover:text-brand disabled:opacity-50 px-1 sm:px-0 py-0",
             page >= pageCount && "cursor-not-allowed"
           )}
         >

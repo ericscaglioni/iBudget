@@ -3,10 +3,15 @@ type NavItem = {
   href: string;
 };
 
-export const navItems: NavItem[] = [
+export const primaryNavItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard" },
   { title: "Transactions", href: "/transactions" },
-  { title: "Accounts", href: "/accounts" },
-  { title: "Categories", href: "/categories" },
   { title: "Budget", href: "/budget" },
 ];
+
+export const secondaryNavItems: NavItem[] = [
+  { title: "Accounts", href: "/accounts" },
+  { title: "Categories", href: "/categories" },
+];
+
+export const navItems: NavItem[] = [...primaryNavItems, ...secondaryNavItems];

@@ -75,9 +75,9 @@ export const SelectModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-x-hidden">
-      <div className="bg-white w-full min-w-0 h-full flex flex-col">
-        <div className="p-4 border-b">
+    <div className="fixed inset-0 bg-surface z-50 flex flex-col overflow-x-hidden">
+      <div className="bg-surface w-full min-w-0 h-full flex flex-col">
+        <div className="border-b border-line p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">{title}</h3>
             <Button
@@ -103,7 +103,7 @@ export const SelectModal = ({
               onClick={() => handleSelect("")}
               variant="ghost"
               size="lg"
-              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none"
+              className="w-full justify-start border-b border-line hover:bg-paper rounded-none"
             >
               <Icon name='checkMark' className={`size-5 ${selected?.value === "" ? "visible" : "invisible"}`} />
               All
@@ -115,7 +115,7 @@ export const SelectModal = ({
               onClick={() => handleSelect(option.value)}
               variant="ghost"
               size="lg"
-              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 last:border-b-0 rounded-none"
+              className="w-full justify-start border-b border-line hover:bg-paper last:border-b-0 rounded-none"
             >
               <Icon name='checkMark' className={`size-5 shrink-0 ${selected?.value === option.value ? "visible" : "invisible"}`} />
               <ComboboxOptionLabel option={option} showCurrency={showCurrency} />
@@ -126,14 +126,14 @@ export const SelectModal = ({
               onClick={handleCreate}
               variant="ghost"
               size="lg"
-              className="w-full justify-start border-b border-gray-100 hover:bg-gray-50 rounded-none text-blue-600 hover:text-blue-700"
+              className="w-full justify-start border-b border-line hover:bg-paper rounded-none text-brand hover:text-brand"
             >
               <Icon name="plus" className="size-5" />
               {showCreate ? <>Create new “{trimmedQuery}”</> : <>Create new {createLabel ?? "option"}…</>}
             </Button>
           )}
           {filteredOptions.length === 0 && query && !showCreate && (
-            <div className="px-4 py-4 text-gray-500 text-center">
+            <div className="px-4 py-4 text-muted text-center">
               No options found
             </div>
           )}

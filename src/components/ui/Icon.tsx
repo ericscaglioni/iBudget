@@ -18,6 +18,10 @@ import {
   Bars3Icon,
   XMarkIcon,
   PlusIcon,
+  SunIcon,
+  MoonIcon,
+  ComputerDesktopIcon,
+  EllipsisHorizontalIcon,
 } from '@heroicons/react/20/solid';
 
 const iconMap = {
@@ -40,6 +44,10 @@ const iconMap = {
   settings: Cog6ToothIcon,
   info: InformationCircleIcon,
   signOut: ArrowRightOnRectangleIcon,
+  sun: SunIcon,
+  moon: MoonIcon,
+  computer: ComputerDesktopIcon,
+  more: EllipsisHorizontalIcon,
 };
 
 export type IconType = keyof typeof iconMap;

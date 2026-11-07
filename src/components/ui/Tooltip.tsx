@@ -21,14 +21,14 @@ export const Tooltip = ({ content, children, className }: Props) => {
     <Popover className={clsx("relative inline-flex max-w-full", className)}>
       <PopoverButton
         type="button"
-        className="inline-flex max-w-full items-center gap-1 rounded-sm bg-transparent p-0 text-left text-inherit cursor-help focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="inline-flex max-w-full items-center gap-1 rounded-sm bg-transparent p-0 text-left text-inherit cursor-help focus:outline-none focus:ring-2 focus:ring-brand/50"
       >
         {children}
         <Icon name="info" className="h-3.5 w-3.5 shrink-0 opacity-70" />
       </PopoverButton>
       <PopoverPanel
         anchor="top start"
-        className="z-50 w-64 rounded-md border border-gray-200 bg-white p-3 text-xs sm:text-sm font-normal text-gray-700 shadow-lg"
+        className="z-50 w-64 rounded-md border border-line bg-surface p-3 text-xs sm:text-sm font-normal text-ink "
       >
         {content}
       </PopoverPanel>

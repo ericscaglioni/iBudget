@@ -28,7 +28,7 @@ export const ColorInput = <TData extends FieldValues,>({
         {...form.register(name)}
         className="w-12 h-12 p-0 border-none rounded-md bg-transparent"
       />
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-xs text-expense mt-1">{error}</p>}
     </div>
   );
 };

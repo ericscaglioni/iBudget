@@ -16,8 +16,8 @@ interface Props {
 export const AccountsBalance = ({ accountBalances }: Props) => {
   if (accountBalances.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-        <p className="text-gray-500 text-sm">No accounts found. Create an account to get started.</p>
+      <div className="bg-surface rounded-lg  border border-line p-8 text-center">
+        <p className="text-muted text-sm">No accounts found. Create an account to get started.</p>
       </div>
     );
   }
@@ -34,13 +34,13 @@ export const AccountsBalance = ({ accountBalances }: Props) => {
   return (
     <div className="space-y-6">
       {/* Total Balance Card */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
-        <h3 className="text-sm font-medium opacity-90 mb-1">Total Balance</h3>
+      <div className="rounded-lg border border-line bg-surface p-6">
+        <h3 className="mb-1 text-sm font-medium text-muted">Total Balance</h3>
         <div className="space-y-2">
           {Object.entries(accountsByCurrency).map(([currency, accounts]) => {
             const currencyTotal = accounts.reduce((sum, acc) => sum + acc.balance, 0);
             return (
-              <div key={currency} className="text-3xl font-bold">
+              <div key={currency} className="text-3xl font-semibold tabular-nums text-ink">
                 {formatCurrency(currencyTotal, currency)}
               </div>
             );
@@ -53,15 +53,15 @@ export const AccountsBalance = ({ accountBalances }: Props) => {
         {accountBalances.map((account) => (
           <div
             key={account.accountId}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
+            className="bg-surface rounded-lg  border border-line p-5 hover: transition-shadow"
           >
             <div className="flex flex-col">
-              <h4 className="text-sm font-medium text-gray-600 mb-1">{account.name}</h4>
+              <h4 className="text-sm font-medium text-muted mb-1">{account.name}</h4>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-ink">
                   {formatCurrency(account.balance, account.currency)}
                 </span>
-                <span className="text-xs text-gray-400 uppercase">{account.currency}</span>
+                <span className="text-xs text-muted uppercase">{account.currency}</span>
               </div>
             </div>
           </div>

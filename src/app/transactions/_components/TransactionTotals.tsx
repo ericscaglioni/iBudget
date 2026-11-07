@@ -46,16 +46,16 @@ const TotalsTable = ({
     {showHeader && (
       <thead>
         <tr>
-          <th scope="col" className="py-0.5 pr-2 text-left text-xs font-medium text-grayNeutral">
+          <th scope="col" className="py-0.5 pr-2 text-left text-xs font-medium text-muted">
             <span className="sr-only">Currency</span>
           </th>
-          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-grayNeutral">
+          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-muted">
             Income
           </th>
-          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-grayNeutral">
+          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-muted">
             Expenses
           </th>
-          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-grayNeutral">
+          <th scope="col" className="py-0.5 pl-3 text-right text-xs font-medium text-muted">
             Net
           </th>
         </tr>
@@ -66,17 +66,17 @@ const TotalsTable = ({
         <tr key={row.currency}>
           <th
             scope="row"
-            className="py-1 pr-2 text-left text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap"
+            className="py-1 pr-2 text-left text-xs sm:text-sm font-medium text-ink whitespace-nowrap"
           >
             {row.currency}
           </th>
-          <td className={clsx(amountClass, "text-green-700")}>
+          <td className={clsx(amountClass, "text-income")}>
             <ClientOnlyCurrency className="block truncate" value={row.income} currency={row.currency} />
           </td>
-          <td className={clsx(amountClass, "text-red-700")}>
+          <td className={clsx(amountClass, "text-expense")}>
             <ClientOnlyCurrency className="block truncate" value={row.expenses} currency={row.currency} />
           </td>
-          <td className={clsx(amountClass, row.net < 0 ? "text-red-700" : "text-green-700")}>
+          <td className={clsx(amountClass, row.net < 0 ? "text-expense" : "text-income")}>
             <ClientOnlyCurrency className="block truncate" value={row.net} currency={row.currency} />
           </td>
         </tr>
@@ -103,7 +103,7 @@ export const TransactionTotals = ({ totals, isPending = false, preferredCurrency
   return (
     <section
       className={clsx(
-        "mb-3 rounded-md border border-gray-200 bg-white px-3 py-2.5 shadow-sm sm:px-4 sm:py-3",
+        "mb-3 rounded-md border border-line bg-surface px-3 py-2.5  sm:px-4 sm:py-3",
         isPending && "opacity-60"
       )}
       aria-busy={isPending || undefined}
@@ -111,7 +111,7 @@ export const TransactionTotals = ({ totals, isPending = false, preferredCurrency
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <h2
           id={headingId}
-          className="text-xs font-medium uppercase tracking-wide text-grayNeutral"
+          className="text-xs font-medium uppercase tracking-wide text-muted"
         >
           Totals for these filters
         </h2>

@@ -1,23 +1,29 @@
 import { toast } from "sonner";
 import { CheckIcon, XCircleIcon } from "@heroicons/react/24/outline";
 
+const cssRgb = (name: string, fallback: string) => {
+  if (typeof document === "undefined") return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value ? `rgb(${value})` : fallback;
+};
+
 export const showSuccess = (message: string) =>
   toast.success(message, {
-    icon: <CheckIcon className="h-4 w-4 text-white" />,
+    icon: <CheckIcon className="h-4 w-4 text-on-brand" />,
     duration: 4000,
     style: {
-      backgroundColor: "#22c55e", // Tailwind's green-500
-      color: "#fff",
+      backgroundColor: cssRgb("--income", "#2F9E6B"),
+      color: cssRgb("--on-brand", "#F6F4F0"),
     },
   });
 
 export const showError = (message: string) =>
   toast.error(message, {
-    icon: <XCircleIcon className="h-4 w-4 text-white" />,
+    icon: <XCircleIcon className="h-4 w-4 text-on-brand" />,
     duration: 5000,
     style: {
-      backgroundColor: "#ef4444", // Tailwind's red-500
-      color: "#fff",
+      backgroundColor: cssRgb("--expense", "#C2413B"),
+      color: cssRgb("--on-brand", "#F6F4F0"),
     },
   });
 
@@ -26,8 +32,8 @@ export const showInfo = (message: string, action?: { label: string; onClick: () 
     duration: 10000,
     action,
     style: {
-      backgroundColor: "#eff6ff", // Tailwind's blue-50
-      color: "#1e3a8a", // Tailwind's blue-900
-      border: "1px solid #bfdbfe", // Tailwind's blue-200
+      backgroundColor: cssRgb("--surface", "#FFFFFF"),
+      color: cssRgb("--ink", "#1A1F1C"),
+      border: `1px solid ${cssRgb("--line", "#E6E2DB")}`,
     },
   });

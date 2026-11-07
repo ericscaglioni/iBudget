@@ -13,7 +13,7 @@ export const FieldLabel = ({ children, required = false, htmlFor, className }: P
     {children}
     {required ? (
       <>
-        <span className="text-red-600" aria-hidden="true">
+        <span className="text-expense" aria-hidden="true">
           {" "}
           *
         </span>

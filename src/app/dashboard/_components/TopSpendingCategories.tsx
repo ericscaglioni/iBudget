@@ -37,9 +37,9 @@ const SliceTooltip = ({ active, payload, currency }: SliceTooltipProps) => {
   if (!active || !payload?.[0]) return null;
   const entry = payload[0];
   return (
-    <div className="rounded-md border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm shadow-lg">
-      <p className="font-medium text-gray-900">{entry.name}</p>
-      <p className="mt-0.5 tabular-nums text-gray-700">
+    <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs sm:text-sm ">
+      <p className="font-medium text-ink">{entry.name}</p>
+      <p className="mt-0.5 tabular-nums text-ink">
         <ClientOnlyCurrency value={entry.value} currency={currency} />
       </p>
     </div>
@@ -58,8 +58,8 @@ export const TopSpendingCategories = ({
 
   if (slices.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 text-center shadow-sm">
-        <p className="text-gray-500 text-xs sm:text-sm">No spending data available for this period.</p>
+      <div className="rounded-lg border border-line bg-surface p-4 sm:p-6 text-center ">
+        <p className="text-muted text-xs sm:text-sm">No spending data available for this period.</p>
       </div>
     );
   }
@@ -69,11 +69,11 @@ export const TopSpendingCategories = ({
   return (
     <section
       aria-labelledby={headingId}
-      className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 shadow-sm"
+      className="rounded-lg border border-line bg-surface p-4 sm:p-6 "
     >
       <h3
         id={headingId}
-        className="text-xs sm:text-sm font-semibold text-gray-700 mb-3 sm:mb-4 uppercase tracking-wide"
+        className="text-xs sm:text-sm font-semibold text-ink mb-3 sm:mb-4 uppercase tracking-wide"
       >
         Spending this month
       </h3>
@@ -119,13 +119,13 @@ export const TopSpendingCategories = ({
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-10 text-center md:px-14">
-              <span className="text-xs font-medium uppercase tracking-wide text-grayNeutral">
+              <span className="text-xs font-medium uppercase tracking-wide text-muted">
                 Spent
               </span>
               <ClientOnlyCurrency
                 value={total}
                 currency={currency}
-                className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 tabular-nums"
+                className="text-base sm:text-lg md:text-xl font-semibold text-ink tabular-nums"
               />
             </div>
           </div>
@@ -139,11 +139,11 @@ export const TopSpendingCategories = ({
             >
               <span className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <span
-                  className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 rounded-full ring-2 ring-white shadow-sm"
+                  className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 rounded-full ring-2 ring-white "
                   style={{ backgroundColor: slice.color }}
                   aria-hidden
                 />
-                <span className="truncate text-xs sm:text-sm font-medium text-gray-700">
+                <span className="truncate text-xs sm:text-sm font-medium text-ink">
                   {slice.name}
                 </span>
               </span>
@@ -151,15 +151,15 @@ export const TopSpendingCategories = ({
                 <ClientOnlyCurrency
                   value={slice.amount}
                   currency={currency}
-                  className="font-semibold text-gray-900"
+                  className="font-semibold text-ink"
                 />
                 {expectedByCategory[slice.id] != null && (
-                  <span className="ml-2 text-grayNeutral">
+                  <span className="ml-2 text-muted">
                     of{" "}
                     <ClientOnlyCurrency value={expectedByCategory[slice.id]} currency={currency} />
                   </span>
                 )}
-                <span className="ml-2 text-grayNeutral">{sliceShare(slice.amount, total)}%</span>
+                <span className="ml-2 text-muted">{sliceShare(slice.amount, total)}%</span>
               </span>
             </li>
           ))}

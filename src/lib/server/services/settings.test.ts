@@ -75,7 +75,26 @@ describe("getSettings", () => {
       defaultCurrency: "EUR",
       availableCurrencies: ["EUR", "USD"],
       openDashboardOn: "home",
+      theme: "light",
     });
+  });
+
+  it("returns a saved theme", async () => {
+    accountsIn("EUR");
+    db.userSettings.findUnique.mockResolvedValue({ baseCurrency: "EUR", theme: "dark" });
+    await expect(settings.getSettings("u1")).resolves.toMatchObject({ theme: "dark" });
+  });
+});
+
+describe("getTheme", () => {
+  it("is light when nothing is saved", async () => {
+    db.userSettings.findUnique.mockResolvedValue(null);
+    await expect(settings.getTheme("u1")).resolves.toBe("light");
+  });
+
+  it("returns the saved preference", async () => {
+    db.userSettings.findUnique.mockResolvedValue({ theme: "system" });
+    await expect(settings.getTheme("u1")).resolves.toBe("system");
   });
 });
 
@@ -93,7 +112,7 @@ describe("updateSettings", () => {
     });
     expect(db.userSettings.upsert).toHaveBeenCalledWith({
       where: { userId: "u1" },
-      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "home" },
+      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "home", theme: "light" },
       update: { baseCurrency: "EUR" },
     });
     expect(result.defaultCurrency).toBe("EUR");
@@ -120,7 +139,7 @@ describe("updateSettings", () => {
 
     expect(db.userSettings.upsert).toHaveBeenCalledWith({
       where: { userId: "u1" },
-      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "all" },
+      create: { userId: "u1", baseCurrency: "EUR", openDashboardOn: "all", theme: "light" },
       update: { openDashboardOn: "all" },
     });
   });
@@ -134,5 +153,23 @@ describe("updateSettings", () => {
   it("refuses an unknown landing choice", async () => {
     accountsIn("USD", "EUR");
     await expect(settings.updateSettings("u1", { openDashboardOn: "banana" })).rejects.toThrow(ValidationError);
+  });
+
+  it("saves a theme preference", async () => {
+    accountsIn("USD");
+    db.userSettings.findUnique.mockResolvedValue({ baseCurrency: "USD", openDashboardOn: "home", theme: "light" });
+
+    await settings.updateSettings("u1", { theme: "dark" });
+
+    expect(db.userSettings.upsert).toHaveBeenCalledWith({
+      where: { userId: "u1" },
+      create: { userId: "u1", baseCurrency: "USD", openDashboardOn: "home", theme: "dark" },
+      update: { theme: "dark" },
+    });
+  });
+
+  it("refuses an unknown theme", async () => {
+    accountsIn("USD");
+    await expect(settings.updateSettings("u1", { theme: "neon" })).rejects.toThrow(ValidationError);
   });
 });

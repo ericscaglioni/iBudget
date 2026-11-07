@@ -1,4 +1,10 @@
-import { DEFAULT_BASE_CURRENCY, OPEN_DASHBOARD_ON, type OpenDashboardOn } from "@/lib/constants";
+import {
+  DEFAULT_BASE_CURRENCY,
+  OPEN_DASHBOARD_ON,
+  THEME_PREFERENCES,
+  type OpenDashboardOn,
+  type ThemePreference,
+} from "@/lib/constants";
 import { ValidationError } from "@/lib/errors/AppError";
 import { prisma } from "@/lib/prisma";
 import { ensureUserRow } from "@/lib/server/utils/users";
@@ -21,6 +27,11 @@ export const getAvailableCurrencies = async (userId: string): Promise<string[]> 
 const asOpenDashboardOn = (value: string | null | undefined, canUseAll: boolean): OpenDashboardOn => {
   if (canUseAll && value === "all") return "all";
   return "home";
+};
+
+const asTheme = (value: string | null | undefined): ThemePreference => {
+  if (value === "dark" || value === "system" || value === "light") return value;
+  return "light";
 };
 
 /**
@@ -50,17 +61,27 @@ export const getSettings = async (userId: string) => {
     defaultCurrency: currency,
     availableCurrencies: available,
     openDashboardOn: asOpenDashboardOn(settings?.openDashboardOn, available.length > 1),
+    theme: asTheme(settings?.theme),
   };
+};
+
+export const getTheme = async (userId: string): Promise<ThemePreference> => {
+  const settings = await prisma.userSettings.findUnique({
+    where: { userId },
+    select: { theme: true },
+  });
+  return asTheme(settings?.theme);
 };
 
 export const updateSettings = async (
   userId: string,
-  data: { defaultCurrency?: string; openDashboardOn?: string }
+  data: { defaultCurrency?: string; openDashboardOn?: string; theme?: string }
 ) => {
-  const { defaultCurrency, openDashboardOn } = data;
+  const { defaultCurrency, openDashboardOn, theme } = data;
   const touchingBase = defaultCurrency !== undefined;
   const touchingOpen = openDashboardOn !== undefined;
-  if (!touchingBase && !touchingOpen) {
+  const touchingTheme = theme !== undefined;
+  if (!touchingBase && !touchingOpen && !touchingTheme) {
     return getSettings(userId);
   }
 
@@ -86,6 +107,14 @@ export const updateSettings = async (
     nextOpen = openDashboardOn as OpenDashboardOn;
   }
 
+  let nextTheme: ThemePreference | undefined;
+  if (touchingTheme) {
+    if (!(THEME_PREFERENCES as readonly string[]).includes(theme)) {
+      throw new ValidationError("Theme must be Light, Dark or System");
+    }
+    nextTheme = theme as ThemePreference;
+  }
+
   await ensureUserRow(userId);
   const baseCurrency = nextBase ?? available[0] ?? DEFAULT_BASE_CURRENCY;
   await prisma.userSettings.upsert({
@@ -94,10 +123,12 @@ export const updateSettings = async (
       userId,
       baseCurrency,
       openDashboardOn: nextOpen ?? "home",
+      theme: nextTheme ?? "light",
     },
     update: {
       ...(touchingBase ? { baseCurrency: nextBase } : {}),
       ...(touchingOpen ? { openDashboardOn: nextOpen } : {}),
+      ...(touchingTheme ? { theme: nextTheme } : {}),
     },
   });
 

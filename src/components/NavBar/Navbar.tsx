@@ -4,158 +4,211 @@ import Link from "next/link";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-import { navItems } from "./constants";
+import { useLayoutEffect, useRef, useState } from "react";
+import { navItems, primaryNavItems, secondaryNavItems } from "./constants";
 import { Icon } from "@/components/ui";
+import { ExclusiveMenuSync, HeaderMenus, useCloseOtherHeaderMenus } from "./HeaderMenus";
+import { ThemeToggle } from "./ThemeToggle";
+import clsx from "clsx";
+
+const navLinkClass = (active: boolean) =>
+  clsx(
+    "block w-full rounded-md px-3 py-2 text-sm transition-colors",
+    active ? "bg-paper font-medium text-ink" : "text-muted hover:bg-paper hover:text-ink"
+  );
+
+const ProfileMenu = ({ onSignOut }: { onSignOut: () => void }) => {
+  const { user } = useUser();
+  const closeOthers = useCloseOtherHeaderMenus("profile");
+
+  return (
+    <Menu as="div" className="shrink-0">
+      {({ close }) => (
+        <>
+          <ExclusiveMenuSync id="profile" close={close} />
+          <MenuButton
+            onClick={closeOthers}
+            className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-brand/50"
+            aria-label="Open profile menu"
+          >
+            {user?.imageUrl ? (
+              // Clerk serves the avatar from its own CDN, so a plain img avoids extra next/image config
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.imageUrl}
+                alt={user.fullName ?? "Profile"}
+                className="size-9 rounded-full object-cover border border-line"
+              />
+            ) : (
+              <span className="flex size-9 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">
+                {(user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "?").charAt(0).toUpperCase()}
+              </span>
+            )}
+          </MenuButton>
+          <MenuItems
+            anchor="bottom end"
+            modal={false}
+            className="z-50 w-48 rounded-md border border-line bg-surface py-1 [--anchor-gap:8px] focus:outline-none"
+          >
+            <MenuItem>
+              <Link
+                href="/settings"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-ink data-[focus]:bg-paper"
+              >
+                <Icon name="settings" className="size-4 text-muted" />
+                Settings
+              </Link>
+            </MenuItem>
+            <MenuItem>
+              <button
+                onClick={onSignOut}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink data-[focus]:bg-paper"
+              >
+                <Icon name="signOut" className="size-4 text-muted" />
+                Sign out
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </>
+      )}
+    </Menu>
+  );
+};
 
 export const Navbar = () => {
   const { signOut } = useClerk();
-  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname.startsWith("/login");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const bottomNavRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    if (isLoginPage) {
+      document.documentElement.style.removeProperty("--mobile-bottom-chrome");
+      return;
+    }
+    const nav = bottomNavRef.current;
+    if (!nav) return;
+    const apply = () => {
+      const height = nav.offsetHeight;
+      if (height > 0) {
+        document.documentElement.style.setProperty("--mobile-bottom-chrome", `${height}px`);
+      } else {
+        document.documentElement.style.removeProperty("--mobile-bottom-chrome");
+      }
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [isLoginPage, moreOpen]);
 
   if (isLoginPage) return null;
 
   const handleSignOut = () => {
-    setIsMobileMenuOpen(false);
+    setMoreOpen(false);
     signOut(() => router.push("/login"));
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const moreActive = secondaryNavItems.some((item) => isActive(item.href)) || pathname.startsWith("/settings");
 
   return (
     <>
-    <nav className="fixed top-0 inset-x-0 z-40 w-full bg-white shadow-sm">
-      {/* Main navbar container */}
-      <div className="flex h-16 sm:h-[4.25rem] justify-between items-center px-4 sm:px-6">
-        {/* LEFT SIDE: Logo + Nav Links (desktop) */}
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg sm:text-xl font-bold text-primary">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-line bg-surface md:flex">
+        <div className="flex h-14 items-center px-5">
+          <Link href="/dashboard" className="text-lg font-semibold text-brand">
             iBudget
           </Link>
-
-          {/* DESKTOP: Navigation Links (hidden on mobile) */}
-          <div className="hidden sm:flex gap-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className={`text-sm text-grayNeutral hover:text-primary transition-colors ${
-                  pathname === item.href ? "text-primary font-semibold" : ""
-                }`}
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
         </div>
+        <nav className="flex flex-1 flex-col gap-0.5 px-3 py-2" aria-label="Main">
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className={navLinkClass(isActive(item.href))}>
+              {item.title}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex flex-col border-t border-line px-3 py-3">
+          <Link href="/settings" className={navLinkClass(pathname.startsWith("/settings"))}>
+            Settings
+          </Link>
+        </div>
+      </aside>
 
-        {/* RIGHT SIDE: Sign out (desktop) + Burger (mobile) */}
-        <div className="flex items-center gap-4">
-          {/* DESKTOP: Profile menu with Settings and Sign out (hidden on mobile) */}
-          <Menu as="div" className="relative hidden sm:block">
-            <MenuButton
-              className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50"
-              aria-label="Open profile menu"
-            >
-              {user?.imageUrl ? (
-                // Clerk serves the avatar from its own CDN, so a plain img avoids extra next/image config
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.imageUrl}
-                  alt={user.fullName ?? "Profile"}
-                  className="size-9 rounded-full object-cover border border-gray-200"
-                />
-              ) : (
-                <span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {(user?.firstName ?? user?.primaryEmailAddress?.emailAddress ?? "?").charAt(0).toUpperCase()}
-                </span>
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between overflow-visible border-b border-line bg-surface px-3 md:pl-56 md:pr-6">
+        <Link href="/dashboard" className="text-base font-semibold text-brand md:hidden">
+          iBudget
+        </Link>
+        <div className="hidden md:block" />
+        <div className="ml-auto flex items-center gap-1 overflow-visible">
+          <HeaderMenus>
+            <ThemeToggle />
+            <ProfileMenu onSignOut={handleSignOut} />
+          </HeaderMenus>
+        </div>
+      </header>
+
+      <nav
+        ref={bottomNavRef}
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+        aria-label="Primary"
+      >
+        <div className="grid grid-cols-4">
+          {primaryNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={clsx(
+                "flex min-h-14 flex-col items-center justify-center gap-0.5 py-3 text-xs",
+                isActive(item.href) ? "font-medium text-ink" : "text-muted"
               )}
-            </MenuButton>
-
-            <MenuItems
-              anchor="bottom end"
-              className="z-50 mt-2 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg [--anchor-gap:4px] focus:outline-none"
             >
-              <MenuItem>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100"
-                >
-                  <Icon name="settings" className="size-4 text-gray-500" />
-                  Settings
-                </Link>
-              </MenuItem>
-              <MenuItem>
-                <button
-                  onClick={handleSignOut}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100"
-                >
-                  <Icon name="signOut" className="size-4 text-gray-500" />
-                  Sign out
-                </button>
-              </MenuItem>
-            </MenuItems>
-          </Menu>
-
-          {/* MOBILE: Burger menu button (visible on mobile only) */}
+              {item.title}
+            </Link>
+          ))}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="sm:hidden p-2 text-grayNeutral hover:text-primary transition-colors"
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isMobileMenuOpen}
+            type="button"
+            onClick={() => setMoreOpen((open) => !open)}
+            className={clsx(
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 py-3 text-xs",
+              moreActive || moreOpen ? "font-medium text-ink" : "text-muted"
+            )}
+            aria-expanded={moreOpen}
+            aria-label="More"
           >
-            <Icon name={isMobileMenuOpen ? "close" : "menu"} className="w-6 h-6" />
+            More
           </button>
         </div>
-      </div>
-
-      {/* MOBILE MENU: Dropdown (visible on mobile only when open) */}
-      {isMobileMenuOpen && (
-        <div className="sm:hidden border-t border-gray-200 bg-white">
-          <div className="flex flex-col py-2 px-4">
-            {/* Navigation Links */}
-            {navItems.map((item) => (
+        {moreOpen && (
+          <div className="border-t border-line px-3 py-2">
+            {secondaryNavItems.map((item) => (
               <Link
-                key={item.title}
+                key={item.href}
                 href={item.href}
-                onClick={closeMobileMenu}
-                className={`py-3 text-sm text-grayNeutral hover:text-primary transition-colors border-b border-gray-100 last:border-b-0 ${
-                  pathname === item.href ? "text-primary font-semibold" : ""
-                }`}
+                onClick={() => setMoreOpen(false)}
+                className={clsx("block py-2.5 text-sm", isActive(item.href) ? "font-medium text-ink" : "text-muted")}
               >
                 {item.title}
               </Link>
             ))}
-
-            {/* Settings */}
             <Link
               href="/settings"
-              onClick={closeMobileMenu}
-              className={`py-3 text-sm text-grayNeutral hover:text-primary transition-colors border-b border-gray-100 ${
-                pathname === "/settings" ? "text-primary font-semibold" : ""
-              }`}
+              onClick={() => setMoreOpen(false)}
+              className={clsx("block py-2.5 text-sm", pathname.startsWith("/settings") ? "font-medium text-ink" : "text-muted")}
             >
               Settings
             </Link>
-
-            {/* Sign out button */}
             <button
+              type="button"
               onClick={handleSignOut}
-              className="py-3 text-sm text-grayNeutral hover:text-primary transition-colors text-left"
+              className="block w-full py-2.5 text-left text-sm text-muted"
             >
               Sign out
             </button>
           </div>
-        </div>
-      )}
-    </nav>
-    {/* Holds the page down because the bar is taken out of flow */}
-    <div className="h-16 sm:h-[4.25rem]" aria-hidden="true" />
+        )}
+      </nav>
     </>
   );
 };

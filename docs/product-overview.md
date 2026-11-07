@@ -23,7 +23,8 @@ truth.
 - **Prisma** 6 with **MySQL** (not PostgreSQL). Local database is
   `localhost:3306/ibudget`. Hosted databases are on Railway. Prisma Client is
   used from server services, not from React.
-- **Tailwind CSS** and `clsx`. Theme, components and checklist: [UI](ui.md).
+- **Tailwind CSS** and `clsx`. Forest ledger tokens, light/dark/system,
+  and the checklist: [UI](ui.md).
 - **Clerk** for auth. The Clerk webhook (`/api/clerk/webhook`) upserts the
   `users` row (id, name, email), creates default categories for a new user,
   and deletes their data when the Clerk user is removed. That route is public

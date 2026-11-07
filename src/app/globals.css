@@ -6,9 +6,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global styling */
-html,
+/* Forest ledger — RGB triplets so Tailwind opacity modifiers work. */
+:root {
+  --mobile-bottom-chrome: 3.5rem;
+  --paper: 246 244 240;
+  --surface: 255 255 255;
+  --ink: 26 31 28;
+  --muted: 107 114 110;
+  --line: 230 226 219;
+  --brand: 31 107 74;
+  --on-brand: 246 244 240;
+  --income: 47 158 107;
+  --expense: 194 65 59;
+}
+
+.dark {
+  --paper: 18 22 20;
+  --surface: 28 33 30;
+  --ink: 238 241 238;
+  --muted: 154 163 156;
+  --line: 42 50 46;
+  --brand: 61 155 110;
+  --on-brand: 18 22 20;
+  --income: 74 186 122;
+  --expense: 224 106 100;
+}
+
+html {
+  /* clip only here. Clip on both html and body makes overflow-y compute to
+     auto, so opening a header menu adds a nested scrollbar. Hidden on either
+     makes sticky/fixed chrome fail. */
+  @apply overflow-x-clip overscroll-x-none bg-paper;
+}
+
 body {
-  /* clip, not hidden: hidden makes the page a scroll container and sticky headers fail */
-  @apply font-sans bg-background text-slateDark overflow-x-clip overscroll-x-none;
+  @apply font-sans bg-paper text-ink;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Clerk paints the SignIn footer with a hard white gradient from colorBackground.
+   Drop it so the card stays on Forest surface in both themes. */
+.cl-footer {
+  background-image: none !important;
+  background-color: rgb(var(--surface)) !important;
 }

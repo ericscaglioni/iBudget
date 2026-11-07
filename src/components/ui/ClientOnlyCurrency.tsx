@@ -23,9 +23,9 @@ export const ClientOnlyCurrency = ({ value, currency, className = "" }: Props) =
 
   // Show a placeholder while formatting (during SSR and before hydration)
   if (formattedValue === null) {
-    return <span className={className}>...</span>;
+    return <span className={`tabular-nums ${className}`}>...</span>;
   }
 
-  return <span className={className}>{formattedValue}</span>;
+  return <span className={`tabular-nums ${className}`}>{formattedValue}</span>;
 };
 

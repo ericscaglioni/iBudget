@@ -43,13 +43,13 @@ export const MobileCombobox = ({
         size={size}
         className="w-full justify-between text-left"
       >
-        <span className={`flex min-w-0 flex-1 items-center justify-between gap-2 ${selected?.label ? "text-gray-900" : "text-gray-500"}`}>
+        <span className={`flex min-w-0 flex-1 items-center justify-between gap-2 ${selected?.label ? "text-ink" : "text-muted"}`}>
           <span className="truncate">{selected?.label || placeholder || "Select an option"}</span>
           {showCurrency && selected?.currency ? (
-            <span className="shrink-0 text-xs font-medium text-grayNeutral">{selected.currency}</span>
+            <span className="shrink-0 text-xs font-medium text-muted">{selected.currency}</span>
           ) : null}
         </span>
-        <Icon name="chevronDown" className="size-4 shrink-0 fill-black/60" />
+        <Icon name="chevronDown" className="size-4 shrink-0 fill-ink/60" />
       </Button>
 
       <SelectModal

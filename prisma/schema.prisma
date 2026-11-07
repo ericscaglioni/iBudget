@@ -115,6 +115,8 @@ model UserSettings {
   baseCurrency    String   @db.VarChar(8)
   /// "home" = open the one-currency dashboard; "all" = open All (converted to baseCurrency).
   openDashboardOn String   @default("home") @db.VarChar(8)
+  /// "light" | "dark" | "system". New users start on light.
+  theme           String   @default("light") @db.VarChar(8)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

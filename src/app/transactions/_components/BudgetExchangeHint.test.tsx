@@ -37,7 +37,7 @@ describe("BudgetExchangeHint", () => {
     await waitFor(() => {
       expect(screen.getByText(/more than/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/more than/).className).toContain("text-primary");
+    expect(screen.getByText(/more than/).className).toContain("text-income");
     expect(screen.queryByText(/over /)).not.toBeInTheDocument();
   });
 });

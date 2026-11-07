@@ -162,7 +162,7 @@ export const DashboardPageShell = ({
         <section>
           {ratesError && (
             <div
-              className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              className="mb-3 rounded-md border border-expense/30 bg-expense/10 px-3 py-2 text-sm text-expense"
               role="status"
             >
               {ratesError}
@@ -186,11 +186,11 @@ export const DashboardPageShell = ({
         <section className="space-y-3 sm:space-y-4 md:space-y-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-ink mb-1 sm:mb-2">
                 Monthly Summary
-                <span className="ml-2 text-xs sm:text-sm font-normal text-gray-400">({currency})</span>
+                <span className="ml-2 text-xs sm:text-sm font-normal text-muted">({currency})</span>
               </h2>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-muted">
                 {isAll
                   ? `Income and expenses from all accounts, converted to ${currency}. Transfers are not counted.`
                   : `Income and expenses from your ${currency} accounts`}
@@ -215,30 +215,30 @@ export const DashboardPageShell = ({
           </div>
 
           {/* Month Selector */}
-          <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4 shadow-sm">
+          <div className="bg-surface border border-line rounded-lg p-2 sm:p-4 ">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               {/* Month Navigation */}
               <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => handleMonthChange(previousMonthKey)}
                   disabled={!hasPreviousMonthData}
-                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                  className="p-1.5 sm:p-2 hover:bg-paper rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Previous month"
                 >
-                  <Icon name="chevronLeft" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                  <Icon name="chevronLeft" className="w-4 h-4 sm:w-5 sm:h-5 text-muted" />
                 </button>
 
-                <h3 className="text-sm sm:text-lg font-semibold text-gray-900 text-center px-2">
+                <h3 className="text-sm sm:text-lg font-semibold text-ink text-center px-2">
                   {formattedMonth}
                 </h3>
 
                 <button
                   onClick={() => handleMonthChange(shiftCalendarMonth(selectedMonth, 1))}
                   disabled={selectedMonth >= newestMonth}
-                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                  className="p-1.5 sm:p-2 hover:bg-paper rounded-lg transition-colors flex-shrink-0 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                   aria-label="Next month"
                 >
-                  <Icon name="chevronRight" className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                  <Icon name="chevronRight" className="w-4 h-4 sm:w-5 sm:h-5 text-muted" />
                 </button>
               </div>
 
@@ -246,7 +246,7 @@ export const DashboardPageShell = ({
               {!isCurrentMonth && (
                 <button
                   onClick={() => handleMonthChange(dayjs().format("YYYY-MM"))}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-medium text-brand hover:bg-brand/10 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto"
                 >
                   <span className="hidden sm:inline">Current Month</span>
                   <span className="sm:hidden">Today</span>
@@ -269,8 +269,8 @@ export const DashboardPageShell = ({
               expectedExpenses={selectedMonthData.expectedExpenses}
             />
           ) : (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-              <p className="text-gray-500 text-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 text-center">
+              <p className="text-muted text-sm">
                 No data available for {formattedMonth}
               </p>
             </div>
@@ -280,7 +280,7 @@ export const DashboardPageShell = ({
         {/* Accounts sit with the month: balances as of today, next to this month's income and expenses */}
         <section>
           <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3 md:mb-4">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-ink">
               Accounts
             </h2>
             {/* With a single account there is nothing to put in order */}
@@ -326,10 +326,10 @@ export const DashboardPageShell = ({
         {sixMonthHistory && sixMonthHistory.length > 0 && (
           <section>
             <div className="mb-2 sm:mb-3 md:mb-4">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-ink mb-1 sm:mb-2">
                 Financial Trends
               </h2>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-muted">
                 Income and expenses for the last six months
               </p>
             </div>
