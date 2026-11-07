@@ -48,24 +48,24 @@ export const Modal = ({
         }`}
       >
         <DialogPanel
-          className={`w-full min-w-0 overflow-x-hidden overscroll-x-none touch-pan-y ${maxWidthClasses[maxWidth]} bg-white p-4 shadow-xl flex flex-col ${
+          className={`w-full min-w-0 overflow-x-hidden overscroll-x-none touch-pan-y ${maxWidthClasses[maxWidth]} bg-surface p-4 border border-line flex flex-col ${
             fullScreenOnMobile
               ? `h-full rounded-none sm:rounded ${fullHeight ? "sm:h-full" : "sm:h-auto sm:max-h-[90vh]"}`
               : `h-auto max-h-[90vh] rounded ${fullHeight ? "sm:h-full" : ""}`
           }`}
         >
-          <DialogTitle className="text-lg font-semibold text-slate-800 mb-4 flex-shrink-0 flex items-center justify-between">
+          <DialogTitle className="text-lg font-semibold text-ink mb-4 flex-shrink-0 flex items-center justify-between">
             <span>{title}</span>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-1 hover:bg-paper rounded-md transition-colors"
               aria-label="Close modal"
             >
-              <Icon name="close" className="size-5 text-gray-500" />
+              <Icon name="close" className="size-5 text-muted" />
             </button>
           </DialogTitle>
           {description && (
-            <Description className="text-sm text-slate-600 mb-4 flex-shrink-0">
+            <Description className="text-sm text-muted mb-4 flex-shrink-0">
               {description}
             </Description>
           )}

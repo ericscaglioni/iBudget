@@ -61,18 +61,18 @@ export const BudgetExchangeHint = ({
           <ClientOnlyCurrency value={expected} currency={currency} /> {label}
         </>
       ) : direction === "in" ? (
-        <span className="text-primary">
+        <span className="text-income">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> more than {label}
         </span>
       ) : (
-        <span className="text-red-600">
+        <span className="text-expense">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> over {label}
         </span>
       );
   }
 
   return (
-    <p className="min-h-5 text-xs sm:text-sm text-gray-600" aria-live="polite">
+    <p className="min-h-5 text-xs sm:text-sm text-muted" aria-live="polite">
       {body}
     </p>
   );

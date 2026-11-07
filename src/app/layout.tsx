@@ -1,13 +1,18 @@
-import { AppFooter } from "@/components/AppFooter";
-import { Navbar } from "@/components/NavBar";
+import { AppFrame } from "@/components/AppFrame";
 import { FloatingTransactionButton } from "@/components/FloatingTransactionButton";
 import { GlobalTransactionModal } from "@/components/GlobalTransactionModal";
 import { TransactionModalDataInitializer } from "@/components/TransactionModalDataInitializer";
 import { LoadingOverlay } from "@/components/ui";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import { LoadingProvider } from "@/lib/hooks/useLoading";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { ThemeProvider } from "@/lib/providers/ThemeProvider";
 import { TransactionModalProvider } from "@/lib/providers/TransactionModalProvider";
+import { settingsService } from "@/lib/server/services";
+import { themeBootScript } from "@/lib/theme";
+import type { ThemePreference } from "@/lib/constants";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -16,37 +21,49 @@ export const metadata = {
   description: "Be in control of your money",
 };
 
-export default function RootLayout({
+const readTheme = async (): Promise<ThemePreference> => {
+  try {
+    const { userId } = await auth();
+    if (!userId) return "light";
+    return await settingsService.getTheme(userId);
+  } catch {
+    return "light";
+  }
+};
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const theme = await readTheme();
+
   return (
     <ClerkProvider
+      appearance={clerkAppearance}
       {...(process.env.NEXT_PUBLIC_CLERK_PROXY_URL
         ? { proxyUrl: process.env.NEXT_PUBLIC_CLERK_PROXY_URL }
         : {})}
     >
       <html lang="en" suppressHydrationWarning>
-        <body className="font-sans bg-background text-slateDark" suppressHydrationWarning>
-          <QueryProvider>
-            <LoadingProvider>
-              <TransactionModalProvider>
-                <Navbar />
-                <Toaster
-                  position="top-right"
-                />
-                <main className="min-h-screen pb-8">
-                  {children}
-                </main>
-                <AppFooter />
-                <FloatingTransactionButton />
-                <GlobalTransactionModal />
-                <TransactionModalDataInitializer />
-                <LoadingOverlay />
-              </TransactionModalProvider>
-            </LoadingProvider>
-          </QueryProvider>
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: themeBootScript(theme) }} />
+        </head>
+        <body className="font-sans bg-paper text-ink" suppressHydrationWarning>
+          <ThemeProvider initialTheme={theme}>
+            <QueryProvider>
+              <LoadingProvider>
+                <TransactionModalProvider>
+                  <AppFrame>{children}</AppFrame>
+                  <Toaster position="top-right" />
+                  <FloatingTransactionButton />
+                  <GlobalTransactionModal />
+                  <TransactionModalDataInitializer />
+                  <LoadingOverlay />
+                </TransactionModalProvider>
+              </LoadingProvider>
+            </QueryProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -36,9 +36,9 @@ export const FormTextInput = <TData extends FieldValues,>({
         {...inputProps}
       />
       {error ? (
-        <p className="text-xs text-red-500 mt-1">{error}</p>
+        <p className="text-xs text-expense mt-1">{error}</p>
       ) : (
-        hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>
+        hint && <p className="text-xs text-muted mt-1">{hint}</p>
       )}
     </div>
   );

@@ -64,7 +64,7 @@ export const ComboboxOptionLabel = ({
   <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
     <span className="truncate">{option.label}</span>
     {showCurrency && option.currency ? (
-      <span className="shrink-0 text-xs font-medium text-grayNeutral">{option.currency}</span>
+      <span className="shrink-0 text-xs font-medium text-muted">{option.currency}</span>
     ) : null}
   </span>
 );
@@ -148,24 +148,24 @@ export const Combobox = ({
         <HeadlessCombobox value={value ?? ""} onChange={handleChange} disabled={disabled}>
           <div className="relative">
             <ComboboxInput
-              className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+              className={`w-full rounded border border-line bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/50 ${
+                disabled ? "bg-muted/15 text-muted cursor-not-allowed" : ""
               }`}
               onChange={(event) => setQuery(event.target.value)}
               displayValue={() => (selected ? optionDisplayValue(selected, showCurrency) : query)}
               placeholder={placeholder}
             />
             <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
-              <Icon name="chevronDown" className="size-4 fill-black/60 group-data-[hover]:fill-black" />
+              <Icon name="chevronDown" className="size-4 fill-ink/60 group-data-[hover]:fill-ink" />
             </ComboboxButton>
             <ComboboxOptions
               anchor="bottom"
-              className="z-10 w-[var(--input-width)] bg-white border rounded shadow-md max-h-60 overflow-auto text-sm [--anchor-gap:4px] empty:invisible"
+              className="z-10 w-[var(--input-width)] max-h-60 overflow-auto rounded border border-line bg-surface text-sm [--anchor-gap:4px] empty:invisible"
             >
               {allValues && (
                 <ComboboxOption
                   value=""
-                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-white data-[focus]:bg-blue-100"
+                  className="cursor-pointer px-3 py-2 group flex gap-2 bg-surface data-[focus]:bg-brand/10"
                 >
                   <Icon name='checkMark' className="invisible size-5 group-data-[selected]:visible" />
                   All
@@ -175,7 +175,7 @@ export const Combobox = ({
                 <ComboboxOption
                   key={option.value}
                   value={option.value}
-                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white data-[focus]:bg-blue-100"
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-surface data-[focus]:bg-brand/10"
                 >
                   <Icon name='checkMark' className="invisible size-5 shrink-0 group-data-[selected]:visible" />
                   <ComboboxOptionLabel option={option} showCurrency={showCurrency} />
@@ -184,14 +184,14 @@ export const Combobox = ({
               {(showCreate || showCreatePrompt) && (
                 <ComboboxOption
                   value={CREATE_VALUE}
-                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-white text-blue-600 data-[focus]:bg-blue-100 border-t border-gray-100"
+                  className="cursor-pointer px-3 py-2 group flex items-center gap-2 bg-surface text-brand data-[focus]:bg-brand/10 border-t border-line"
                 >
                   <Icon name="plus" className="size-5" />
                   {showCreate ? <>Create new “{query.trim()}”</> : <>Create new {createLabel ?? "option"}…</>}
                 </ComboboxOption>
               )}
               {filteredOptions.length === 0 && !showCreate && query && (
-                <div className="px-3 py-2 text-gray-500 text-center text-sm">
+                <div className="px-3 py-2 text-muted text-center text-sm">
                   No options found
                 </div>
               )}

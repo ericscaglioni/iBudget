@@ -102,10 +102,10 @@ export const FormModal = <TData extends FieldValues,>({
           {isLoading && (
             <div
               role="status"
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-md bg-white/80"
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-md bg-surface/80"
             >
               <Spinner />
-              <span className="text-sm text-gray-500">Loading...</span>
+              <span className="text-sm text-muted">Loading...</span>
             </div>
           )}
         </div>

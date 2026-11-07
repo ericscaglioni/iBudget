@@ -103,7 +103,7 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex-1 min-w-[140px] sm:min-w-[180px] text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-white hover:bg-gray-50"
+          className="flex-1 min-w-[140px] sm:min-w-[180px] text-left border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 bg-surface hover:bg-paper"
         >
           {displayValue}
         </button>
@@ -122,7 +122,7 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-4">
+        <div className="absolute z-50 mt-1 w-full bg-surface border border-line rounded-md p-4">
           {/* Year Selector */}
           <div className="flex items-center justify-between mb-4">
             <Button
@@ -162,7 +162,7 @@ export const MonthYearPicker = ({ label, value, onChange, placeholder = 'Month/Y
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+          <div className="mt-3 pt-3 border-t border-line space-y-2">
             <Button
               variant="outline"
               size="sm"

@@ -16,6 +16,10 @@ export const DEFAULT_BASE_CURRENCY = "USD";
 export const OPEN_DASHBOARD_ON = ["home", "all"] as const;
 export type OpenDashboardOn = (typeof OPEN_DASHBOARD_ON)[number];
 
+/** Appearance. New users start on light; system follows the OS after they pick it. */
+export const THEME_PREFERENCES = ["light", "dark", "system"] as const;
+export type ThemePreference = (typeof THEME_PREFERENCES)[number];
+
 export type AccountCurrency = (typeof accountCurrencies)[keyof typeof accountCurrencies];
 
 export const accountTypes: AccountType[] = [
@@ -39,17 +43,17 @@ type TransactionConfigType = Record<TransactionTypeEnum, { label: string; color:
 export const TRANSACTION_TYPE_CONFIG: TransactionConfigType = {
   [TransactionTypeEnum.income]: {
     label: "Income",
-    color: "#10B981", // green
+    color: "#2F9E6B", // income token
     icon: "arrowUp",
   },
   [TransactionTypeEnum.expense]: {
     label: "Expense",
-    color: "#EF4444", // red
+    color: "#C2413B", // expense token
     icon: "arrowDown",
   },
   [TransactionTypeEnum.transfer]: {
     label: "Transfer",
-    color: "#3B82F6", // blue
+    color: "#6B726E", // muted — transfers are not a third money colour
     icon: "arrowLoop",
   },
 };

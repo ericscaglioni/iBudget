@@ -90,21 +90,21 @@ export const ReorderAccountsModal = ({ open, onClose, accounts, currency }: Prop
                 }
               }}
               onDragEnd={() => setDragIndex(null)}
-              className={`flex items-center gap-3 rounded-lg border bg-white px-3 py-2 ${
-                dragIndex === index ? "border-primary opacity-60" : "border-gray-200"
+              className={`flex items-center gap-3 rounded-lg border bg-surface px-3 py-2 ${
+                dragIndex === index ? "border-brand opacity-60" : "border-line"
               }`}
             >
-              <span className="w-5 shrink-0 select-none text-center text-gray-400 cursor-grab" aria-hidden="true">
+              <span className="w-5 shrink-0 select-none text-center text-muted cursor-grab" aria-hidden="true">
                 ⋮⋮
               </span>
-              <span className="w-5 shrink-0 text-xs font-medium text-gray-400">{index + 1}</span>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800" title={account.name}>
+              <span className="w-5 shrink-0 text-xs font-medium text-muted">{index + 1}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink" title={account.name}>
                 {account.name}
               </span>
               <ClientOnlyCurrency
                 value={account.balance}
                 currency={account.currency}
-                className="hidden shrink-0 text-sm text-gray-500 sm:inline"
+                className="hidden shrink-0 text-sm text-muted sm:inline"
               />
               <div className="flex shrink-0 gap-1">
                 <button
@@ -112,7 +112,7 @@ export const ReorderAccountsModal = ({ open, onClose, accounts, currency }: Prop
                   onClick={() => setOrder((current) => moveItem(current, index, index - 1))}
                   disabled={index === 0 || isSaving}
                   aria-label={`Move ${account.name} up`}
-                  className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="rounded p-1 text-muted hover:bg-paper disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                   <Icon name="chevronUp" className="size-4" />
                 </button>
@@ -121,7 +121,7 @@ export const ReorderAccountsModal = ({ open, onClose, accounts, currency }: Prop
                   onClick={() => setOrder((current) => moveItem(current, index, index + 1))}
                   disabled={index === order.length - 1 || isSaving}
                   aria-label={`Move ${account.name} down`}
-                  className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="rounded p-1 text-muted hover:bg-paper disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                   <Icon name="chevronDown" className="size-4" />
                 </button>
@@ -132,7 +132,7 @@ export const ReorderAccountsModal = ({ open, onClose, accounts, currency }: Prop
       </ul>
 
       {/* Pinned to the bottom of the window, so Save is always in reach however long the list is */}
-      <div className="sticky bottom-0 -mx-2 -mb-2 mt-4 flex flex-col-reverse justify-end gap-3 border-t border-gray-100 bg-white px-2 py-3 sm:flex-row">
+      <div className="sticky bottom-0 -mx-2 -mb-2 mt-4 flex flex-col-reverse justify-end gap-3 border-t border-line bg-surface px-2 py-3 sm:flex-row">
         <Button variant="ghost" size="sm" onClick={handleClose} disabled={isSaving} className="w-full sm:w-auto">
           Cancel
         </Button>

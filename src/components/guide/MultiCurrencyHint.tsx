@@ -36,11 +36,11 @@ export const MultiCurrencyHint = ({ currency, currencies }: Props) => {
   return (
     <div
       role="note"
-      className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4"
+      className="flex items-start gap-3 rounded-lg border border-brand/30 bg-brand/10 p-3 sm:p-4"
     >
-      <div className="min-w-0 flex-1 text-xs sm:text-sm text-blue-900">
+      <div className="min-w-0 flex-1 text-xs sm:text-sm text-ink">
         <p className="font-medium">You have accounts in {currencies.join(" and ")}</p>
-        <p className="mt-1 text-blue-800">
+        <p className="mt-1 text-ink">
           Your dashboard is showing {currency}. Switch currency from the net worth card, use All to
           see every currency converted to your home currency, or choose what the dashboard opens on
           in Settings.
@@ -54,7 +54,7 @@ export const MultiCurrencyHint = ({ currency, currencies }: Props) => {
         onClick={handleDismiss}
         disabled={isDismissing}
         aria-label="Dismiss tip"
-        className="rounded p-1 text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+        className="rounded p-1 text-brand hover:bg-brand/10 disabled:opacity-50"
       >
         <Icon name="close" className="size-4" />
       </button>

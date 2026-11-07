@@ -35,30 +35,51 @@ extend that kit instead of styling a one-off.
 
 Sizes are `sm` / `md` / `lg`. Focus rings are already `focus:ring-primary/50`.
 
-## Palette (`tailwind.config.js`)
+## Palette (`tailwind.config.js` + `globals.css`)
 
-Font is Inter.
+Font is Inter. Money uses tabular figures. The palette is **Forest ledger**:
+pine on warm paper. Brand is not the same colour as income.
 
-| Token | Hex | Use |
-|-------|-----|-----|
-| `primary` | `#10B981` | brand, primary buttons, focus |
-| `primaryDark` | `#065F46` | dark green, sparingly |
-| `accent` | `#6366F1` | indigo, sparingly (not for buttons) |
-| `background` | `#F9FAFB` | page background |
-| `slateDark` | `#1F2937` | dark text |
-| `grayNeutral` | `#9CA3AF` | muted text |
+Tokens have a light and a dark value. Use them (`bg-paper`, `text-ink`,
+`border-line`, `text-income`) — do not reach for `gray-*`, `green-*`,
+`blue-*`, or `white`. Tailwind `dark:` is driven by a `dark` class on
+`<html>`, not `prefers-color-scheme` alone.
 
-Plus Tailwind grays for borders and surfaces (`gray-300`, `gray-50`, `white`).
-Errors and destructive actions use `red-600`. Success uses `green-500`.
+| Token | Light | Dark | Use |
+|-------|-------|------|-----|
+| `paper` | `#F6F4F0` | `#121614` | page background |
+| `surface` | `#FFFFFF` | `#1C211E` | cards, header, sidebar |
+| `ink` | `#1A1F1C` | `#EEF1EE` | body text |
+| `muted` | `#6B726E` | `#9AA39C` | secondary text |
+| `line` | `#E6E2DB` | `#2A322E` | hairline borders |
+| `brand` | `#1F6B4A` | `#3D9B6E` | logo, primary buttons, focus |
+| `on-brand` | `#F6F4F0` | `#121614` | text on brand / expense buttons |
+| `income` | `#2F9E6B` | `#4ABA7A` | money in, extra income |
+| `expense` | `#C2413B` | `#E06A64` | money out, overspend, danger |
 
-Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
+`primary`, `background`, `slateDark`, and `grayNeutral` still exist as
+aliases of brand / paper / ink / muted. Prefer the new names.
+
+Do not introduce other brand colours (no stray `blue-*`, candy emerald, gradients).
+
+Theme: Light / Dark / System, in the header next to the user icon (sun /
+moon). Saved on the user (`user_settings.theme`). New users start on light.
+Clerk SignIn uses Forest tokens (`rgb(var(--surface))` and friends) so the
+card, including the footer, matches the page in both themes.
 
 ## Layout
 
-- The site header (`Navbar`) is fixed to the top of the viewport (a spacer keeps
-  the page from sliding under it). Do not invent a second top bar. Do not put
-  `overflow-x-hidden` on `html`/`body` — use `overflow-x-clip` (hidden makes
-  sticky/fixed headers fail).
+- App shell: a **sidebar** on desktop (`md+`) with every page plus Settings;
+  a slim header (theme control, then the user icon); **bottom tabs** on a
+  phone (Dashboard, Transactions, Budget, More). More holds Accounts,
+  Categories, Settings, Sign out. Do not put `overflow-x-hidden` on
+  `html`/`body` (hidden makes sticky/fixed headers fail). Clip overflow-x
+  on `html` only — clip on both makes opening a header menu add a nested
+  scrollbar. Login has no shell. On a phone the copy and SignIn sit as one
+  centred block (not a stretched lower pane). Sidebar Settings uses the same full-width
+  link as the other items. Phone tabs are at least as tall as the header
+  (`min-h-14`). Opening More lifts the page and the new-transaction button
+  above the sheet.
 - The site footer (`AppFooter`) shows `iBudget` and the version from
   `package.json`. Do not hard-code a version number. Hide it on `/login`, like
   the navbar.
@@ -83,8 +104,8 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
   explains All and links to Settings. Do not mix native amounts. If rates
   fail, All is disabled and a banner explains the fallback.
 - This month's spending is a donut (`TopSpendingCategories`) with a legend
-  (name, amount, %). Top 5 then Other. Do not label slices or invent extra
-  brand colours; Other is `gray-300`. Respect `prefers-reduced-motion`.
+  (name, amount, %). Top 5 then Other.   Do not label slices or invent extra
+  brand colours; Other is muted stone, not brand. Respect `prefers-reduced-motion`.
   When a budget exists, the legend can show expected next to actual.
 - The six-month trend ends at the current month (this month on the right).
   Do not slide it to a later booked month. The monthly summary still can.
@@ -112,7 +133,7 @@ Do not introduce other brand colours (no stray `blue-*`, `purple-*`, and so on).
 
 - [ ] Primary action is `Button variant="primary"`. Secondary is `outline` or `ghost`.
 - [ ] No native `<select>`, no blue text-link standing in for a button.
-- [ ] Colours come from the palette above.
+- [ ] Colours come from the Forest tokens above (including dark).
 - [ ] It works stacked on a phone and at `md` / `xl`, like the screens around it.
 - [ ] Long lists in dialogs scroll; the footer does not disappear.
 - [ ] Expanding and collapsing is smooth.

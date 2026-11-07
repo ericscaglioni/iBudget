@@ -66,18 +66,18 @@ export const BudgetHint = ({
           <ClientOnlyCurrency value={expected} currency={currency} /> expected
         </>
       ) : kind === "income" ? (
-        <span className="text-primary">
+        <span className="text-income">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> more than expected
         </span>
       ) : (
-        <span className="text-red-600">
+        <span className="text-expense">
           <ClientOnlyCurrency value={Math.abs(remaining)} currency={currency} /> over expected
         </span>
       );
   }
 
   return (
-    <p className="min-h-5 text-xs sm:text-sm text-gray-600" aria-live="polite">
+    <p className="min-h-5 text-xs sm:text-sm text-muted" aria-live="polite">
       {body}
     </p>
   );

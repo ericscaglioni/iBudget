@@ -40,10 +40,10 @@ export const categoryColumns: ColumnDef<Category>[] = [
       return (
         <div className="flex items-center gap-2">
           <span
-            className="inline-block w-6 h-6 rounded border border-gray-300"
+            className="inline-block w-6 h-6 rounded border border-line"
             style={{ backgroundColor: color }}
           />
-          <span className="text-sm text-gray-600">{color}</span>
+          <span className="text-sm text-muted">{color}</span>
         </div>
       );
     },

@@ -6,6 +6,34 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-07
+
+A Forest ledger: sidebar, phone tabs, and light or dark.
+
+### Added
+- Light, Dark, and System appearance, saved on your account. The control
+  sits in the header next to your profile (sun and moon). New accounts
+  start on light.
+
+### Changed
+- The app is a Forest ledger: sidebar on desktop, bottom tabs on a phone,
+  pine on warm paper. Brand green is no longer the same colour as income.
+  Login uses the same language. The migration adds `user_settings.theme`
+  and runs on deploy.
+- Phone tabs are a little taller, closer to the header.
+- On a phone, the login card sits closer to the middle of the screen.
+
+### Fixed
+- Sidebar Settings now fills the same width as the other nav links.
+- Opening the theme or profile menu no longer adds a nested scrollbar
+  on the header.
+- Opening the theme or profile menu closes the other, so they no longer
+  stack.
+- Opening More on a phone lifts the page and the new-transaction button
+  so they sit above the sheet.
+- The login card stays Forest in dark mode — no white Clerk footer on a
+  dark panel.
+
 ## [2.1.0] - 2026-11-06
 
 Account pickers show the currency, and extra income is no longer red.
@@ -327,6 +355,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[3.0.0]: https://github.com/ericscaglioni/iBudget/compare/2.1.0...3.0.0
 [2.1.0]: https://github.com/ericscaglioni/iBudget/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/ericscaglioni/iBudget/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/ericscaglioni/iBudget/compare/2.0.0...2.0.1

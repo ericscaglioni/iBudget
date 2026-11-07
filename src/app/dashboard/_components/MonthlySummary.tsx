@@ -47,41 +47,39 @@ export const MonthlySummary = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-      {/* Income Card */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-6 shadow-sm">
-        <h3 className="text-xs sm:text-sm font-medium text-green-700 mb-1.5 sm:mb-2 uppercase tracking-wide">
+      <div className="rounded-lg border border-line bg-surface p-4 sm:p-6">
+        <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted sm:mb-2 sm:text-sm">
           Income
         </h3>
-        <p className="text-2xl sm:text-3xl font-bold text-green-900">
+        <p className="text-2xl font-semibold tabular-nums text-income sm:text-3xl">
           {formatAmount(income)}
         </p>
         {incomeFromExchange > 0 && (
-          <p className="mt-1 text-xs sm:text-sm text-green-700">
+          <p className="mt-1 text-xs text-muted sm:text-sm">
             Includes {formatAmount(incomeFromExchange)} received from currency exchange
           </p>
         )}
         {expectedIncome != null && (
-          <p className="mt-1 text-xs sm:text-sm text-green-700">
+          <p className="mt-1 text-xs text-muted sm:text-sm">
             of {formatAmount(expectedIncome)} expected
           </p>
         )}
       </div>
 
-      {/* Expenses Card */}
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6 shadow-sm">
-        <h3 className="text-xs sm:text-sm font-medium text-red-700 mb-1.5 sm:mb-2 uppercase tracking-wide">
+      <div className="rounded-lg border border-line bg-surface p-4 sm:p-6">
+        <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted sm:mb-2 sm:text-sm">
           Expenses
         </h3>
-        <p className="text-2xl sm:text-3xl font-bold text-red-900">
+        <p className="text-2xl font-semibold tabular-nums text-expense sm:text-3xl">
           {formatAmount(expenses)}
         </p>
         {expensesFromExchange > 0 && (
-          <p className="mt-1 text-xs sm:text-sm text-red-700">
+          <p className="mt-1 text-xs text-muted sm:text-sm">
             Includes {formatAmount(expensesFromExchange)} sent in currency exchange
           </p>
         )}
         {expectedExpenses != null ? (
-          <p className={`mt-1 text-xs sm:text-sm ${expenses > expectedExpenses ? "font-medium text-red-800" : "text-red-700"}`}>
+          <p className={`mt-1 text-xs sm:text-sm ${expenses > expectedExpenses ? "font-medium text-expense" : "text-muted"}`}>
             of {formatAmount(expectedExpenses)} expected
             {expenses > expectedExpenses ? " · over" : ""}
           </p>
@@ -91,7 +89,7 @@ export const MonthlySummary = ({
             className="mt-1"
             content={`This compares what is already booked this month with ${previousLabel}. It is not a target or a forecast. Green means this month is lower so far — a month that is still ahead, or only just started, often looks much lower.`}
           >
-            <span className={`text-xs sm:text-sm font-medium ${expenseChange > 0 ? "text-red-700" : "text-green-700"}`}>
+            <span className={`text-xs font-medium sm:text-sm ${expenseChange > 0 ? "text-expense" : "text-income"}`}>
               {expenseChange > 0 ? "▲" : "▼"} {Math.abs(expenseChange).toFixed(0)}% vs. {previousLabel}
             </span>
           </Tooltip>
@@ -99,30 +97,15 @@ export const MonthlySummary = ({
         )}
       </div>
 
-      {/* Net Card - Color changes based on positive/negative */}
-      <div
-        className={`border rounded-lg p-4 sm:p-6 shadow-sm ${
-          net >= 0
-            ? "bg-blue-50 border-blue-200"
-            : "bg-orange-50 border-orange-200"
-        }`}
-      >
-        <h3
-          className={`text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 uppercase tracking-wide ${
-            net >= 0 ? "text-blue-700" : "text-orange-700"
-          }`}
-        >
+      <div className="rounded-lg border border-line bg-surface p-4 sm:p-6">
+        <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted sm:mb-2 sm:text-sm">
           Net
         </h3>
-        <p
-          className={`text-2xl sm:text-3xl font-bold ${
-            net >= 0 ? "text-blue-900" : "text-orange-900"
-          }`}
-        >
+        <p className={`text-2xl font-semibold tabular-nums sm:text-3xl ${net >= 0 ? "text-ink" : "text-expense"}`}>
           {formatAmount(net)}
         </p>
         {expectedIncome != null && expectedExpenses != null && (
-          <p className={`mt-1 text-xs sm:text-sm ${net >= 0 ? "text-blue-700" : "text-orange-700"}`}>
+          <p className="mt-1 text-xs text-muted sm:text-sm">
             of {formatAmount(expectedIncome - expectedExpenses)} expected
           </p>
         )}

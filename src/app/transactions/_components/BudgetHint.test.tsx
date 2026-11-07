@@ -36,7 +36,7 @@ describe("BudgetHint", () => {
     await waitFor(() => {
       expect(screen.getByText(/more than expected/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/more than expected/).className).toContain("text-primary");
+    expect(screen.getByText(/more than expected/).className).toContain("text-income");
     expect(screen.queryByText(/over expected/)).not.toBeInTheDocument();
   });
 
@@ -46,6 +46,6 @@ describe("BudgetHint", () => {
     await waitFor(() => {
       expect(screen.getByText(/over expected/)).toBeInTheDocument();
     });
-    expect(screen.getByText(/over expected/).className).toContain("text-red-600");
+    expect(screen.getByText(/over expected/).className).toContain("text-expense");
   });
 });

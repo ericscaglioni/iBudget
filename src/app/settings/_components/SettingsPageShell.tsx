@@ -43,9 +43,9 @@ export const SettingsPageShell = ({ defaultCurrency, availableCurrencies, openDa
 
   return (
     <PageShell title="Settings" subtitle="Manage your preferences.">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 sm:p-6 max-w-xl">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900">Home currency</h2>
-        <p className="text-xs sm:text-sm text-gray-500 mt-1 mb-4">
+      <div className="bg-surface border border-line rounded-lg p-4 sm:p-6 max-w-xl">
+        <h2 className="text-base sm:text-lg font-semibold text-ink">Home currency</h2>
+        <p className="text-xs sm:text-sm text-muted mt-1 mb-4">
           The currency All is converted into. You can still switch between your currencies from the
           dashboard at any time.
         </p>
@@ -61,7 +61,7 @@ export const SettingsPageShell = ({ defaultCurrency, availableCurrencies, openDa
 
             <div>
               <FieldLabel htmlFor="open-dashboard-on">Open dashboard on</FieldLabel>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1 mb-3">
+              <p className="text-xs sm:text-sm text-muted mt-1 mb-3">
                 All shows every account converted to {currency}. You can change this whenever you
                 like, including from the chips on the dashboard.
               </p>
@@ -90,22 +90,22 @@ export const SettingsPageShell = ({ defaultCurrency, availableCurrencies, openDa
           </div>
         ) : hasAccounts ? (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              Your dashboard shows <span className="font-medium text-gray-900">{availableCurrencies[0]}</span>, the
+            <p className="text-sm text-muted">
+              Your dashboard shows <span className="font-medium text-ink">{availableCurrencies[0]}</span>, the
               currency of your accounts.
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted">
               Once you add an account in another currency, you can choose a home currency here and
               open the dashboard on All (converted into it).{" "}
-              <Link href="/accounts?new=1" className="text-primary font-medium hover:underline">
+              <Link href="/accounts?new=1" className="text-brand font-medium hover:underline">
                 Add an account
               </Link>
             </p>
           </div>
         ) : (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             You don&apos;t have any accounts yet.{" "}
-            <Link href="/accounts?new=1" className="text-primary font-medium hover:underline">
+            <Link href="/accounts?new=1" className="text-brand font-medium hover:underline">
               Create an account
             </Link>{" "}
             to choose a home currency.

@@ -78,11 +78,11 @@ export function Table<TData>({
           startTransition={startTransition}
         />
       )}
-      <div className="overflow-x-auto overflow-y-visible rounded-md border border-gray-200">
+      <div className="overflow-x-auto overflow-y-visible rounded-md border border-line">
         <div className="relative" aria-busy={showLoading || undefined}>
           {showLoading && (
             <div
-              className="absolute inset-0 z-10 flex items-center justify-center bg-white/50"
+              className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50"
               role="status"
               aria-label="Loading"
             >
@@ -90,8 +90,8 @@ export function Table<TData>({
             </div>
           )}
         {/* 🚀 TABLE */}
-        <table className="table-auto w-full min-w-[600px] sm:min-w-full bg-white text-sm text-left">
-          <thead className="bg-gray-100">
+        <table className="table-auto w-full min-w-[600px] sm:min-w-full bg-surface text-sm text-left">
+          <thead className="bg-muted/15">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -117,7 +117,7 @@ export function Table<TData>({
                           : undefined
                     }
                     className={clsx(
-                      "px-2 sm:px-4 py-2 font-medium text-gray-700 text-xs sm:text-sm",
+                      "px-2 sm:px-4 py-2 font-medium text-ink text-xs sm:text-sm",
                       header.column.columnDef.meta?.className
                     )}
                   >
@@ -126,14 +126,14 @@ export function Table<TData>({
                         type="button"
                         onClick={() => handleSortChange(header.column.id)}
                         className={clsx(
-                          "inline-flex items-center gap-1 rounded-sm text-left font-medium hover:text-gray-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50",
+                          "inline-flex items-center gap-1 rounded-sm text-left font-medium hover:text-ink cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand/50",
                           header.column.columnDef.meta?.className?.includes("text-center") && "justify-center w-full"
                         )}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         <Icon
                           name={sortIcon}
-                          className={clsx("w-3.5 h-3.5", isSorted ? "text-gray-700" : "text-gray-400")}
+                          className={clsx("w-3.5 h-3.5", isSorted ? "text-ink" : "text-muted")}
                         />
                       </button>
                     ) : (
@@ -150,12 +150,12 @@ export function Table<TData>({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-line">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
                 className={clsx(
-                  "hover:bg-gray-50",
+                  "hover:bg-paper",
                   onRowClick && "cursor-pointer select-none"
                 )}
                 onClick={
@@ -169,7 +169,7 @@ export function Table<TData>({
               >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className={clsx(
-                    "px-2 sm:px-4 py-2 text-gray-800 text-xs sm:text-sm",
+                    "px-2 sm:px-4 py-2 text-ink text-xs sm:text-sm",
                     cell.column.columnDef.meta?.className,
                   )}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -181,7 +181,7 @@ export function Table<TData>({
         </table>
 
         {data.length === 0 && (
-          <div className="p-4 text-center text-sm text-gray-500">No data available.</div>
+          <div className="p-4 text-center text-sm text-muted">No data available.</div>
         )}
         </div>
 

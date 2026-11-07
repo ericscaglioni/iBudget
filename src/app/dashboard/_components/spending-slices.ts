@@ -12,8 +12,8 @@ export type SpendingSlice = {
   color: string;
 };
 
-/** Tailwind gray-300 — Other is leftover spending, not a brand colour. */
-export const OTHER_SLICE_COLOR = "#D1D5DB";
+/** Muted stone — Other is leftover spending, not a brand colour. */
+export const OTHER_SLICE_COLOR = "#C5C1B8";
 
 /**
  * Top `limit` categories, then Other if anything remains, so slices always add up

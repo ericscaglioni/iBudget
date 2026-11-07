@@ -2,6 +2,25 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatMonthYear } from "@/lib/utils/format";
+import { useEffect, useState } from "react";
+
+const forestChart = {
+  light: { income: "#2F9E6B", expense: "#C2413B", grid: "#E6E2DB", muted: "#6B726E" },
+  dark: { income: "#4ABA7A", expense: "#E06A64", grid: "#2A322E", muted: "#9AA39C" },
+};
+
+const useForestChart = () => {
+  const [palette, setPalette] = useState(forestChart.light);
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => setPalette(root.classList.contains("dark") ? forestChart.dark : forestChart.light);
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return palette;
+};
 
 interface SixMonthBarChartProps {
   data: { month: string; income: number; expenses: number }[];
@@ -21,8 +40,8 @@ interface TooltipProps {
 const CustomTooltip = ({ active, payload, label, currency }: TooltipProps & { currency: string }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p className="text-sm font-medium text-gray-900 mb-2">
+      <div className="bg-surface border border-line rounded-lg p-3">
+        <p className="text-sm font-medium text-ink mb-2">
           {label ? formatMonthYear(label, true) : ""}
         </p>
         {payload.map((entry, index: number) => (
@@ -55,6 +74,7 @@ const formatCompactCurrency = (amount: number, currency: string): string => {
 };
 
 export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
+  const palette = useForestChart();
   const chartData = data.map(item => ({
     month: item.month,
     Income: item.income,
@@ -99,11 +119,11 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">
+      <div className="bg-surface border border-line rounded-lg p-6 ">
+        <h3 className="text-sm font-semibold text-ink mb-4 uppercase tracking-wide">
           6-Month Trend
         </h3>
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-muted">
           <p className="text-sm">No data available for these months</p>
         </div>
       </div>
@@ -111,9 +131,9 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4 sm:mb-6 uppercase tracking-wide">
-        6-Month Trend <span className="text-gray-400 font-normal normal-case">({currency})</span>
+    <div className="bg-surface border border-line rounded-lg p-4 sm:p-6 ">
+      <h3 className="text-sm font-semibold text-ink mb-4 sm:mb-6 uppercase tracking-wide">
+        6-Month Trend <span className="text-muted font-normal normal-case">({currency})</span>
       </h3>
       
       <div className="h-64 sm:h-80">
@@ -127,18 +147,18 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} />
             <XAxis 
               dataKey="month"
               tickFormatter={(value: string) => formatMonthYear(value)}
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              axisLine={{ stroke: '#e5e7eb' }}
-              tickLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 12, fill: palette.muted }}
+              axisLine={{ stroke: palette.grid }}
+              tickLine={{ stroke: palette.grid }}
             />
             <YAxis 
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              axisLine={{ stroke: '#e5e7eb' }}
-              tickLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 12, fill: palette.muted }}
+              axisLine={{ stroke: palette.grid }}
+              tickLine={{ stroke: palette.grid }}
               tickFormatter={formatYAxisTick}
               domain={[0, yAxisMax]}
               ticks={yAxisTicks}
@@ -149,13 +169,13 @@ export const SixMonthBarChart = ({ data, currency }: SixMonthBarChartProps) => {
             />
             <Bar 
               dataKey="Income" 
-              fill="#10b981" 
+              fill={palette.income} 
               radius={[2, 2, 0, 0]}
               name="Income"
             />
             <Bar 
               dataKey="Expenses" 
-              fill="#ef4444" 
+              fill={palette.expense} 
               radius={[2, 2, 0, 0]}
               name="Expenses"
             />

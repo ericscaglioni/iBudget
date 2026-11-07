@@ -63,12 +63,12 @@ export const GettingStarted = ({ steps, canDismiss }: Props) => {
   return (
     <section
       aria-label="Getting started"
-      className="bg-white border border-blue-200 rounded-lg shadow-sm p-4 sm:p-6"
+      className="bg-surface border border-brand/30 rounded-lg p-4 sm:p-6"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Welcome to iBudget</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <h2 className="text-base sm:text-lg font-semibold text-ink">Welcome to iBudget</h2>
+          <p className="text-xs sm:text-sm text-muted mt-1">
             Two quick steps to get going ({doneCount} of {steps.length} done).
           </p>
         </div>
@@ -89,9 +89,9 @@ export const GettingStarted = ({ steps, canDismiss }: Props) => {
               <span
                 className={clsx(
                   "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  step.done && "bg-green-100 text-green-700",
-                  isCurrent && "bg-primary text-white",
-                  !step.done && !isCurrent && "bg-gray-100 text-gray-400"
+                  step.done && "bg-income/15 text-income",
+                  isCurrent && "bg-brand text-on-brand",
+                  !step.done && !isCurrent && "bg-muted/15 text-muted"
                 )}
               >
                 {step.done ? <Icon name="checkMark" className="size-4" /> : index + 1}
@@ -101,14 +101,14 @@ export const GettingStarted = ({ steps, canDismiss }: Props) => {
                 <p
                   className={clsx(
                     "text-sm font-medium",
-                    step.done ? "text-gray-400 line-through" : "text-gray-900"
+                    step.done ? "text-muted line-through" : "text-ink"
                   )}
                 >
                   {content.title}
                 </p>
                 {isCurrent && (
                   <>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1">{content.description}</p>
+                    <p className="text-xs sm:text-sm text-muted mt-1">{content.description}</p>
                     <Button className="mt-3" size="md" onClick={() => handleAction(step.id)}>
                       {content.actionLabel}
                     </Button>

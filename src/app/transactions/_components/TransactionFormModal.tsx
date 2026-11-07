@@ -375,7 +375,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
               value={type}
               className={({ checked }) =>
                 `flex-1 min-w-0 text-center px-2 py-1.5 rounded-md text-sm font-medium cursor-pointer ${
-                  checked ? "bg-primary text-white" : "bg-gray-100 text-gray-700"
+                  checked ? "bg-brand text-on-brand" : "bg-muted/15 text-ink"
                 }`
               }
             >
@@ -454,18 +454,18 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
 
         {/* Recurring Transaction Section - Only for expense/income */}
         {(mode === TransactionTypeEnum.expense || mode === TransactionTypeEnum.income) && (
-          <div className="space-y-4 pt-4 border-t border-gray-200">
+          <div className="space-y-4 pt-4 border-t border-line">
             {/* Checkbox for recurring */}
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="isRecurring"
                 {...form.register("isRecurring")}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                className="h-4 w-4 rounded border-line text-brand focus:ring-brand cursor-pointer"
               />
               <label 
                 htmlFor="isRecurring" 
-                className="text-sm font-medium text-gray-700 cursor-pointer"
+                className="text-sm font-medium text-ink cursor-pointer"
               >
                 Make this a recurring transaction
               </label>
@@ -473,7 +473,7 @@ export const TransactionFormModal = ({ open, onClose, accountOptions: baseAccoun
 
             {/* Conditional fields when isRecurring is true */}
             {isRecurring && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2 border-brand/20">
                 {/* Frequency dropdown */}
                 <FormCombobox
                   form={form}

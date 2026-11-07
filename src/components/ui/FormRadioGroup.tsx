@@ -36,7 +36,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
 
   return (
     <div className={className}>
-      <FieldLabel required={required} className="text-gray-700">{label}</FieldLabel>
+      <FieldLabel required={required} className="text-ink">{label}</FieldLabel>
       <RadioGroup
         options={options}
         value={value}
@@ -44,7 +44,7 @@ export const FormRadioGroup = <TFormValues extends FieldValues>({
         name={name}
         className="mt-2"
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-expense">{error}</p>}
     </div>
   );
 };

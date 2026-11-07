@@ -17,6 +17,13 @@ interface Props {
   disabled?: boolean;
 }
 
+const chipClass = (active: boolean) =>
+  `flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm border transition-colors disabled:opacity-60 ${
+    active
+      ? "bg-brand text-on-brand border-brand cursor-default"
+      : "bg-surface text-ink border-line hover:bg-paper"
+  }`;
+
 export const NetWorthHero = ({
   netWorth,
   currency,
@@ -35,8 +42,8 @@ export const NetWorthHero = ({
   const allActive = view === "all";
 
   return (
-    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 sm:p-8 text-white">
-      <h3 className="text-xs sm:text-sm font-medium text-white/90 mb-2 uppercase tracking-wide">
+    <div className="rounded-lg border border-line bg-surface p-5 sm:p-8">
+      <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted sm:text-sm">
         Net worth · {currency}
         {allActive && " · All"}
       </h3>
@@ -44,28 +51,27 @@ export const NetWorthHero = ({
       <ClientOnlyCurrency
         value={netWorth.total}
         currency={currency}
-        className="block text-3xl sm:text-5xl font-bold"
+        className="block text-3xl font-semibold tracking-tight text-ink sm:text-5xl"
       />
 
       {allActive && ratesAsOf && (
-        <p className="mt-1 text-xs sm:text-sm text-white/80">
+        <p className="mt-1 text-xs text-muted sm:text-sm">
           Converted to {homeCurrency} · rates as of {ratesAsOf}
         </p>
       )}
 
-      {/* Change since the end of last month */}
-      <div className="mt-2 text-xs sm:text-sm text-white/90">
+      <div className="mt-2 text-xs text-muted sm:text-sm">
         <Tooltip content="This compares today's balance with the end of last month. It is not a target. Green means the balance went up.">
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
-              changeIsPositive ? "bg-green-400/25" : "bg-red-400/30"
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
+              changeIsPositive ? "bg-income/15 text-income" : "bg-expense/15 text-expense"
             }`}
           >
             {changeIsPositive ? "▲" : "▼"}
             <ClientOnlyCurrency value={Math.abs(change)} currency={currency} />
             {changePercent !== null && <span>({Math.abs(changePercent).toFixed(1)}%)</span>}
           </span>
-          <span className="ml-2 text-white/70">vs. end of last month</span>
+          <span className="ml-2 text-muted">vs. end of last month</span>
         </Tooltip>
       </div>
 
@@ -80,13 +86,9 @@ export const NetWorthHero = ({
                 disabled={disabled}
                 onClick={() => !active && onCurrencyChange(item.currency)}
                 aria-pressed={active}
-                className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm border transition-colors disabled:opacity-60 ${
-                  active
-                    ? "bg-white text-blue-700 border-white cursor-default"
-                    : "bg-white/10 text-white border-white/30 hover:bg-white/20"
-                }`}
+                className={chipClass(active)}
               >
-                <span className="font-semibold">{item.currency}</span>
+                <span className="font-medium">{item.currency}</span>
                 <ClientOnlyCurrency value={item.balance} currency={item.currency} />
               </button>
             );
@@ -97,11 +99,7 @@ export const NetWorthHero = ({
             onClick={() => !allActive && !allDisabled && onViewAll()}
             aria-pressed={allActive}
             title={allDisabled ? "Exchange rates are unavailable right now." : undefined}
-            className={`rounded-full px-3 py-1.5 text-xs sm:text-sm border font-semibold transition-colors disabled:opacity-60 ${
-              allActive
-                ? "bg-white text-blue-700 border-white cursor-default"
-                : "bg-white/10 text-white border-white/30 hover:bg-white/20"
-            }`}
+            className={`${chipClass(allActive)} font-medium`}
           >
             All
           </button>
@@ -110,14 +108,14 @@ export const NetWorthHero = ({
               <>
                 All converts every currency into {homeCurrency}, your home currency. Switch these
                 chips any time. Change the home currency or what the dashboard opens on in{" "}
-                <Link href="/settings" className="font-medium text-primary underline">
+                <Link href="/settings" className="font-medium text-brand underline">
                   Settings
                 </Link>
                 .
               </>
             }
           >
-            <span className="text-xs sm:text-sm text-white/80">Home currency</span>
+            <span className="text-xs text-muted sm:text-sm">Home currency</span>
           </Tooltip>
         </div>
       )}
