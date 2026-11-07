@@ -6,6 +6,13 @@ All notable changes to iBudget are documented here. The format follows
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-11-07
+
+Spent vs expected on the donut is easier to read.
+
+### Fixed
+- Spent vs expected on the spending donut is easier to tell apart.
+
 ## [3.0.1] - 2026-11-07
 
 Login sits higher on a phone.
@@ -362,6 +369,7 @@ Bug fixes, security hardening and the first separate QA and Prod environments.
 
 - Initial release.
 
+[3.0.2]: https://github.com/ericscaglioni/iBudget/compare/3.0.1...3.0.2
 [3.0.1]: https://github.com/ericscaglioni/iBudget/compare/3.0.0...3.0.1
 [3.0.0]: https://github.com/ericscaglioni/iBudget/compare/2.1.0...3.0.0
 [2.1.0]: https://github.com/ericscaglioni/iBudget/compare/2.0.2...2.1.0

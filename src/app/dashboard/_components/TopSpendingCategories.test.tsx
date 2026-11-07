@@ -52,6 +52,19 @@ describe("TopSpendingCategories", () => {
     expect(svg?.getAttribute("tabindex")).not.toBe("0");
   });
 
+  it("shows expected quieter than actual on the legend", () => {
+    render(
+      <TopSpendingCategories
+        categories={[food]}
+        currency="USD"
+        expectedByCategory={{ food: 100 }}
+      />,
+    );
+    const expected = screen.getByText(/of/).closest("span");
+    expect(expected).toHaveClass("text-muted");
+    expect(expected).toHaveClass("text-xs");
+  });
+
   it("folds extra categories into Other", () => {
     const many = Array.from({ length: 6 }, (_, i) => ({
       categoryId: `c${i}`,

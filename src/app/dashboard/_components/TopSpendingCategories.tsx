@@ -147,19 +147,19 @@ export const TopSpendingCategories = ({
                   {slice.name}
                 </span>
               </span>
-              <span className="shrink-0 text-right text-xs sm:text-sm tabular-nums">
+              <span className="shrink-0 text-right tabular-nums">
                 <ClientOnlyCurrency
                   value={slice.amount}
                   currency={currency}
-                  className="font-semibold text-ink"
+                  className="text-sm font-semibold text-ink"
                 />
                 {expectedByCategory[slice.id] != null && (
-                  <span className="ml-2 text-muted">
+                  <span className="ml-1.5 text-xs font-normal text-muted">
                     of{" "}
                     <ClientOnlyCurrency value={expectedByCategory[slice.id]} currency={currency} />
                   </span>
                 )}
-                <span className="ml-2 text-muted">{sliceShare(slice.amount, total)}%</span>
+                <span className="ml-1.5 text-xs text-muted">{sliceShare(slice.amount, total)}%</span>
               </span>
             </li>
           ))}
